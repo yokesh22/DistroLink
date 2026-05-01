@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter pub get)",
+      "Bash(flutter pub add:*)",
+      "Bash(flutter pub remove:*)",
+      "Bash(flutter pub upgrade:*)",
+      "Bash(flutter pub outdated:*)",
+      "Bash(flutter pub run:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(flutter test:*)",
+      "Bash(flutter clean)",
+      "Bash(flutter build apk:*)",
+      "Bash(flutter build appbundle:*)",
+      "Bash(flutter build ios:*)",
+      "Bash(dart run build_runner:*)",
+      "Bash(dart format:*)",
+      "Bash(dart fix:*)"
+    ]
+  }
+}
