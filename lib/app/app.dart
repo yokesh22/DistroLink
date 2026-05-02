@@ -1,56 +1,24 @@
+import 'package:distro_link/app/router.dart';
 import 'package:distro_link/app/theme.dart';
-import 'package:distro_link/core/theme/app_spacing.dart';
-import 'package:distro_link/core/widgets/app_button.dart';
-import 'package:distro_link/core/widgets/app_card.dart';
+import 'package:distro_link/features/settings/application/settings_providers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class DistroLinkApp extends StatelessWidget {
+class DistroLinkApp extends ConsumerWidget {
   const DistroLinkApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(routerProvider);
+    final themeMode = ref.watch(themeModeProvider);
+
+    return MaterialApp.router(
       title: 'DistroLink',
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
-      home: const _SetupHome(),
-    );
-  }
-}
-
-class _SetupHome extends StatelessWidget {
-  const _SetupHome();
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Scaffold(
-      appBar: AppBar(title: const Text('DistroLink')),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.screenPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AppCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Setup complete', style: textTheme.titleLarge),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      'Design system wired. Ready to build features.',
-                      style: textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              AppButton(label: 'Get started', onPressed: () {}),
-            ],
-          ),
-        ),
-      ),
+      themeMode: themeMode,
+      routerConfig: router,
+      debugShowCheckedModeBanner: false,
     );
   }
 }

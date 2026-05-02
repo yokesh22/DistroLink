@@ -27,4 +27,18 @@ abstract final class AppColors {
   static const Color darkBorder = Color(0xFF334155);
   static const Color darkTextPrimary = Color(0xFFF1F5F9);
   static const Color darkTextSecondary = Color(0xFF94A3B8);
+
+  // Tints — light (used for badge backgrounds, card fills, etc.)
+  static const Color blueLight = Color(0xFFEFF6FF);
+  static const Color blueMid = Color(0xFFBFDBFE);
+  static const Color greenLight = Color(0xFFECFDF5);
+  static const Color orangeLight = Color(0xFFFFFBEB);
+  static const Color redLight = Color(0xFFFEF2F2);
+
+  // Tints — dark
+  static const Color darkBlueLight = Color(0xFF1E3A5F);
+  static const Color darkBlueMid = Color(0xFF1E3A5F);
+  static const Color darkGreenLight = Color(0xFF064E3B);
+  static const Color darkOrangeLight = Color(0xFF431407);
+  static const Color darkRedLight = Color(0xFF450A0A);
 }

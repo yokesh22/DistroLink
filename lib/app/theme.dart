@@ -91,7 +91,7 @@ abstract final class AppTheme {
           disabledBackgroundColor: border,
           disabledForegroundColor: textSecondary,
           elevation: 0,
-          minimumSize: const Size.fromHeight(48), // large touch target
+          minimumSize: const Size(0, 48), // large touch target, bounded width
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
             vertical: AppSpacing.xs + 4,
@@ -107,7 +107,7 @@ abstract final class AppTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.primary,
           side: BorderSide(color: border),
-          minimumSize: const Size.fromHeight(48),
+          minimumSize: const Size(0, 48),
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
             vertical: AppSpacing.xs + 4,

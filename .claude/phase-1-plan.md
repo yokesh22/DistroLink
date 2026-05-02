@@ -1,6 +1,6 @@
 # Phase 1 — Salesman Flow
 
-> **Status:** In progress (Step 0 plumbing complete; awaiting go-ahead for screens).
+> **Status:** In progress — all screens implemented, `flutter analyze` clean. Pending: runtime verification on device.
 > **Last updated:** 2026-05-02
 > **Where this fits:** Phase 1 of 6. Full ladder: [roadmap.md](./roadmap.md).
 
@@ -47,11 +47,11 @@ Ship a working **salesman** experience for DistroLink, backed by real Supabase. 
 Tick items as they land. Group order ≈ build order (foundations → UI), but it's fine to deviate when something blocks.
 
 ### 1. Foundation
-- [x] Add deps: `supabase_flutter`, `flutter_dotenv`, `shared_preferences` _(shared_preferences pulled in transitively via supabase_flutter)_
+- [x] Add deps: `supabase_flutter`, `flutter_dotenv`, `shared_preferences`, `uuid`
 - [x] Create `.env.example` (placeholders) and add `.env` to `.gitignore`
 - [x] `lib/core/config/env.dart` — typed accessor
 - [x] `lib/bootstrap.dart` — `dotenv.load()` + `Supabase.initialize(...)`
-- [ ] `lib/core/network/supabase_provider.dart` — `supabaseClientProvider`
+- [x] `lib/core/network/supabase_provider.dart` — `supabaseClientProvider`
 
 ### 2. Theme update
 - [ ] `lib/core/theme/app_typography.dart` — Inter → Plus Jakarta Sans

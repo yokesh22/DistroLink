@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Inter-based typography scale matching the design system.
+/// Plus Jakarta Sans typography scale matching the design system.
 ///
 /// Build a [TextTheme] for either brightness via [build]; the resulting theme
 /// is wired into [ThemeData] in lib/app/theme.dart.
 abstract final class AppTypography {
-  /// Returns a [TextTheme] using Inter on top of the given color.
+  /// Returns a [TextTheme] using Plus Jakarta Sans on top of the given color.
   static TextTheme build({required Color textColor}) {
     final base = ThemeData(
       brightness: textColor.computeLuminance() > 0.5
@@ -14,7 +14,7 @@ abstract final class AppTypography {
           : Brightness.light,
     ).textTheme;
 
-    return GoogleFonts.interTextTheme(base).copyWith(
+    return GoogleFonts.plusJakartaSansTextTheme(base).copyWith(
       // Heading: 20–24px semi-bold
       headlineLarge: TextStyle(
         fontSize: 24,
@@ -76,9 +76,11 @@ abstract final class AppTypography {
     );
   }
 
-  /// Slightly emphasised numeric style (price, qty, totals) — see design system.
+  /// Slightly emphasised numeric style for prices, quantities, totals.
+  ///
+  /// Uses tabular figures so columns of numbers align cleanly.
   static TextStyle numeric({required Color color, double size = 16}) {
-    return GoogleFonts.inter(
+    return GoogleFonts.plusJakartaSans(
       fontSize: size,
       fontWeight: FontWeight.w600,
       color: color,
