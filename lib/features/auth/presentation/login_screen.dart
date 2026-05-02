@@ -45,9 +45,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             password: password,
           );
       if (mounted) context.go('/home');
-    } on Exception {
+    } on Exception catch (e) {
       if (mounted) {
-        setState(() => _error = 'Invalid credentials. Please try again.');
+        final msg = e.toString().replaceFirst('Exception: ', '');
+        setState(() => _error = msg.isNotEmpty
+            ? msg
+            : 'Login failed. Check your connection and try again.');
       }
     } finally {
       if (mounted) setState(() => _loading = false);
