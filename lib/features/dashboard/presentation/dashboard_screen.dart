@@ -8,7 +8,9 @@ import 'package:distro_link/features/auth/application/auth_providers.dart';
 import 'package:distro_link/features/orders/application/order_providers.dart';
 import 'package:distro_link/features/orders/domain/order.dart';
 import 'package:distro_link/features/orders/domain/order_draft.dart';
-import 'package:distro_link/features/settings/application/settings_providers.dart';
+import 'package:distro_link/features/shops/application/shop_providers.dart';
+import 'package:distro_link/services/connectivity/connectivity_provider.dart';
+import 'package:distro_link/services/sync/pending_sync_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -23,13 +25,19 @@ class DashboardScreen extends ConsumerWidget {
     final salesmanAsync = ref.watch(currentSalesmanProvider);
     final statsAsync = ref.watch(salesmanStatsProvider);
     final recentAsync = ref.watch(recentOrdersProvider);
-    final isOffline = ref.watch(offlineSimProvider);
+    final isOnline = ref.watch(isOnlineProvider);
+    final pendingCount =
+        ref.watch(pendingSyncCountProvider).asData?.value ?? 0;
+
+    // Pre-warm areas cache so they're available offline when starting an order.
+    ref.listen(areasProvider, (_, _) {});
 
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            if (isOffline) const AppOfflineBanner(pendingCount: 2),
+            if (!isOnline || pendingCount > 0)
+              AppOfflineBanner(pendingCount: pendingCount),
             Expanded(
               child: RefreshIndicator(
                 onRefresh: () async {
@@ -102,10 +110,7 @@ class DashboardScreen extends ConsumerWidget {
 
                     // ── Stats grid ───────────────────────────────────
                     statsAsync.when(
-                      data: (stats) => _StatsGrid(
-                        stats: stats,
-                        isOffline: isOffline,
-                      ),
+                      data: (stats) => _StatsGrid(stats: stats),
                       loading: () => const _StatsGridSkeleton(),
                       error: (e, _) => Text('Error loading stats: $e'),
                     ),
@@ -135,7 +140,9 @@ class DashboardScreen extends ConsumerWidget {
                           const AppChip(label: '📍 Nearby Shops'),
                           const SizedBox(width: 8),
                           AppChip(
-                            label: isOffline ? '⏳ Pending (2)' : '⏳ Pending',
+                            label: pendingCount > 0
+                                ? '⏳ Pending ($pendingCount)'
+                                : '⏳ Pending',
                             onTap: () => context.go('/orders'),
                           ),
                         ],
@@ -167,10 +174,7 @@ class DashboardScreen extends ConsumerWidget {
                           : Column(
                               children: orders
                                   .take(3)
-                                  .map((o) => _OrderRow(
-                                        order: o,
-                                        isOffline: isOffline,
-                                      ))
+                                  .map((o) => _OrderRow(order: o))
                                   .toList(),
                             ),
                       loading: () =>
@@ -189,10 +193,9 @@ class DashboardScreen extends ConsumerWidget {
 }
 
 class _StatsGrid extends StatelessWidget {
-  const _StatsGrid({required this.stats, required this.isOffline});
+  const _StatsGrid({required this.stats});
 
   final SalesmanStats stats;
-  final bool isOffline;
 
   @override
   Widget build(BuildContext context) {
@@ -200,10 +203,10 @@ class _StatsGrid extends StatelessWidget {
     final rev = stats.revenueToday >= 1000
         ? '₹${(stats.revenueToday / 1000).toStringAsFixed(0)}K'
         : fmt.format(stats.revenueToday);
+    final hasPending = stats.pendingSync > 0;
 
     return Column(
       children: [
-        // Full-width blue "Orders Today" card
         Container(
           decoration: BoxDecoration(
             color: AppColors.primary,
@@ -235,10 +238,7 @@ class _StatsGrid extends StatelessWidget {
                   ),
                 ],
               ),
-              const Text(
-                '📋',
-                style: TextStyle(fontSize: 48),
-              ),
+              const Text('📋', style: TextStyle(fontSize: 48)),
             ],
           ),
         ),
@@ -269,9 +269,10 @@ class _StatsGrid extends StatelessWidget {
             Expanded(
               child: AppStatCard(
                 label: 'Pending Sync',
-                value: isOffline ? '${stats.pendingSync}' : '0',
-                footnote: isOffline ? '⚠ No internet' : '✓ All synced',
-                footnoteColor: isOffline
+                value: '${stats.pendingSync}',
+                footnote:
+                    hasPending ? '⚠ No internet' : '✓ All synced',
+                footnoteColor: hasPending
                     ? const Color(0xFFB45309)
                     : AppColors.accent,
               ),
@@ -304,8 +305,7 @@ class _ProgressBar extends StatelessWidget {
       child: LinearProgressIndicator(
         value: value,
         backgroundColor: Theme.of(context).colorScheme.outline,
-        valueColor:
-            const AlwaysStoppedAnimation(AppColors.accent),
+        valueColor: const AlwaysStoppedAnimation(AppColors.accent),
         minHeight: 4,
       ),
     );
@@ -325,15 +325,13 @@ class _StatsGridSkeleton extends StatelessWidget {
 }
 
 class _OrderRow extends StatelessWidget {
-  const _OrderRow({required this.order, required this.isOffline});
+  const _OrderRow({required this.order});
 
   final Order order;
-  final bool isOffline;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isPending = isOffline && order == order; // simulate pending
 
     return AppCard(
       padding: const EdgeInsets.symmetric(
@@ -389,19 +387,15 @@ class _OrderRow extends StatelessWidget {
                   vertical: 2,
                 ),
                 decoration: BoxDecoration(
-                  color: isPending
-                      ? AppColors.orangeLight
-                      : AppColors.greenLight,
+                  color: AppColors.greenLight,
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Text(
-                  isPending ? 'Pending' : 'Synced',
+                child: const Text(
+                  'Synced',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: isPending
-                        ? const Color(0xFF92400E)
-                        : AppColors.accent,
+                    color: AppColors.accent,
                   ),
                 ),
               ),
