@@ -15,11 +15,11 @@ final ordersRepositoryProvider = OrdersRepositoryProvider._();
 final class OrdersRepositoryProvider
     extends
         $FunctionalProvider<
+          AsyncValue<OrdersRepository>,
           OrdersRepository,
-          OrdersRepository,
-          OrdersRepository
+          FutureOr<OrdersRepository>
         >
-    with $Provider<OrdersRepository> {
+    with $FutureModifier<OrdersRepository>, $FutureProvider<OrdersRepository> {
   OrdersRepositoryProvider._()
     : super(
         from: null,
@@ -36,24 +36,17 @@ final class OrdersRepositoryProvider
 
   @$internal
   @override
-  $ProviderElement<OrdersRepository> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $FutureProviderElement<OrdersRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
   @override
-  OrdersRepository create(Ref ref) {
+  FutureOr<OrdersRepository> create(Ref ref) {
     return ordersRepository(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(OrdersRepository value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<OrdersRepository>(value),
-    );
   }
 }
 
-String _$ordersRepositoryHash() => r'be64e7c3a647f46c17bb6ee7c468c0ba1502fdbe';
+String _$ordersRepositoryHash() => r'e0e53895bf716170205d67e7a2f8688294c0c2d0';
 
 @ProviderFor(recentOrders)
 final recentOrdersProvider = RecentOrdersProvider._();
@@ -92,7 +85,7 @@ final class RecentOrdersProvider
   }
 }
 
-String _$recentOrdersHash() => r'5c442bb353848e6aebed9963669ac9951b7ec647';
+String _$recentOrdersHash() => r'eb766152f6a4ee3cd671411da91435350d19eab7';
 
 @ProviderFor(salesmanStats)
 final salesmanStatsProvider = SalesmanStatsProvider._();
@@ -131,7 +124,7 @@ final class SalesmanStatsProvider
   }
 }
 
-String _$salesmanStatsHash() => r'a8f23e777f8c37c83247561d4c36d404063c3246';
+String _$salesmanStatsHash() => r'f3980f6af3d813d95098f6a8a7f695412110f187';
 
 @ProviderFor(analyticsData)
 final analyticsDataProvider = AnalyticsDataFamily._();
@@ -188,7 +181,7 @@ final class AnalyticsDataProvider
   }
 }
 
-String _$analyticsDataHash() => r'cf40bf94771cbd4fd3ec296f7e55c4d6cab4ad97';
+String _$analyticsDataHash() => r'02eaaa540e38e00b0f06e7de922fd6c5c958ffac';
 
 final class AnalyticsDataFamily extends $Family
     with
@@ -249,7 +242,7 @@ final class TopProductsProvider
   }
 }
 
-String _$topProductsHash() => r'1de29e9040a473b3ffbc6a38e302dd9544bdcdda';
+String _$topProductsHash() => r'624c927d194c94ecca99e3aacce142b9a275df1c';
 
 @ProviderFor(lastOrderItemNames)
 final lastOrderItemNamesProvider = LastOrderItemNamesProvider._();
@@ -289,7 +282,53 @@ final class LastOrderItemNamesProvider
 }
 
 String _$lastOrderItemNamesHash() =>
-    r'8097a5dac55370dfbf86642ee1c68c3b8474099b';
+    r'8d5827eb3c2d0e028b6ce845fde6f9f8d7b85dbe';
+
+/// Outbox orders waiting to sync (pending + failed).
+
+@ProviderFor(outboxOrders)
+final outboxOrdersProvider = OutboxOrdersProvider._();
+
+/// Outbox orders waiting to sync (pending + failed).
+
+final class OutboxOrdersProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<OutboxOrder>>,
+          List<OutboxOrder>,
+          FutureOr<List<OutboxOrder>>
+        >
+    with
+        $FutureModifier<List<OutboxOrder>>,
+        $FutureProvider<List<OutboxOrder>> {
+  /// Outbox orders waiting to sync (pending + failed).
+  OutboxOrdersProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'outboxOrdersProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$outboxOrdersHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<OutboxOrder>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<OutboxOrder>> create(Ref ref) {
+    return outboxOrders(ref);
+  }
+}
+
+String _$outboxOrdersHash() => r'8c3c4538be44caa34f646847b5e19b96364a661f';
 
 @ProviderFor(OrderDraftNotifier)
 final orderDraftProvider = OrderDraftNotifierProvider._();
@@ -324,7 +363,7 @@ final class OrderDraftNotifierProvider
 }
 
 String _$orderDraftNotifierHash() =>
-    r'78a2de6c4327f448e383bce62e88b10d9c858263';
+    r'aa8fe51ac1e7b73f4d19cef7d2b578962d1530be';
 
 abstract class _$OrderDraftNotifier extends $Notifier<OrderDraftState> {
   OrderDraftState build();

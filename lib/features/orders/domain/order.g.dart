@@ -21,6 +21,13 @@ _Order _$OrderFromJson(Map<String, dynamic> json) => _Order(
   notes: json['notes'] as String?,
   shopName: json['shop_name'] as String?,
   shopNumber: json['shop_number'] as String?,
+  shopAddress: json['shop_address'] as String?,
+  areaName: json['area_name'] as String?,
+  salesmanName: json['salesman_name'] as String?,
+  salesmanPhone: json['salesman_phone'] as String?,
+  distributorName: json['distributor_name'] as String?,
+  distributorPhone: json['distributor_phone'] as String?,
+  distributorEmail: json['distributor_email'] as String?,
 );
 
 Map<String, dynamic> _$OrderToJson(_Order instance) => <String, dynamic>{
@@ -38,4 +45,11 @@ Map<String, dynamic> _$OrderToJson(_Order instance) => <String, dynamic>{
   'notes': instance.notes,
   'shop_name': instance.shopName,
   'shop_number': instance.shopNumber,
+  'shop_address': instance.shopAddress,
+  'area_name': instance.areaName,
+  'salesman_name': instance.salesmanName,
+  'salesman_phone': instance.salesmanPhone,
+  'distributor_name': instance.distributorName,
+  'distributor_phone': instance.distributorPhone,
+  'distributor_email': instance.distributorEmail,
 };

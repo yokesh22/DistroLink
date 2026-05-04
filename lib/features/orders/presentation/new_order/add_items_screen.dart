@@ -44,7 +44,10 @@ class _AddItemsScreenState extends ConsumerState<AddItemsScreen> {
 
     final hasInvalidRate = draft.items.any((i) => !i.isRateValid());
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (_, _) => context.go('/orders/new/2'),
+      child: Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
@@ -253,6 +256,7 @@ class _AddItemsScreenState extends ConsumerState<AddItemsScreen> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

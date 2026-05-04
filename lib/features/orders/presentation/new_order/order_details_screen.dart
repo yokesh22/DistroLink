@@ -47,7 +47,10 @@ class _OrderDetailsScreenState
     final dateFmt = DateFormat('EEE, dd MMM yyyy');
     final timeFmt = DateFormat('hh:mm a');
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (_, _) => context.go('/orders/new/1'),
+      child: Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
@@ -254,6 +257,7 @@ class _OrderDetailsScreenState
             ),
           ),
         ],
+      ),
       ),
     );
   }

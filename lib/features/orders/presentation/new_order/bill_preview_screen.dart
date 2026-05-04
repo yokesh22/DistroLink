@@ -7,6 +7,8 @@ import 'package:distro_link/features/auth/application/auth_providers.dart';
 import 'package:distro_link/features/orders/application/order_providers.dart';
 import 'package:distro_link/features/orders/domain/order_draft.dart';
 import 'package:distro_link/features/shops/application/shop_providers.dart';
+import 'package:distro_link/services/connectivity/connectivity_provider.dart';
+import 'package:distro_link/services/sync/pending_sync_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -28,30 +30,34 @@ class _BillPreviewScreenState
     setState(() => _submitting = true);
     try {
       final draft = ref.read(orderDraftProvider);
-      final user =
-          await ref.read(currentAppUserProvider.future);
-      final salesman =
-          await ref.read(currentSalesmanProvider.future);
+      final user = await ref.read(currentAppUserProvider.future);
+      final salesman = await ref.read(currentSalesmanProvider.future);
 
       if (user == null || salesman == null) {
         throw Exception('Not authenticated');
       }
 
-      await ref.read(ordersRepositoryProvider).submit(
-            draft: draft,
-            salesmanId: salesman.id,
-            distributorId: user.distributorId,
-          );
+      final isOnline = ref.read(isOnlineProvider);
+      final repo = await ref.read(ordersRepositoryProvider.future);
+      await repo.submit(
+        draft: draft,
+        salesmanId: salesman.id,
+        distributorId: user.distributorId,
+      );
 
       ref.read(orderDraftProvider.notifier).clear();
       ref
         ..invalidate(recentOrdersProvider)
         ..invalidate(salesmanStatsProvider)
-        ..invalidate(recentShopsProvider);
+        ..invalidate(recentShopsProvider)
+        ..invalidate(pendingSyncCountProvider);
 
       if (mounted) {
+        final message = isOnline
+            ? 'Order saved successfully!'
+            : 'Saved offline — will sync when connected';
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Order saved successfully!')),
+          SnackBar(content: Text(message)),
         );
         context.go('/home');
       }
@@ -72,7 +78,10 @@ class _BillPreviewScreenState
     final draft = ref.watch(orderDraftProvider);
     final fmt = DateFormat('EEE, dd MMM yyyy');
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (_, _) => context.go('/orders/new/3'),
+      child: Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
@@ -252,6 +261,7 @@ class _BillPreviewScreenState
             ),
           ),
         ],
+      ),
       ),
     );
   }

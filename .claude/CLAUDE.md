@@ -2,7 +2,7 @@
 
 DistroLink is a Flutter mobile app for FMCG distributors. Salesmen visit shops in their assigned areas, take orders product-by-product, and submit them to **Supabase** (with offline-first capability planned via Isar). Admins manage the catalog (salesmen, shops, products); super admins manage distributors.
 
-> **Active plan: [phase-1-plan.md](./phase-1-plan.md)** — read this first when starting or resuming work. It has the locked-in decisions, the unticked checklist, and the resume instructions.
+> **Active plan: [phase-5-plan.md](./phase-5-plan.md)** — read this first when starting or resuming work. It has the locked-in decisions, the unticked checklist, and the resume instructions. Phases 1–3 are complete; Phase 4 is deferred (per PM 2026-05-04).
 
 ## Stack
 
@@ -12,7 +12,7 @@ DistroLink is a Flutter mobile app for FMCG distributors. Salesmen visit shops i
 | State | Riverpod (`flutter_riverpod` + `riverpod_annotation` codegen) |
 | Routing | `go_router` |
 | Backend | **Supabase** (auth + postgres + storage); Google Sheets is **deprecated** as backend |
-| Offline cache | **Isar** (Phase 2) |
+| Offline cache | **hive_ce** (Isar 3 dropped — incompatible with riverpod_generator 4.x) |
 | Forms | `reactive_forms` |
 | Connectivity | `connectivity_plus` |
 | Codegen | `freezed`, `json_serializable`, `riverpod_generator`, `build_runner` |
@@ -21,7 +21,8 @@ DistroLink is a Flutter mobile app for FMCG distributors. Salesmen visit shops i
 
 ## Memory index — read the relevant file, don't re-derive
 
-- **[phase-1-plan.md](./phase-1-plan.md) — active plan + progress checklist (start here)**
+- **[phase-5-plan.md](./phase-5-plan.md) — active plan + progress checklist (start here)**
+- [phase-1-plan.md](./phase-1-plan.md) · [phase-2-plan.md](./phase-2-plan.md) · [phase-3-plan.md](./phase-3-plan.md) — completed phases
 - **[roadmap.md](./roadmap.md) — full 6-phase path from current state to wireframe-complete**
 - [product.md](./product.md) — what DistroLink is, personas, scope phases
 - [database.md](./database.md) — Supabase schema, columns, FKs, business invariants
@@ -45,11 +46,13 @@ The public living spec lives in [`docs/`](../docs/) (`architecture.md`, `setup.m
 7. **No `setState` in production widgets** except for ephemeral UI state (controllers, animations). State management is Riverpod.
 8. **Don't hand-edit codegen output** (`*.freezed.dart`, `*.g.dart`). Re-run `build_runner` instead.
 
-## Current phase: Phase 1 (Salesman flow)
+## Current phase: Phase 5 (Export & Share) — implementation complete, pending device verification
 
-Implementing: Login (email+password via Supabase Auth) → Salesman Dashboard → 4-step Order Flow (Area+Shop → Details → Items → Bill Preview) → Orders List → Analytics → Settings.
+Phases 1–3 done. Phase 4 (barcode/voice/GPS/SMS-OTP) **deferred** by PM 2026-05-04. Phase 5 implementation done 2026-05-04; pending manual on-device test (WhatsApp share, PDF ₹ glyph).
 
-Out of scope this phase (tracked, not stubbed): Admin module (P2), real Isar offline cache + sync (P3), barcode/voice/SMS OTP/GPS (P4), Excel/PDF/WhatsApp (P5), Super Admin (P6). Full phase ladder in [roadmap.md](./roadmap.md).
+Phase 5 ships: Settings → "Export Excel" / "Export PDF" buttons → dedicated `/settings/export` screen with date range + format toggle → file saved to app docs dir → system share sheet to WhatsApp. See [phase-5-plan.md](./phase-5-plan.md) for the locked-in decisions (notably: `orderId` = `order_number`, `company` = `shop_name`, GST excluded from Excel `Total`, generic share sheet, offline-disabled).
+
+Out of scope: Phase 4 (deferred), `exports` table tracking, admin-side bulk export, Super Admin (P6). Full ladder in [roadmap.md](./roadmap.md).
 
 ## Known stale docs (update before/with the next PR that touches them)
 

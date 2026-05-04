@@ -103,7 +103,7 @@ final class OfflineSimNotifierProvider
 }
 
 String _$offlineSimNotifierHash() =>
-    r'ca9d35c168ca6d3a2346cb1a3d7f6945a2b05086';
+    r'10efbd66d9720014fe3f0ab0b86aa4ab70210469';
 
 /// Debug-only "Simulate Offline" toggle — never persisted.
 

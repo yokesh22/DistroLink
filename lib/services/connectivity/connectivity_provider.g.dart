@@ -93,4 +93,4 @@ final class IsOnlineProvider extends $FunctionalProvider<bool, bool, bool>
   }
 }
 
-String _$isOnlineHash() => r'bfb37a90bb1a7973acf7b8f80a23d9e197cfa47a';
+String _$isOnlineHash() => r'29f00e0de8eb422fc6242805dec98cf5193bfefe';

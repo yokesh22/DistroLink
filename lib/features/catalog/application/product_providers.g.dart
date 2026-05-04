@@ -15,11 +15,13 @@ final productsRepositoryProvider = ProductsRepositoryProvider._();
 final class ProductsRepositoryProvider
     extends
         $FunctionalProvider<
+          AsyncValue<ProductsRepository>,
           ProductsRepository,
-          ProductsRepository,
-          ProductsRepository
+          FutureOr<ProductsRepository>
         >
-    with $Provider<ProductsRepository> {
+    with
+        $FutureModifier<ProductsRepository>,
+        $FutureProvider<ProductsRepository> {
   ProductsRepositoryProvider._()
     : super(
         from: null,
@@ -36,26 +38,18 @@ final class ProductsRepositoryProvider
 
   @$internal
   @override
-  $ProviderElement<ProductsRepository> $createElement(
+  $FutureProviderElement<ProductsRepository> $createElement(
     $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
+  ) => $FutureProviderElement(pointer);
 
   @override
-  ProductsRepository create(Ref ref) {
+  FutureOr<ProductsRepository> create(Ref ref) {
     return productsRepository(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(ProductsRepository value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<ProductsRepository>(value),
-    );
   }
 }
 
 String _$productsRepositoryHash() =>
-    r'ba55fde4c9e0ded22e9e01eb29e4de8e10f9c903';
+    r'a575c7d41c82022733b6ad910a0628bdd351900b';
 
 @ProviderFor(products)
 final productsProvider = ProductsProvider._();
@@ -94,7 +88,7 @@ final class ProductsProvider
   }
 }
 
-String _$productsHash() => r'ecb05bde4a9f7224f0d2491c90287846797720c8';
+String _$productsHash() => r'c3c7dd97a51bc5279a81dd66760537f6b7d7295e';
 
 @ProviderFor(productSearch)
 final productSearchProvider = ProductSearchFamily._();
@@ -151,7 +145,7 @@ final class ProductSearchProvider
   }
 }
 
-String _$productSearchHash() => r'fdf1379d740098eb8ea07a1a98c7606487c4c3c8';
+String _$productSearchHash() => r'25d54d4377e3bfe877fbc9789aedf17986c351c3';
 
 final class ProductSearchFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<Product>>, String> {

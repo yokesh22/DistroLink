@@ -1,6 +1,7 @@
 import 'package:distro_link/app/router.dart';
 import 'package:distro_link/app/theme.dart';
 import 'package:distro_link/features/settings/application/settings_providers.dart';
+import 'package:distro_link/services/sync/sync_worker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -9,6 +10,10 @@ class DistroLinkApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Eagerly start the sync worker.
+    // keepAlive: true — persists for the app lifetime.
+    ref.read<void>(syncWorkerProvider);
+
     final router = ref.watch(routerProvider);
     final themeMode = ref.watch(themeModeProvider);
 

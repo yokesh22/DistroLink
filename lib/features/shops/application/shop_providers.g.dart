@@ -14,8 +14,12 @@ final areasRepositoryProvider = AreasRepositoryProvider._();
 
 final class AreasRepositoryProvider
     extends
-        $FunctionalProvider<AreasRepository, AreasRepository, AreasRepository>
-    with $Provider<AreasRepository> {
+        $FunctionalProvider<
+          AsyncValue<AreasRepository>,
+          AreasRepository,
+          FutureOr<AreasRepository>
+        >
+    with $FutureModifier<AreasRepository>, $FutureProvider<AreasRepository> {
   AreasRepositoryProvider._()
     : super(
         from: null,
@@ -32,32 +36,29 @@ final class AreasRepositoryProvider
 
   @$internal
   @override
-  $ProviderElement<AreasRepository> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $FutureProviderElement<AreasRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
   @override
-  AreasRepository create(Ref ref) {
+  FutureOr<AreasRepository> create(Ref ref) {
     return areasRepository(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(AreasRepository value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<AreasRepository>(value),
-    );
   }
 }
 
-String _$areasRepositoryHash() => r'cb0f0e043e750f68012700a588a806e617be64b9';
+String _$areasRepositoryHash() => r'b31089c8e66a967c595cafdf141a37d95fa6915e';
 
 @ProviderFor(shopsRepository)
 final shopsRepositoryProvider = ShopsRepositoryProvider._();
 
 final class ShopsRepositoryProvider
     extends
-        $FunctionalProvider<ShopsRepository, ShopsRepository, ShopsRepository>
-    with $Provider<ShopsRepository> {
+        $FunctionalProvider<
+          AsyncValue<ShopsRepository>,
+          ShopsRepository,
+          FutureOr<ShopsRepository>
+        >
+    with $FutureModifier<ShopsRepository>, $FutureProvider<ShopsRepository> {
   ShopsRepositoryProvider._()
     : super(
         from: null,
@@ -74,24 +75,17 @@ final class ShopsRepositoryProvider
 
   @$internal
   @override
-  $ProviderElement<ShopsRepository> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $FutureProviderElement<ShopsRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
   @override
-  ShopsRepository create(Ref ref) {
+  FutureOr<ShopsRepository> create(Ref ref) {
     return shopsRepository(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(ShopsRepository value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<ShopsRepository>(value),
-    );
   }
 }
 
-String _$shopsRepositoryHash() => r'3aaf2f684a0a61d1932469b1ab5759b4b7bacc4d';
+String _$shopsRepositoryHash() => r'e519cc320cfc540d5026cda6c7395351bbdc1488';
 
 @ProviderFor(areas)
 final areasProvider = AreasProvider._();
@@ -129,7 +123,7 @@ final class AreasProvider
   }
 }
 
-String _$areasHash() => r'5a59b6d4eb6584d5d3c3192ca3362b64d890526d';
+String _$areasHash() => r'4e25d891ee8671540b00b2a73489399f28fbc35b';
 
 @ProviderFor(shopsByArea)
 final shopsByAreaProvider = ShopsByAreaFamily._();
@@ -185,7 +179,7 @@ final class ShopsByAreaProvider
   }
 }
 
-String _$shopsByAreaHash() => r'e7058a66d07eeb3b67524f5aeb87bd1282c20889';
+String _$shopsByAreaHash() => r'22489ad65d8463f93950164b16577067bd7f16e3';
 
 final class ShopsByAreaFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<Shop>>, String> {
@@ -205,12 +199,8 @@ final class ShopsByAreaFamily extends $Family
   String toString() => r'shopsByAreaProvider';
 }
 
-/// Recent shops for the current salesman (Step 1 shortcut).
-
 @ProviderFor(recentShops)
 final recentShopsProvider = RecentShopsProvider._();
-
-/// Recent shops for the current salesman (Step 1 shortcut).
 
 final class RecentShopsProvider
     extends
@@ -220,7 +210,6 @@ final class RecentShopsProvider
           FutureOr<List<Shop>>
         >
     with $FutureModifier<List<Shop>>, $FutureProvider<List<Shop>> {
-  /// Recent shops for the current salesman (Step 1 shortcut).
   RecentShopsProvider._()
     : super(
         from: null,
@@ -246,4 +235,4 @@ final class RecentShopsProvider
   }
 }
 
-String _$recentShopsHash() => r'95f7e212f5215fc7842db6b95cc750ab65e47ca2';
+String _$recentShopsHash() => r'9704da7f39b3c20f0c64b67f71ac0e0a5151b5e0';

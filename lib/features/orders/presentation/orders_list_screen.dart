@@ -4,7 +4,9 @@ import 'package:distro_link/core/widgets/app_chip.dart';
 import 'package:distro_link/core/widgets/app_offline_banner.dart';
 import 'package:distro_link/features/orders/application/order_providers.dart';
 import 'package:distro_link/features/orders/domain/order.dart';
-import 'package:distro_link/features/settings/application/settings_providers.dart';
+import 'package:distro_link/services/connectivity/connectivity_provider.dart';
+import 'package:distro_link/services/hive/outbox_order.dart';
+import 'package:distro_link/services/sync/pending_sync_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -32,13 +34,17 @@ class _OrdersListScreenState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final ordersAsync = ref.watch(recentOrdersProvider);
-    final isOffline = ref.watch(offlineSimProvider);
+    final outboxAsync = ref.watch(outboxOrdersProvider);
+    final isOnline = ref.watch(isOnlineProvider);
+    final pendingCount =
+        ref.watch(pendingSyncCountProvider).asData?.value ?? 0;
 
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            if (isOffline) const AppOfflineBanner(pendingCount: 2),
+            if (!isOnline || pendingCount > 0)
+              AppOfflineBanner(pendingCount: pendingCount),
             Expanded(
               child: RefreshIndicator(
                 onRefresh: () async =>
@@ -60,12 +66,13 @@ class _OrdersListScreenState
                               children: [
                                 Text(
                                   'Orders',
-                                  style: theme.textTheme.headlineMedium
+                                  style: theme
+                                      .textTheme.headlineMedium
                                       ?.copyWith(
                                     fontWeight: FontWeight.w800,
                                   ),
                                 ),
-                                if (isOffline)
+                                if (pendingCount > 0)
                                   Container(
                                     padding:
                                         const EdgeInsets.symmetric(
@@ -77,9 +84,9 @@ class _OrdersListScreenState
                                       borderRadius:
                                           BorderRadius.circular(20),
                                     ),
-                                    child: const Text(
-                                      '2 Pending Sync',
-                                      style: TextStyle(
+                                    child: Text(
+                                      '$pendingCount Pending Sync',
+                                      style: const TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w700,
                                         color: Color(0xFF92400E),
@@ -137,73 +144,119 @@ class _OrdersListScreenState
                         ),
                       ),
                     ),
-                    ordersAsync.when(
-                      data: (orders) {
-                        final filtered =
-                            _filter(orders, isOffline);
-                        final q = _searchCtrl.text
-                            .trim()
-                            .toLowerCase();
-                        final searched = q.isEmpty
-                            ? filtered
-                            : filtered
-                                .where(
-                                  (o) =>
-                                      (o.shopName ?? '')
-                                          .toLowerCase()
-                                          .contains(q) ||
-                                      o.orderNumber
-                                          .toLowerCase()
-                                          .contains(q),
-                                )
-                                .toList();
 
-                        if (searched.isEmpty) {
-                          return SliverToBoxAdapter(
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.all(32),
-                              child: Center(
-                                child: Text(
-                                  'No orders found.',
-                                  style: theme.textTheme
-                                      .bodyMedium,
+                    // ── Pending Sync filter shows outbox list ─────
+                    if (_filterIndex == 3)
+                      outboxAsync.when(
+                        data: (outbox) {
+                          if (outbox.isEmpty) {
+                            return SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.all(32),
+                                child: Center(
+                                  child: Text(
+                                    'No pending orders.',
+                                    style: theme.textTheme.bodyMedium,
+                                  ),
                                 ),
                               ),
+                            );
+                          }
+                          return SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (_, i) => Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  AppSpacing.screenPadding,
+                                  0,
+                                  AppSpacing.screenPadding,
+                                  AppSpacing.xs,
+                                ),
+                                child: _OutboxOrderCard(
+                                  entry: outbox[i],
+                                ),
+                              ),
+                              childCount: outbox.length,
                             ),
                           );
-                        }
-
-                        return SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (_, i) => Padding(
-                              padding: const EdgeInsets.fromLTRB(
-                                AppSpacing.screenPadding,
-                                0,
-                                AppSpacing.screenPadding,
-                                AppSpacing.xs,
-                              ),
-                              child: _OrderCard(
-                                order: searched[i],
-                                isOffline: isOffline && i < 2,
-                              ),
+                        },
+                        loading: () => const SliverToBoxAdapter(
+                          child: Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(32),
+                              child: CircularProgressIndicator(),
                             ),
-                            childCount: searched.length,
-                          ),
-                        );
-                      },
-                      loading: () => const SliverToBoxAdapter(
-                        child: Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(32),
-                            child: CircularProgressIndicator(),
                           ),
                         ),
+                        error: (e, _) => SliverToBoxAdapter(
+                          child: Center(child: Text('Error: $e')),
+                        ),
+                      )
+                    else
+                      // ── All / Today / This Week ─────────────────
+                      ordersAsync.when(
+                        data: (orders) {
+                          final filtered = _filter(orders);
+                          final q = _searchCtrl.text
+                              .trim()
+                              .toLowerCase();
+                          final searched = q.isEmpty
+                              ? filtered
+                              : filtered
+                                  .where(
+                                    (o) =>
+                                        (o.shopName ?? '')
+                                            .toLowerCase()
+                                            .contains(q) ||
+                                        o.orderNumber
+                                            .toLowerCase()
+                                            .contains(q),
+                                  )
+                                  .toList();
+
+                          if (searched.isEmpty) {
+                            return SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.all(32),
+                                child: Center(
+                                  child: Text(
+                                    'No orders found.',
+                                    style:
+                                        theme.textTheme.bodyMedium,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+
+                          return SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (_, i) => Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  AppSpacing.screenPadding,
+                                  0,
+                                  AppSpacing.screenPadding,
+                                  AppSpacing.xs,
+                                ),
+                                child: _OrderCard(
+                                  order: searched[i],
+                                ),
+                              ),
+                              childCount: searched.length,
+                            ),
+                          );
+                        },
+                        loading: () => const SliverToBoxAdapter(
+                          child: Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(32),
+                              child: CircularProgressIndicator(),
+                            ),
+                          ),
+                        ),
+                        error: (e, _) => SliverToBoxAdapter(
+                          child: Center(child: Text('Error: $e')),
+                        ),
                       ),
-                      error: (e, _) => SliverToBoxAdapter(
-                        child: Center(child: Text('Error: $e')),
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -214,7 +267,7 @@ class _OrdersListScreenState
     );
   }
 
-  List<Order> _filter(List<Order> orders, bool isOffline) {
+  List<Order> _filter(List<Order> orders) {
     if (_filterIndex == 0) return orders;
     final now = DateTime.now();
     if (_filterIndex == 1) {
@@ -233,16 +286,14 @@ class _OrdersListScreenState
           .where((o) => o.orderDate.isAfter(weekAgo))
           .toList();
     }
-    // Pending Sync — simulated when offline
-    return isOffline ? orders.take(2).toList() : [];
+    return orders;
   }
 }
 
 class _OrderCard extends StatelessWidget {
-  const _OrderCard({required this.order, required this.isOffline});
+  const _OrderCard({required this.order});
 
   final Order order;
-  final bool isOffline;
 
   @override
   Widget build(BuildContext context) {
@@ -253,11 +304,97 @@ class _OrderCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
+        border: Border.all(color: theme.colorScheme.outline),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 4,
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    order.shopName ?? 'Shop',
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${order.orderNumber} · '
+                    '${DateFormat('dd MMM').format(order.orderDate)}',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '₹${order.grandTotal.toStringAsFixed(0)}',
+                  style: theme.textTheme.bodyLarge
+                      ?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.greenLight,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'Synced',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.accent,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _OutboxOrderCard extends StatelessWidget {
+  const _OutboxOrderCard({required this.entry});
+
+  final OutboxOrder entry;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isFailed = entry.status == OutboxStatus.failed;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 2),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
         border: Border.all(
-          color: isOffline
-              ? const Color(0xFFFDE68A)
-              : theme.colorScheme.outline,
-          width: isOffline ? 1.5 : 1,
+          color: isFailed
+              ? const Color(0xFFFCA5A5)
+              : const Color(0xFFFDE68A),
+          width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
@@ -272,19 +409,16 @@ class _OrderCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment:
-                  MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        order.shopName ?? 'Shop',
-                        style: theme.textTheme.bodyLarge
-                            ?.copyWith(
+                        entry.shopName,
+                        style: theme.textTheme.bodyLarge?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
                         maxLines: 1,
@@ -292,21 +426,22 @@ class _OrderCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${order.orderNumber} · '
-                        '${DateFormat('dd MMM').format(order.orderDate)}',
+                        '${entry.orderNumber} · ${entry.orderDate}',
                         style: theme.textTheme.bodySmall,
                       ),
-                      if (isOffline) ...[
-                        const SizedBox(height: 4),
-                        const Text(
-                          '⚠ Saved offline · will sync when online',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF92400E),
-                          ),
+                      const SizedBox(height: 4),
+                      Text(
+                        isFailed
+                            ? '✗ Sync failed · will retry'
+                            : '⚠ Saved offline · will sync when online',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: isFailed
+                              ? const Color(0xFFB91C1C)
+                              : const Color(0xFF92400E),
                         ),
-                      ],
+                      ),
                     ],
                   ),
                 ),
@@ -314,7 +449,7 @@ class _OrderCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '₹${order.grandTotal.toStringAsFixed(0)}',
+                      '₹${entry.grandTotal.toStringAsFixed(0)}',
                       style: theme.textTheme.bodyLarge
                           ?.copyWith(fontWeight: FontWeight.w700),
                     ),
@@ -325,19 +460,19 @@ class _OrderCard extends StatelessWidget {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: isOffline
-                            ? AppColors.orangeLight
-                            : AppColors.greenLight,
+                        color: isFailed
+                            ? const Color(0xFFFEE2E2)
+                            : AppColors.orangeLight,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        isOffline ? 'Pending' : 'Synced',
+                        isFailed ? 'Failed' : 'Pending',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
-                          color: isOffline
-                              ? const Color(0xFF92400E)
-                              : AppColors.accent,
+                          color: isFailed
+                              ? const Color(0xFFB91C1C)
+                              : const Color(0xFF92400E),
                         ),
                       ),
                     ),

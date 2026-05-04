@@ -6,13 +6,18 @@ import 'package:distro_link/features/orders/domain/order_draft.dart';
 import 'package:distro_link/features/orders/domain/order_type.dart';
 import 'package:distro_link/features/shops/domain/area.dart';
 import 'package:distro_link/features/shops/domain/shop.dart';
+import 'package:distro_link/services/hive/hive_provider.dart';
+import 'package:distro_link/services/hive/outbox_order.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'order_providers.g.dart';
 
 @Riverpod(keepAlive: true)
-OrdersRepository ordersRepository(Ref ref) =>
-    OrdersRepository(ref.watch(supabaseClientProvider));
+Future<OrdersRepository> ordersRepository(Ref ref) async {
+  final client = ref.watch(supabaseClientProvider);
+  final hive = await ref.watch(hiveServiceProvider.future);
+  return OrdersRepository(client, hive);
+}
 
 // ─── Read providers ───────────────────────────────────────────────
 
@@ -20,16 +25,16 @@ OrdersRepository ordersRepository(Ref ref) =>
 Future<List<Order>> recentOrders(Ref ref) async {
   final salesman = await ref.watch(currentSalesmanProvider.future);
   if (salesman == null) return [];
-  return ref
-      .watch(ordersRepositoryProvider)
-      .recentForSalesman(salesman.id);
+  final repo = await ref.watch(ordersRepositoryProvider.future);
+  return repo.recentForSalesman(salesman.id);
 }
 
 @riverpod
 Future<SalesmanStats> salesmanStats(Ref ref) async {
   final salesman = await ref.watch(currentSalesmanProvider.future);
   if (salesman == null) return SalesmanStats.empty;
-  return ref.watch(ordersRepositoryProvider).salesmanStats(salesman.id);
+  final repo = await ref.watch(ordersRepositoryProvider.future);
+  return repo.salesmanStats(salesman.id);
 }
 
 @riverpod
@@ -40,29 +45,31 @@ Future<AnalyticsData> analyticsData(
 }) async {
   final salesman = await ref.watch(currentSalesmanProvider.future);
   if (salesman == null) return AnalyticsData.empty;
-  return ref.watch(ordersRepositoryProvider).analyticsForSalesman(
-        salesman.id,
-        year: year,
-        month: month,
-      );
+  final repo = await ref.watch(ordersRepositoryProvider.future);
+  return repo.analyticsForSalesman(salesman.id, year: year, month: month);
 }
 
 @riverpod
 Future<List<TopProduct>> topProducts(Ref ref) async {
   final salesman = await ref.watch(currentSalesmanProvider.future);
   if (salesman == null) return [];
-  return ref
-      .watch(ordersRepositoryProvider)
-      .topProductsForSalesman(salesman.id);
+  final repo = await ref.watch(ordersRepositoryProvider.future);
+  return repo.topProductsForSalesman(salesman.id);
 }
 
 @riverpod
 Future<List<String>> lastOrderItemNames(Ref ref) async {
   final salesman = await ref.watch(currentSalesmanProvider.future);
   if (salesman == null) return [];
-  return ref
-      .watch(ordersRepositoryProvider)
-      .lastOrderItemNames(salesman.id);
+  final repo = await ref.watch(ordersRepositoryProvider.future);
+  return repo.lastOrderItemNames(salesman.id);
+}
+
+/// Outbox orders waiting to sync (pending + failed).
+@riverpod
+Future<List<OutboxOrder>> outboxOrders(Ref ref) async {
+  final repo = await ref.watch(ordersRepositoryProvider.future);
+  return repo.allPendingOrFailed();
 }
 
 // ─── Order draft (mutable, 4-step flow) ──────────────────────────

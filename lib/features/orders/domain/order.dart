@@ -19,9 +19,19 @@ abstract class Order with _$Order {
     @JsonKey(name: 'created_at') required DateTime createdAt,
     // Optional fields
     String? notes,
-    // Joined from shops — populated by repo queries that include a shop join
+    // Joined from shops
     @JsonKey(name: 'shop_name') String? shopName,
     @JsonKey(name: 'shop_number') String? shopNumber,
+    @JsonKey(name: 'shop_address') String? shopAddress,
+    // Joined from areas
+    @JsonKey(name: 'area_name') String? areaName,
+    // Joined from salesmen
+    @JsonKey(name: 'salesman_name') String? salesmanName,
+    @JsonKey(name: 'salesman_phone') String? salesmanPhone,
+    // Joined from distributors
+    @JsonKey(name: 'distributor_name') String? distributorName,
+    @JsonKey(name: 'distributor_phone') String? distributorPhone,
+    @JsonKey(name: 'distributor_email') String? distributorEmail,
   }) = _Order;
 
   factory Order.fromJson(Map<String, dynamic> json) => _$OrderFromJson(json);

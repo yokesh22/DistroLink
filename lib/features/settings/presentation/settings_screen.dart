@@ -3,8 +3,11 @@ import 'package:distro_link/core/theme/app_spacing.dart';
 import 'package:distro_link/core/widgets/app_button.dart';
 import 'package:distro_link/core/widgets/app_card.dart';
 import 'package:distro_link/features/auth/application/auth_providers.dart';
+import 'package:distro_link/features/exports/application/export_controller.dart';
 import 'package:distro_link/features/settings/application/settings_providers.dart';
-import 'package:flutter/foundation.dart';
+import 'package:distro_link/services/connectivity/connectivity_provider.dart';
+import 'package:distro_link/services/sync/pending_sync_provider.dart';
+import 'package:distro_link/services/sync/sync_worker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -18,8 +21,10 @@ class SettingsScreen extends ConsumerWidget {
     final userAsync = ref.watch(currentAppUserProvider);
     final salesmanAsync = ref.watch(currentSalesmanProvider);
     final themeMode = ref.watch(themeModeProvider);
-    final isOffline = ref.watch(offlineSimProvider);
     final isDark = themeMode == ThemeMode.dark;
+    final isOnline = ref.watch(isOnlineProvider);
+    final pendingCount =
+        ref.watch(pendingSyncCountProvider).asData?.value ?? 0;
 
     return Scaffold(
       body: SafeArea(
@@ -99,7 +104,7 @@ class SettingsScreen extends ConsumerWidget {
                   Row(
                     children: [
                       Text(
-                        isOffline ? '📶' : '✅',
+                        isOnline && pendingCount == 0 ? '✅' : '📶',
                         style: const TextStyle(fontSize: 22),
                       ),
                       const SizedBox(width: 10),
@@ -109,19 +114,23 @@ class SettingsScreen extends ConsumerWidget {
                               CrossAxisAlignment.start,
                           children: [
                             Text(
-                              isOffline
-                                  ? 'Offline — 2 orders pending sync'
-                                  : 'All synced · Last sync 2 min ago',
-                              style:
-                                  theme.textTheme.bodyMedium?.copyWith(
+                              !isOnline
+                                  ? 'Offline — $pendingCount orders'
+                                      ' pending sync'
+                                  : pendingCount > 0
+                                      ? '$pendingCount orders pending'
+                                          ' sync'
+                                      : 'All synced',
+                              style: theme.textTheme.bodyMedium
+                                  ?.copyWith(
                                 fontWeight: FontWeight.w700,
-                                color: isOffline
-                                    ? const Color(0xFF92400E)
-                                    : const Color(0xFF065F46),
+                                color: isOnline && pendingCount == 0
+                                    ? const Color(0xFF065F46)
+                                    : const Color(0xFF92400E),
                               ),
                             ),
                             Text(
-                              isOffline
+                              !isOnline
                                   ? 'Orders saved locally. '
                                       'Will sync automatically.'
                                   : 'Orders sync automatically '
@@ -133,12 +142,14 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  if (!isOffline) ...[
+                  if (isOnline) ...[
                     const SizedBox(height: AppSpacing.xs),
                     AppButton(
                       label: 'Force Sync Now',
                       variant: AppButtonVariant.secondary,
-                      onPressed: () {},
+                      onPressed: () => ref
+                          .read(syncWorkerProvider.notifier)
+                          .drain(),
                     ),
                   ],
                 ],
@@ -168,27 +179,11 @@ class SettingsScreen extends ConsumerWidget {
                   .toggle(),
             ),
 
-            // ── Offline simulation (debug only) ──────────────────
-            if (kDebugMode)
-              _PrefRow(
-                label: 'Simulate Offline',
-                subtitle: 'Debug: test offline UI states',
-                value: isOffline,
-                onChanged: (v) => ref
-                    .read(offlineSimProvider.notifier)
-                    .simulating = v,
-              ),
-
             // ── Other preferences (cosmetic Phase 1) ────────────
             const _PrefRow(
               label: 'Auto-fill last shop',
               subtitle: 'Pre-select on new order',
               value: true,
-            ),
-            const _PrefRow(
-              label: 'SMS OTP auto-read',
-              subtitle: 'Skip manual OTP entry (Phase 4)',
-              value: false,
             ),
 
             const Divider(height: AppSpacing.lg),
@@ -204,16 +199,36 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.xs),
-            const AppButton(
+            AppButton(
               label: '↓ Export to Excel (.xlsx)',
               variant: AppButtonVariant.secondary,
-              onPressed: null, // Phase 5
+              onPressed: isOnline
+                  ? () => context.push(
+                        '/settings/export',
+                        extra: ExportFormat.excel,
+                      )
+                  : null,
             ),
+            if (!isOnline) ...[
+              const SizedBox(height: 4),
+              Text(
+                'Export needs internet — connect to'
+                ' Wi-Fi or mobile data',
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(color: AppColors.warning),
+                textAlign: TextAlign.center,
+              ),
+            ],
             const SizedBox(height: AppSpacing.xs),
-            const AppButton(
+            AppButton(
               label: '↓ Export PDF Report',
               variant: AppButtonVariant.secondary,
-              onPressed: null, // Phase 5
+              onPressed: isOnline
+                  ? () => context.push(
+                        '/settings/export',
+                        extra: ExportFormat.pdf,
+                      )
+                  : null,
             ),
 
             const Divider(height: AppSpacing.lg),

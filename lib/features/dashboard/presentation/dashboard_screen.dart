@@ -5,6 +5,7 @@ import 'package:distro_link/core/widgets/app_chip.dart';
 import 'package:distro_link/core/widgets/app_offline_banner.dart';
 import 'package:distro_link/core/widgets/app_stat_card.dart';
 import 'package:distro_link/features/auth/application/auth_providers.dart';
+import 'package:distro_link/features/exports/application/export_controller.dart';
 import 'package:distro_link/features/orders/application/order_providers.dart';
 import 'package:distro_link/features/orders/domain/order.dart';
 import 'package:distro_link/features/orders/domain/order_draft.dart';
@@ -124,6 +125,19 @@ class DashboardScreen extends ConsumerWidget {
                       },
                       icon: const Icon(Icons.add, size: 22),
                       label: const Text('Start New Order'),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+
+                    // ── Export report button ──────────────────────────
+                    OutlinedButton.icon(
+                      onPressed: isOnline
+                          ? () => context.push(
+                                '/settings/export',
+                                extra: ExportFormat.excel,
+                              )
+                          : null,
+                      icon: const Icon(Icons.download_rounded, size: 18),
+                      label: const Text('Export Report'),
                     ),
                     const SizedBox(height: AppSpacing.sm),
 

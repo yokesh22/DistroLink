@@ -2,17 +2,17 @@
 
 The full path from "scaffold" to "every wireframe screen + every feature working end-to-end". Each phase ships independent, deployable value. Detailed checklists live in `phase-<N>-plan.md` and are created when that phase begins.
 
-> **Currently in flight: Phase 1.** See [phase-1-plan.md](./phase-1-plan.md).
+> **Currently in flight: Phase 5 (planned, not yet implemented).** See [phase-5-plan.md](./phase-5-plan.md). Phase 4 is **deferred** — Phase 5 was prioritised by the PM (2026-05-04).
 
 ## Phase ladder at a glance
 
 | # | Phase | Status | Detailed plan |
 |---|---|---|---|
-| 1 | Salesman Core | **In planning** | [phase-1-plan.md](./phase-1-plan.md) |
-| 2 | Admin Module | Not started | _(create `phase-2-plan.md` when starting)_ |
-| 3 | Offline-First | Not started | _(create `phase-3-plan.md` when starting)_ |
-| 4 | Field Productivity | Not started | _(create `phase-4-plan.md` when starting)_ |
-| 5 | Export & Share | Not started | _(create `phase-5-plan.md` when starting)_ |
+| 1 | Salesman Core | ✅ Done | [phase-1-plan.md](./phase-1-plan.md) |
+| 2 | Admin Module | ✅ Done | [phase-2-plan.md](./phase-2-plan.md) |
+| 3 | Offline-First | ✅ Done | [phase-3-plan.md](./phase-3-plan.md) |
+| 4 | Field Productivity | ⏸️ Deferred (skipped by PM 2026-05-04) | _(plan to be drafted when prioritised)_ |
+| 5 | Export & Share | **In planning — implementation deferred** | [phase-5-plan.md](./phase-5-plan.md) |
 | 6 | Super Admin & Multi-Tenant | Not started | _(create `phase-6-plan.md` when starting)_ |
 
 Polish (bundled fonts, perf, accessibility, error tracking, store prep, i18n) is part of every phase's Done bar — **not** a separate phase.
@@ -63,7 +63,9 @@ Polish (bundled fonts, perf, accessibility, error tracking, store prep, i18n) is
 
 ---
 
-## Phase 4 — Field Productivity
+## Phase 4 — Field Productivity ⏸️ Deferred
+
+**Status:** Deferred by PM 2026-05-04 in favour of Phase 5. Resume when the field team asks for typing-speed improvements.
 
 **Goal:** Cut typing on the hot path even further. The wireframe has these icons / cards already drawn — Phase 4 wires them up.
 
@@ -84,19 +86,23 @@ Polish (bundled fonts, perf, accessibility, error tracking, store prep, i18n) is
 
 ## Phase 5 — Export & Share
 
-**Goal:** Orders flow back into the distributor's existing back-office workflow (Excel) and the salesman can share a bill from the shop.
+**Status:** In planning, implementation deferred. Detailed plan: [phase-5-plan.md](./phase-5-plan.md). Plan source: `~/.claude/plans/clever-beaming-sloth.md` (approved 2026-05-04).
 
-**Ships these wireframe affordances:**
-- Settings → "Export to Excel (.xlsx)" → `excel` package
-- Settings → "Export PDF Report" → `pdf` package
-- Step 4 → "📤 WhatsApp" → generates PDF + `share_plus` to WhatsApp
-- `exports` table tracking (status: pending → done | failed) — already in schema
+**Goal:** Salesmen can export their own orders to Excel or PDF for any date range and share via WhatsApp from the field. (Admin-side bulk export is a future extension.)
 
-**Dependencies:** Phase 1 (orders exist). Phase 2 unlocks admin-side bulk export. Independent of Phase 3 / 4.
+**Locked-in scope (from PM 2026-05-04):**
+- Excel: salesman picks from-date / to-date (single day works); columns `orderId | date | area | company | itemname | item code | MRP | Rate | Qty | Total`. One row per order_item.
+- `orderId` = `orders.order_number` (human). `company` = **`shops.shop_name`** (the customer/shop, not a product brand — there is no brand field in the schema).
+- PDF: same date range; multi-page document, **one page per order**, layout mirrors `bill_preview_screen.dart`.
+- File saved to app docs dir, then handed to the system share sheet (`share_plus` `Share.shareXFiles`) so the user picks WhatsApp themselves.
+- Both export buttons disabled when offline; helper text "Export needs internet — connect to Wi-Fi or mobile data".
+- Dedicated screen at `/settings/export` (top-level push route, no bottom nav). Settings buttons push there with format pre-selected.
 
-**Open questions:** Excel export scope — single salesman / all salesmen / one distributor? PDF bill template — what fields, what branding? Need to align with user's existing back-office format.
+**Out of scope this phase:** `exports` table audit tracking · admin-side bulk export · WhatsApp deeplink (use generic share sheet) · Step 4 "WhatsApp" share button (the `bill_preview_screen.dart` placeholder; tracked separately if PM wants per-order share inline).
 
-**Done bar:** click export → `.xlsx` lands on device with last-N-days orders matching what's in Supabase; share PDF from Step 4 → opens WhatsApp with attached bill.
+**Dependencies:** Phase 1 (orders exist), Phase 3 (online check via `isOnlineProvider`). Independent of Phase 2 / 4.
+
+**Done bar:** salesman picks today's date → Excel lands on device with rows matching Supabase → share sheet opens → file attaches in WhatsApp. Same for PDF with one page per order. Offline → buttons disabled with banner. ₹ glyph verified on Android and iOS PDFs.
 
 ---
 

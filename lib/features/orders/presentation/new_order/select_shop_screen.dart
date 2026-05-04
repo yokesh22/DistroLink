@@ -8,7 +8,6 @@ import 'package:distro_link/features/shops/application/shop_providers.dart';
 import 'package:distro_link/features/shops/domain/area.dart';
 import 'package:distro_link/features/shops/domain/shop.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -40,17 +39,14 @@ class _SelectShopScreenState extends ConsumerState<SelectShopScreen> {
         : null;
     final recentAsync = ref.watch(recentShopsProvider);
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (_, _) => context.go('/home'),
+      child: Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go('/orders');
-            }
-          },
+          onPressed: () => context.go('/home'),
         ),
         title: const Text('New Order'),
         actions: [
@@ -161,7 +157,8 @@ class _SelectShopScreenState extends ConsumerState<SelectShopScreen> {
                                 .toList();
                         debugPrint(
                           'UI shops for area $_selectedAreaId -> '
-                          'total: ${shops.length}, filtered: ${filtered.length}, query: "$q"',
+                          'total: ${shops.length}, '
+                          'filtered: ${filtered.length}, query: "$q"',
                         );
                         if (shops.isEmpty) {
                           return Text(
@@ -252,6 +249,7 @@ class _SelectShopScreenState extends ConsumerState<SelectShopScreen> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

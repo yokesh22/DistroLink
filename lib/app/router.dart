@@ -1,13 +1,29 @@
+import 'package:distro_link/features/admin/presentation/admin_dashboard_screen.dart';
+import 'package:distro_link/features/admin/presentation/admin_shell.dart';
 import 'package:distro_link/features/analytics/presentation/analytics_screen.dart';
 import 'package:distro_link/features/auth/application/auth_providers.dart';
+import 'package:distro_link/features/auth/domain/app_user.dart';
+import 'package:distro_link/features/auth/presentation/admin/add_edit_salesman_screen.dart';
+import 'package:distro_link/features/auth/presentation/admin/salesmen_list_screen.dart';
 import 'package:distro_link/features/auth/presentation/login_screen.dart';
+import 'package:distro_link/features/catalog/domain/product.dart';
+import 'package:distro_link/features/catalog/presentation/admin/add_edit_product_screen.dart';
+import 'package:distro_link/features/catalog/presentation/admin/products_list_screen.dart';
 import 'package:distro_link/features/dashboard/presentation/dashboard_screen.dart';
+import 'package:distro_link/features/exports/application/export_controller.dart';
+import 'package:distro_link/features/exports/presentation/export_screen.dart';
 import 'package:distro_link/features/orders/presentation/new_order/add_items_screen.dart';
 import 'package:distro_link/features/orders/presentation/new_order/bill_preview_screen.dart';
 import 'package:distro_link/features/orders/presentation/new_order/order_details_screen.dart';
 import 'package:distro_link/features/orders/presentation/new_order/select_shop_screen.dart';
 import 'package:distro_link/features/orders/presentation/orders_list_screen.dart';
 import 'package:distro_link/features/settings/presentation/settings_screen.dart';
+import 'package:distro_link/features/shops/domain/area.dart';
+import 'package:distro_link/features/shops/domain/shop.dart';
+import 'package:distro_link/features/shops/presentation/admin/add_edit_area_screen.dart';
+import 'package:distro_link/features/shops/presentation/admin/add_edit_shop_screen.dart';
+import 'package:distro_link/features/shops/presentation/admin/areas_list_screen.dart';
+import 'package:distro_link/features/shops/presentation/admin/shops_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -27,13 +43,11 @@ GoRouter router(Ref ref) {
         path: '/login',
         builder: (_, _) => const LoginScreen(),
       ),
-      GoRoute(
-        path: '/admin-not-yet',
-        builder: (_, _) => const _AdminPlaceholder(),
-      ),
+
+      // ── Salesman shell ───────────────────────────────────────────
       ShellRoute(
         builder: (context, state, child) =>
-            _AppShell(location: state.matchedLocation, child: child),
+            _SalesmanShell(location: state.matchedLocation, child: child),
         routes: [
           GoRoute(
             path: '/home',
@@ -53,6 +67,8 @@ GoRouter router(Ref ref) {
           ),
         ],
       ),
+
+      // ── New order flow (full-screen steps) ───────────────────────
       GoRoute(
         path: '/orders/new/1',
         builder: (_, _) => const SelectShopScreen(),
@@ -69,15 +85,92 @@ GoRouter router(Ref ref) {
         path: '/orders/new/4',
         builder: (_, _) => const BillPreviewScreen(),
       ),
+
+      // ── Export (full-screen, no bottom nav) ──────────────────────
+      GoRoute(
+        path: '/settings/export',
+        builder: (_, state) => ExportScreen(
+          initialFormat:
+              (state.extra as ExportFormat?) ?? ExportFormat.excel,
+        ),
+      ),
+
+      // ── Admin shell ──────────────────────────────────────────────
+      ShellRoute(
+        builder: (context, state, child) =>
+            AdminShell(location: state.matchedLocation, child: child),
+        routes: [
+          GoRoute(
+            path: '/admin/dashboard',
+            builder: (_, _) => const AdminDashboardScreen(),
+          ),
+          GoRoute(
+            path: '/admin/salesmen',
+            builder: (_, _) => const AdminSalesmenListScreen(),
+          ),
+          GoRoute(
+            path: '/admin/shops',
+            builder: (_, _) => const AdminShopsListScreen(),
+          ),
+          GoRoute(
+            path: '/admin/products',
+            builder: (_, _) => const AdminProductsListScreen(),
+          ),
+        ],
+      ),
+
+      // ── Admin push routes (no bottom nav) ────────────────────────
+      GoRoute(
+        path: '/admin/salesmen/add',
+        builder: (_, _) => const AddEditSalesmanScreen(),
+      ),
+      GoRoute(
+        path: '/admin/salesmen/:id/edit',
+        builder: (_, state) =>
+            AddEditSalesmanScreen(salesman: state.extra as Salesman?),
+      ),
+      GoRoute(
+        path: '/admin/areas',
+        builder: (_, _) => const AreasListScreen(),
+      ),
+      GoRoute(
+        path: '/admin/areas/add',
+        builder: (_, _) => const AddEditAreaScreen(),
+      ),
+      GoRoute(
+        path: '/admin/areas/:id/edit',
+        builder: (_, state) =>
+            AddEditAreaScreen(area: state.extra as Area?),
+      ),
+      GoRoute(
+        path: '/admin/shops/add',
+        builder: (_, _) => const AddEditShopScreen(),
+      ),
+      GoRoute(
+        path: '/admin/shops/:id/edit',
+        builder: (_, state) =>
+            AddEditShopScreen(shop: state.extra as Shop?),
+      ),
+      GoRoute(
+        path: '/admin/products/add',
+        builder: (_, _) => const AddEditProductScreen(),
+      ),
+      GoRoute(
+        path: '/admin/products/:id/edit',
+        builder: (_, state) =>
+            AddEditProductScreen(product: state.extra as Product?),
+      ),
     ],
   );
 }
 
-// ─── Auth-aware redirect ──────────────────────────────────────────
+// ─── Auth + role-aware redirect ───────────────────────────────────
 
 class _RouterNotifier extends ChangeNotifier {
   _RouterNotifier(this._ref) {
-    _ref.listen(authStateStreamProvider, (_, _) => notifyListeners());
+    _ref
+      ..listen(authStateStreamProvider, (_, _) => notifyListeners())
+      ..listen(currentAppUserProvider, (_, _) => notifyListeners());
   }
 
   final Ref _ref;
@@ -90,15 +183,44 @@ class _RouterNotifier extends ChangeNotifier {
     if (!isLoggedIn) {
       return path == '/login' ? null : '/login';
     }
-    if (path == '/login') return '/home';
+
+    final userAsync = _ref.read(currentAppUserProvider);
+    final user = userAsync.asData?.value;
+
+    // Still fetching — stay put to avoid premature redirect.
+    if (userAsync.isLoading || (user == null && !userAsync.hasError)) {
+      return null;
+    }
+
+    if (user == null) return path == '/login' ? null : '/login';
+
+    final isAdmin = user.role == UserRole.admin ||
+        user.role == UserRole.superAdmin;
+    final isSalesman = user.role == UserRole.salesman;
+
+    if (path == '/login') {
+      return isAdmin ? '/admin/dashboard' : '/home';
+    }
+
+    if (isAdmin && _isSalesmanPath(path)) return '/admin/dashboard';
+    if (isSalesman && _isAdminPath(path)) return '/home';
+
     return null;
   }
+
+  bool _isSalesmanPath(String path) =>
+      path.startsWith('/home') ||
+      path.startsWith('/orders') ||
+      path.startsWith('/analytics') ||
+      path.startsWith('/settings');
+
+  bool _isAdminPath(String path) => path.startsWith('/admin');
 }
 
-// ─── Bottom nav shell ─────────────────────────────────────────────
+// ─── Salesman bottom nav shell ────────────────────────────────────
 
-class _AppShell extends StatelessWidget {
-  const _AppShell({required this.location, required this.child});
+class _SalesmanShell extends StatelessWidget {
+  const _SalesmanShell({required this.location, required this.child});
 
   final String location;
   final Widget child;
@@ -156,44 +278,6 @@ class _AppShell extends StatelessWidget {
             label: 'Settings',
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ─── Admin placeholder ────────────────────────────────────────────
-
-class _AdminPlaceholder extends StatelessWidget {
-  const _AdminPlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('DistroLink')),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.construction_rounded,
-                  size: 64, color: Colors.grey),
-              const SizedBox(height: 16),
-              Text(
-                'Admin module coming soon',
-                style: Theme.of(context).textTheme.titleLarge,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Phase 2 will unlock the admin dashboard, '
-                'salesmen, shops and products.',
-                style: Theme.of(context).textTheme.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
