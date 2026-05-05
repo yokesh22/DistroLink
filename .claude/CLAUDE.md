@@ -64,3 +64,11 @@ Out of scope: Phase 4 (deferred), `exports` table tracking, admin-side bulk expo
 ## Design source
 
 Canonical design: the Claude Design handoff bundle (`DistroLink Wireframes.html`) — re-fetch via the design URL the user shared. The user iterated to: brand palette (`#2563EB` blue, `#10B981` green, `#0F172A` dark navy), Plus Jakarta Sans, full business-model alignment with the schema in [database.md](./database.md). Don't redesign without checking back.
+
+## Reference Documents
+
+When needed, refer to:
+
+- docs/architecture.md for system design
+- docs/design-system.md for UI consistency
+- docs/decisions/ for architectural decisions
