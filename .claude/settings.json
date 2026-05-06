@@ -17,5 +17,10 @@
       "Bash(dart format:*)",
       "Bash(dart fix:*)"
     ]
+  },
+  "enabledPlugins": {
+    "playwright@claude-plugins-official": true,
+    "supabase@claude-plugins-official": true,
+    "chrome-devtools-mcp@claude-plugins-official": true
   }
 }
