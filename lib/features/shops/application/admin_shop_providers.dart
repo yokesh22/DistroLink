@@ -23,14 +23,20 @@ class AdminShopsList extends _$AdminShopsList {
   Future<void> create({
     required String areaId,
     required String shopName,
-    required String shopNumber,
     required String shopAddress,
+    String? shopNumber,
+    String? shopOwner,
+    String? phoneNo,
+    String? gstin,
   }) async {
     await ref.read(adminShopsRepositoryProvider).create(
           areaId: areaId,
           shopName: shopName,
-          shopNumber: shopNumber,
           shopAddress: shopAddress,
+          shopNumber: shopNumber,
+          shopOwner: shopOwner,
+          phoneNo: phoneNo,
+          gstin: gstin,
         );
     ref
       ..invalidateSelf()
@@ -42,15 +48,21 @@ class AdminShopsList extends _$AdminShopsList {
     required String id,
     required String areaId,
     required String shopName,
-    required String shopNumber,
     required String shopAddress,
+    String? shopNumber,
+    String? shopOwner,
+    String? phoneNo,
+    String? gstin,
   }) async {
     await ref.read(adminShopsRepositoryProvider).update(
           id: id,
           areaId: areaId,
           shopName: shopName,
-          shopNumber: shopNumber,
           shopAddress: shopAddress,
+          shopNumber: shopNumber,
+          shopOwner: shopOwner,
+          phoneNo: phoneNo,
+          gstin: gstin,
         );
     ref
       ..invalidateSelf()

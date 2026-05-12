@@ -120,4 +120,19 @@ class AdminSalesmenRepository {
             .update({'is_active': isActive})
             .eq('id', userId),
       ]);
+
+  Future<void> resetPassword({
+    required String userId,
+    required String newPassword,
+  }) async {
+    final response = await _client.functions.invoke(
+      'update-user-password',
+      body: {'userId': userId, 'newPassword': newPassword},
+    );
+    if (response.status != 200) {
+      final msg = (response.data as Map<String, dynamic>?)?['error'] as String?
+          ?? 'Failed to reset password';
+      throw Exception(msg);
+    }
+  }
 }

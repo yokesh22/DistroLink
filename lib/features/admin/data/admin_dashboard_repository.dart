@@ -19,12 +19,14 @@ class AdminDashboardKpis {
 
 class AdminRecentOrder {
   const AdminRecentOrder({
+    required this.id,
     required this.orderNumber,
     required this.shopName,
     required this.salesmanName,
     required this.grandTotal,
     required this.createdAt,
   });
+  final String id;
   final String orderNumber;
   final String shopName;
   final String salesmanName;
@@ -92,20 +94,32 @@ class AdminDashboardRepository {
   }
 
   Future<List<AdminRecentOrder>> recentActivity(
-    String distributorId,
-  ) async {
+    String distributorId, {
+    required DateTime from,
+    required DateTime to,
+  }) async {
+    final fromStr = '${from.year}-'
+        '${from.month.toString().padLeft(2, '0')}-'
+        '${from.day.toString().padLeft(2, '0')}';
+    final toStr = '${to.year}-'
+        '${to.month.toString().padLeft(2, '0')}-'
+        '${to.day.toString().padLeft(2, '0')}';
+
     final rows = await _client
         .from('orders')
         .select(
-          'order_number, grand_total, created_at, '
+          'id, order_number, grand_total, created_at, '
           'shops(shop_name), salesmen(name)',
         )
         .eq('distributor_id', distributorId)
+        .gte('order_date', fromStr)
+        .lte('order_date', toStr)
         .order('created_at', ascending: false)
-        .limit(10);
+        .limit(50);
 
     return rows.map((row) {
       return AdminRecentOrder(
+        id: row['id'] as String? ?? '',
         orderNumber: row['order_number'] as String? ?? '—',
         shopName: (row['shops'] as Map<String, dynamic>?)?['shop_name']
                 as String? ??

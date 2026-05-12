@@ -9,9 +9,12 @@ abstract class Shop with _$Shop {
     required String id,
     @JsonKey(name: 'area_id') required String areaId,
     @JsonKey(name: 'shop_name') required String shopName,
-    @JsonKey(name: 'shop_number') required String shopNumber,
     @JsonKey(name: 'shop_address') required String shopAddress,
     @JsonKey(name: 'created_at') required DateTime createdAt,
+    @JsonKey(name: 'shop_number') String? shopNumber,
+    @JsonKey(name: 'shop_owner') String? shopOwner,
+    @JsonKey(name: 'phone_no') String? phoneNo,
+    String? gstin,
   }) = _Shop;
 
   factory Shop.fromJson(Map<String, dynamic> json) => _$ShopFromJson(json);

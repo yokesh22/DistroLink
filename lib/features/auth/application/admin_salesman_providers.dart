@@ -68,4 +68,13 @@ class AdminSalesmenList extends _$AdminSalesmenList {
         );
     ref.invalidateSelf();
   }
+
+  Future<void> resetPassword({
+    required String userId,
+    required String newPassword,
+  }) =>
+      ref.read(adminSalesmenRepositoryProvider).resetPassword(
+            userId: userId,
+            newPassword: newPassword,
+          );
 }

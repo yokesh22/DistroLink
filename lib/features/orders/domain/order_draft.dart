@@ -1,6 +1,8 @@
 import 'package:distro_link/features/catalog/domain/product.dart';
-import 'package:distro_link/features/orders/application/order_providers.dart' show OrderDraftNotifier;
-import 'package:distro_link/features/orders/data/orders_repository.dart' show OrdersRepository;
+import 'package:distro_link/features/orders/application/order_providers.dart'
+    show OrderDraftNotifier;
+import 'package:distro_link/features/orders/data/orders_repository.dart'
+    show OrdersRepository;
 import 'package:distro_link/features/orders/domain/order_type.dart';
 import 'package:distro_link/features/shops/domain/area.dart';
 import 'package:distro_link/features/shops/domain/shop.dart';
@@ -24,11 +26,9 @@ abstract class OrderDraftState with _$OrderDraftState {
 
   const OrderDraftState._();
 
-  double get subtotal =>
-      items.fold(0, (sum, item) => sum + item.lineTotal);
+  double get subtotal => items.fold(0, (sum, item) => sum + item.lineTotal);
 
-  double get gstTotal =>
-      items.fold(0, (sum, item) => sum + item.gstAmount);
+  double get gstTotal => items.fold(0, (sum, item) => sum + item.gstAmount);
 
   double get grandTotal => subtotal + gstTotal;
 
@@ -49,18 +49,18 @@ abstract class DraftItem with _$DraftItem {
     required double gstPercent,
   }) = _DraftItem;
 
-  /// Build a draft item from a [Product] using the base rate as the default
+  /// Build a draft item from a [Product] using the selling rate as the default
   /// selling rate — called when the salesman taps a Quick Add chip.
   factory DraftItem.fromProduct(Product p) => DraftItem(
-        productId: p.id,
-        itemCode: p.itemCode,
-        itemName: p.itemName,
-        mrp: p.mrp,
-        baseRate: p.baseRate,
-        sellingRate: p.baseRate,
-        quantity: 1,
-        gstPercent: p.gstPercent,
-      );
+    productId: p.id,
+    itemCode: p.itemCode,
+    itemName: p.itemName,
+    mrp: p.mrp,
+    baseRate: p.baseRate,
+    sellingRate: p.baseRate,
+    quantity: 1,
+    gstPercent: p.gstPercent,
+  );
 
   const DraftItem._();
 

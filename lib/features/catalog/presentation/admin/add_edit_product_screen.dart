@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:distro_link/core/theme/app_spacing.dart';
 import 'package:distro_link/core/widgets/app_button.dart';
 import 'package:distro_link/core/widgets/app_text_field.dart';
@@ -45,6 +47,17 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
     );
     _gstPercent = p?.gstPercent ?? 0;
     _isActive = p?.isActive ?? true;
+
+    if (!_isEdit) {
+      unawaited(
+        Future.microtask(() async {
+          final code = await ref.read(nextProductItemCodeProvider.future);
+          if (mounted && _code.text.isEmpty) {
+            setState(() => _code.text = code);
+          }
+        }),
+      );
+    }
   }
 
   @override
@@ -67,11 +80,11 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
       return;
     }
     if (mrp <= 0 || baseRate <= 0) {
-      setState(() => _error = 'MRP and base rate must be positive numbers.');
+      setState(() => _error = 'MRP and selling rate must be positive numbers.');
       return;
     }
     if (baseRate > mrp) {
-      setState(() => _error = 'Base rate cannot exceed MRP.');
+      setState(() => _error = 'Selling rate cannot exceed MRP.');
       return;
     }
 
@@ -133,8 +146,9 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
                   const SizedBox(width: 4),
                   Text(
                     _isEdit ? 'Edit Product' : 'Add Product',
-                    style: theme.textTheme.headlineSmall
-                        ?.copyWith(fontWeight: FontWeight.w800),
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ],
               ),
@@ -148,7 +162,11 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
                     AppTextField(
                       controller: _code,
                       label: 'Item Code',
-                      hint: 'e.g. SUN-01',
+                      hint: 'Generating…',
+                      readOnly: !_isEdit,
+                      prefixIcon: !_isEdit
+                          ? const Icon(Icons.lock_outline, size: 16)
+                          : null,
                       textInputAction: TextInputAction.next,
                     ),
                     const SizedBox(height: AppSpacing.sm),
@@ -181,7 +199,7 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
                         Expanded(
                           child: AppTextField(
                             controller: _baseRate,
-                            label: 'Base Rate (₹)',
+                            label: 'Selling Rate (₹)',
                             hint: '0.00',
                             keyboardType: const TextInputType.numberWithOptions(
                               decimal: true,
@@ -234,8 +252,9 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
                       const SizedBox(height: AppSpacing.sm),
                       Text(
                         _error!,
-                        style: theme.textTheme.bodySmall
-                            ?.copyWith(color: theme.colorScheme.error),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.error,
+                        ),
                       ),
                     ],
                     const SizedBox(height: AppSpacing.md),

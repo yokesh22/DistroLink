@@ -150,7 +150,7 @@ class _SelectShopScreenState extends ConsumerState<SelectShopScreen> {
                                       s.shopName
                                           .toLowerCase()
                                           .contains(q) ||
-                                      s.shopNumber
+                                      (s.shopNumber ?? '')
                                           .toLowerCase()
                                           .contains(q),
                                 )

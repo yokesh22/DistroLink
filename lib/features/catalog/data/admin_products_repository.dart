@@ -68,4 +68,24 @@ class AdminProductsRepository {
           .from('products')
           .update({'is_active': isActive})
           .eq('id', id);
+
+  /// Returns the next item code in the M1, M2, M3… series.
+  Future<String> nextItemCode(String distributorId) async {
+    final rows = await _client
+        .from('products')
+        .select('item_code')
+        .eq('distributor_id', distributorId);
+
+    final pattern = RegExp(r'^M(\d+)$', caseSensitive: false);
+    var max = 0;
+    for (final row in rows) {
+      final code = (row['item_code'] as String?) ?? '';
+      final match = pattern.firstMatch(code);
+      if (match != null) {
+        final n = int.tryParse(match.group(1)!) ?? 0;
+        if (n > max) max = n;
+      }
+    }
+    return 'M${max + 1}';
+  }
 }

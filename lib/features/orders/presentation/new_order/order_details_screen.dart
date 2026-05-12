@@ -269,7 +269,7 @@ class _OrderDetailsScreenState
   }
 
   String _selectedShopSubtitle(OrderDraftState draft) {
-    final shopNumber = draft.shop?.shopNumber.trim() ?? '';
+    final shopNumber = draft.shop?.shopNumber?.trim() ?? '';
     final areaName = draft.area?.name.trim() ?? '';
     if (shopNumber.isNotEmpty && areaName.isNotEmpty) {
       return '$shopNumber · $areaName';

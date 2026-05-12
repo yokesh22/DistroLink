@@ -7,6 +7,7 @@ import 'package:distro_link/features/auth/domain/app_user.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 class AddEditSalesmanScreen extends ConsumerStatefulWidget {
   const AddEditSalesmanScreen({super.key, this.salesman});
@@ -23,7 +24,9 @@ class _AddEditSalesmanScreenState
   late final TextEditingController _phone;
   late final TextEditingController _email;
   late final TextEditingController _password;
+  late final TextEditingController _newPassword;
   bool _obscurePassword = true;
+  bool _obscureNewPassword = true;
   bool _loading = false;
   String? _error;
 
@@ -36,6 +39,7 @@ class _AddEditSalesmanScreenState
     _phone = TextEditingController(text: widget.salesman?.phone ?? '');
     _email = TextEditingController(text: widget.salesman?.email ?? '');
     _password = TextEditingController();
+    _newPassword = TextEditingController();
   }
 
   @override
@@ -44,6 +48,7 @@ class _AddEditSalesmanScreenState
     _phone.dispose();
     _email.dispose();
     _password.dispose();
+    _newPassword.dispose();
     super.dispose();
   }
 
@@ -58,9 +63,12 @@ class _AddEditSalesmanScreenState
       return;
     }
     if (!_isEdit && password.length < 6) {
-      setState(
-        () => _error = 'Password must be at least 6 characters.',
-      );
+      setState(() => _error = 'Password must be at least 6 characters.');
+      return;
+    }
+    final newPwd = _newPassword.text;
+    if (_isEdit && newPwd.isNotEmpty && newPwd.length < 6) {
+      setState(() => _error = 'New password must be at least 6 characters.');
       return;
     }
 
@@ -80,6 +88,12 @@ class _AddEditSalesmanScreenState
           phone: phone,
           email: email,
         );
+        if (newPwd.isNotEmpty) {
+          await notifier.resetPassword(
+            userId: s.userId ?? '',
+            newPassword: newPwd,
+          );
+        }
       } else {
         await notifier.create(
           fullName: name,
@@ -150,6 +164,10 @@ class _AddEditSalesmanScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    if (_isEdit) ...[
+                      _SalesmanProfileCard(salesman: widget.salesman!),
+                      const SizedBox(height: AppSpacing.md),
+                    ],
                     AppTextField(
                       controller: _name,
                       label: 'Full Name',
@@ -171,9 +189,61 @@ class _AddEditSalesmanScreenState
                       hint: 'ravi@example.com',
                       keyboardType: TextInputType.emailAddress,
                       textInputAction:
-                          _isEdit ? TextInputAction.done : TextInputAction.next,
+                          _isEdit ? TextInputAction.next : TextInputAction.next,
                       enabled: !_isEdit,
                     ),
+                    if (_isEdit) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      AppTextField(
+                        controller: _newPassword,
+                        label: 'New Password',
+                        hint: 'Leave blank to keep current password',
+                        obscureText: _obscureNewPassword,
+                        textInputAction: TextInputAction.done,
+                        onSubmitted: (_) => _submit(),
+                        suffixIcon: IconButton(
+                          onPressed: () => setState(
+                            () => _obscureNewPassword = !_obscureNewPassword,
+                          ),
+                          icon: Icon(
+                            _obscureNewPassword
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                          vertical: AppSpacing.xs,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.warning.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusCard,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.lightbulb_outline_rounded,
+                              size: 14,
+                              color: AppColors.warning,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                'Salesman logs in with email and password.',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: AppColors.warning,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                     if (!_isEdit) ...[
                       const SizedBox(height: AppSpacing.sm),
                       AppTextField(
@@ -240,6 +310,71 @@ class _AddEditSalesmanScreenState
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _SalesmanProfileCard extends StatelessWidget {
+  const _SalesmanProfileCard({required this.salesman});
+  final Salesman salesman;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final initial = salesman.name.isNotEmpty
+        ? salesman.name[0].toUpperCase()
+        : '?';
+    final since = DateFormat('MMM yyyy').format(salesman.createdAt);
+    final statusLabel = salesman.isActive ? 'Active' : 'Inactive';
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusButton),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              initial,
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  salesman.name,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '$statusLabel since $since',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

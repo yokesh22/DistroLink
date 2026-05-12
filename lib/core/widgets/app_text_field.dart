@@ -17,6 +17,7 @@ class AppTextField extends StatelessWidget {
     this.keyboardType,
     this.textInputAction,
     this.obscureText = false,
+    this.readOnly = false,
     this.enabled = true,
     this.maxLines = 1,
     this.inputFormatters,
@@ -34,6 +35,7 @@ class AppTextField extends StatelessWidget {
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
   final bool obscureText;
+  final bool readOnly;
   final bool enabled;
   final int maxLines;
   final List<TextInputFormatter>? inputFormatters;
@@ -57,6 +59,7 @@ class AppTextField extends StatelessWidget {
           keyboardType: keyboardType,
           textInputAction: textInputAction,
           obscureText: obscureText,
+          readOnly: readOnly,
           enabled: enabled,
           maxLines: maxLines,
           inputFormatters: inputFormatters,

@@ -12,6 +12,15 @@ AdminProductsRepository adminProductsRepository(Ref ref) =>
     AdminProductsRepository(ref.watch(supabaseClientProvider));
 
 @riverpod
+Future<String> nextProductItemCode(Ref ref) async {
+  final user = await ref.watch(currentAppUserProvider.future);
+  final distributorId = user?.distributorId ?? '';
+  return ref
+      .watch(adminProductsRepositoryProvider)
+      .nextItemCode(distributorId);
+}
+
+@riverpod
 class AdminProductsList extends _$AdminProductsList {
   @override
   Future<List<Product>> build() async {

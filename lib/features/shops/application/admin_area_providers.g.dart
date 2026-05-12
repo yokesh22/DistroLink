@@ -81,7 +81,7 @@ final class AdminAreasListProvider
   AdminAreasList create() => AdminAreasList();
 }
 
-String _$adminAreasListHash() => r'8986a81c91b319c00415cfdd9d078ff7d17e4085';
+String _$adminAreasListHash() => r'febda72b93485620b22e8bca838f212a88ef27e9';
 
 abstract class _$AdminAreasList extends $AsyncNotifier<List<Area>> {
   FutureOr<List<Area>> build();

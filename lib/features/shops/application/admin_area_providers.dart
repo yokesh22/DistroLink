@@ -16,11 +16,12 @@ class AdminAreasList extends _$AdminAreasList {
   Future<List<Area>> build() =>
       ref.watch(adminAreasRepositoryProvider).list();
 
-  Future<void> create(String name) async {
-    await ref.read(adminAreasRepositoryProvider).create(name);
+  Future<Area> create(String name) async {
+    final area = await ref.read(adminAreasRepositoryProvider).create(name);
     ref
       ..invalidateSelf()
       ..invalidate(areasRepositoryProvider);
+    return area;
   }
 
   Future<void> updateArea(String id, String name) async {

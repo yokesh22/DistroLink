@@ -76,6 +76,53 @@ class OrdersRepository {
     }).toList();
   }
 
+  Future<OrderWithItems> fetchOrderById(String orderId) async {
+    final raw = await _client
+        .from('orders')
+        .select(
+          '*, '
+          'shops!inner(shop_name, shop_number, shop_address), '
+          'areas!inner(name), '
+          'salesmen!inner(name, phone), '
+          'distributors!inner(name, phone, email), '
+          'order_items(*)',
+        )
+        .eq('id', orderId)
+        .single();
+
+    final r = raw;
+    final flat = Map<String, dynamic>.from(r);
+    final shop = (r['shops'] as Map<String, dynamic>?) ?? {};
+    final area = (r['areas'] as Map<String, dynamic>?) ?? {};
+    final salesman = (r['salesmen'] as Map<String, dynamic>?) ?? {};
+    final distributor = (r['distributors'] as Map<String, dynamic>?) ?? {};
+    flat
+      ..['shop_name'] = shop['shop_name']
+      ..['shop_number'] = shop['shop_number']
+      ..['shop_address'] = shop['shop_address']
+      ..['area_name'] = area['name']
+      ..['salesman_name'] = salesman['name']
+      ..['salesman_phone'] = salesman['phone']
+      ..['distributor_name'] = distributor['name']
+      ..['distributor_phone'] = distributor['phone']
+      ..['distributor_email'] = distributor['email']
+      ..remove('shops')
+      ..remove('areas')
+      ..remove('salesmen')
+      ..remove('distributors')
+      ..remove('order_items');
+
+    final itemsRaw = (r['order_items'] as List<dynamic>?) ?? [];
+    final items = itemsRaw
+        .map(
+          (dynamic i) =>
+              OrderItem.fromJson(Map<String, dynamic>.from(i as Map)),
+        )
+        .toList();
+
+    return OrderWithItems(order: Order.fromJson(flat), items: items);
+  }
+
   Future<List<Order>> recentForSalesman(
     String salesmanId, {
     int limit = 20,
@@ -412,7 +459,7 @@ class OrdersRepository {
       shopId: draft.shop!.id,
       areaId: draft.area!.id,
       shopName: draft.shop!.shopName,
-      shopNumber: draft.shop!.shopNumber,
+      shopNumber: draft.shop!.shopNumber ?? '',
       subtotal: draft.subtotal,
       gstTotal: draft.gstTotal,
       grandTotal: draft.grandTotal,

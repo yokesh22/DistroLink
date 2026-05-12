@@ -57,6 +57,40 @@ final class AdminProductsRepositoryProvider
 String _$adminProductsRepositoryHash() =>
     r'd20e5771a24e2450507896cb0083571b373f0aed';
 
+@ProviderFor(nextProductItemCode)
+final nextProductItemCodeProvider = NextProductItemCodeProvider._();
+
+final class NextProductItemCodeProvider
+    extends $FunctionalProvider<AsyncValue<String>, String, FutureOr<String>>
+    with $FutureModifier<String>, $FutureProvider<String> {
+  NextProductItemCodeProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'nextProductItemCodeProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$nextProductItemCodeHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<String> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<String> create(Ref ref) {
+    return nextProductItemCode(ref);
+  }
+}
+
+String _$nextProductItemCodeHash() =>
+    r'6d83a2cb2d0a5ff65a3f5062171e9cd0861901e1';
+
 @ProviderFor(AdminProductsList)
 final adminProductsListProvider = AdminProductsListProvider._();
 

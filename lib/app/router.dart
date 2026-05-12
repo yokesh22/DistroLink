@@ -1,4 +1,5 @@
 import 'package:distro_link/features/admin/presentation/admin_dashboard_screen.dart';
+import 'package:distro_link/features/admin/presentation/admin_order_summary_screen.dart';
 import 'package:distro_link/features/admin/presentation/admin_shell.dart';
 import 'package:distro_link/features/analytics/presentation/analytics_screen.dart';
 import 'package:distro_link/features/auth/application/auth_providers.dart';
@@ -159,6 +160,12 @@ GoRouter router(Ref ref) {
         path: '/admin/products/:id/edit',
         builder: (_, state) =>
             AddEditProductScreen(product: state.extra as Product?),
+      ),
+      GoRoute(
+        path: '/admin/orders/:id',
+        builder: (_, state) => AdminOrderSummaryScreen(
+          orderId: state.pathParameters['id']!,
+        ),
       ),
     ],
   );

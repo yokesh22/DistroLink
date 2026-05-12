@@ -99,6 +99,59 @@ final class AdminDashboardKpisProvider
 String _$adminDashboardKpisHash() =>
     r'5f37fb66ade25e5481c87d42c5340ce78c7b9223';
 
+@ProviderFor(ActivityFilterNotifier)
+final activityFilterProvider = ActivityFilterNotifierProvider._();
+
+final class ActivityFilterNotifierProvider
+    extends $NotifierProvider<ActivityFilterNotifier, ActivityFilter> {
+  ActivityFilterNotifierProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'activityFilterProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$activityFilterNotifierHash();
+
+  @$internal
+  @override
+  ActivityFilterNotifier create() => ActivityFilterNotifier();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ActivityFilter value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ActivityFilter>(value),
+    );
+  }
+}
+
+String _$activityFilterNotifierHash() =>
+    r'978e2ec6428409d41f930275a6c3c64d4f4f132a';
+
+abstract class _$ActivityFilterNotifier extends $Notifier<ActivityFilter> {
+  ActivityFilter build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<ActivityFilter, ActivityFilter>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<ActivityFilter, ActivityFilter>,
+              ActivityFilter,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
+
 @ProviderFor(adminRecentActivity)
 final adminRecentActivityProvider = AdminRecentActivityProvider._();
 
@@ -139,4 +192,4 @@ final class AdminRecentActivityProvider
 }
 
 String _$adminRecentActivityHash() =>
-    r'1729cbadb12fda69c10000a4ac4093c0d1f94501';
+    r'651cf13571a9553256ba1c33721a5473457e2027';

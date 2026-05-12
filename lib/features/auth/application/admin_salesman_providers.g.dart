@@ -81,7 +81,7 @@ final class AdminSalesmenListProvider
   AdminSalesmenList create() => AdminSalesmenList();
 }
 
-String _$adminSalesmenListHash() => r'0428f1601531e329b834c19183b332ef2a6a106a';
+String _$adminSalesmenListHash() => r'e89650b12ff967de8409b6358700a64fc3760592';
 
 abstract class _$AdminSalesmenList extends $AsyncNotifier<List<Salesman>> {
   FutureOr<List<Salesman>> build();
