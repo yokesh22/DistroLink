@@ -26,3 +26,8 @@ ios/        iOS platform code
 assets/     images, icons, fonts
 docs/       architecture, setup, ADRs
 ```
+### Wireframe
+
+[DistoLink.pdf](https://github.com/user-attachments/files/27626217/DistoLink.pdf)
+
+
