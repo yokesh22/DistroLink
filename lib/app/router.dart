@@ -26,6 +26,7 @@ import 'package:distro_link/features/shops/presentation/admin/add_edit_area_scre
 import 'package:distro_link/features/shops/presentation/admin/add_edit_shop_screen.dart';
 import 'package:distro_link/features/shops/presentation/admin/areas_list_screen.dart';
 import 'package:distro_link/features/shops/presentation/admin/shops_list_screen.dart';
+import 'package:distro_link/features/splash/presentation/splash_screen.dart';
 import 'package:distro_link/services/sync/sync_worker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -39,10 +40,14 @@ part 'router.g.dart';
 GoRouter router(Ref ref) {
   final notifier = _RouterNotifier(ref);
   return GoRouter(
-    initialLocation: '/login',
+    initialLocation: '/splash',
     refreshListenable: notifier,
     redirect: notifier.redirect,
     routes: [
+      GoRoute(
+        path: '/splash',
+        builder: (_, _) => const SplashScreen(),
+      ),
       GoRoute(
         path: '/login',
         builder: (_, _) => const LoginScreen(),
@@ -197,6 +202,9 @@ class _RouterNotifier extends ChangeNotifier {
     final session = Supabase.instance.client.auth.currentSession;
     final isLoggedIn = session != null;
     final path = state.matchedLocation;
+
+    // Splash handles its own navigation after the timer — never redirect away.
+    if (path == '/splash') return null;
 
     if (!isLoggedIn) {
       return path == '/login' ? null : '/login';
