@@ -1,3 +1,4 @@
+import 'package:distro_link/core/theme/app_colors.dart';
 import 'package:distro_link/features/admin/presentation/admin_dashboard_screen.dart';
 import 'package:distro_link/features/admin/presentation/admin_order_summary_screen.dart';
 import 'package:distro_link/features/admin/presentation/admin_shell.dart';
@@ -25,7 +26,9 @@ import 'package:distro_link/features/shops/presentation/admin/add_edit_area_scre
 import 'package:distro_link/features/shops/presentation/admin/add_edit_shop_screen.dart';
 import 'package:distro_link/features/shops/presentation/admin/areas_list_screen.dart';
 import 'package:distro_link/features/shops/presentation/admin/shops_list_screen.dart';
+import 'package:distro_link/services/sync/sync_worker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -85,6 +88,14 @@ GoRouter router(Ref ref) {
       GoRoute(
         path: '/orders/new/4',
         builder: (_, _) => const BillPreviewScreen(),
+      ),
+
+      // ── Salesman order detail (no bottom nav) ────────────────────
+      GoRoute(
+        path: '/orders/:id',
+        builder: (_, state) => AdminOrderSummaryScreen(
+          orderId: state.pathParameters['id']!,
+        ),
       ),
 
       // ── Export (full-screen, no bottom nav) ──────────────────────
@@ -226,14 +237,42 @@ class _RouterNotifier extends ChangeNotifier {
 
 // ─── Salesman bottom nav shell ────────────────────────────────────
 
-class _SalesmanShell extends StatelessWidget {
+class _SalesmanShell extends ConsumerWidget {
   const _SalesmanShell({required this.location, required this.child});
 
   final String location;
   final Widget child;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen<SyncWorkerState>(syncStatusProvider, (prev, next) {
+      if (next.status != SyncStatus.done) return;
+
+      final count = next.syncedCount;
+      // Auto-sync with nothing to do → no toast (avoid noise on every startup).
+      if (count == 0 && !next.isManual) {
+        ref.read(syncStatusProvider.notifier).reset();
+        return;
+      }
+
+      final msg = count > 0
+          ? '$count order${count > 1 ? 's' : ''} synced to server'
+          : 'Already up to date';
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          backgroundColor:
+              count > 0 ? AppColors.accent : null,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+
+      // Reset so the snackbar doesn't re-trigger on next rebuild.
+      ref.read(syncStatusProvider.notifier).state = const SyncWorkerState();
+    });
+
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
     final secondary =

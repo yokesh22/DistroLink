@@ -11,6 +11,15 @@ AdminSalesmenRepository adminSalesmenRepository(Ref ref) =>
     AdminSalesmenRepository(ref.watch(supabaseClientProvider));
 
 @riverpod
+Future<Map<String, int>> salesmanOrdersTodayMap(Ref ref) async {
+  final user = await ref.watch(currentAppUserProvider.future);
+  final distributorId = user?.distributorId ?? '';
+  return ref
+      .watch(adminSalesmenRepositoryProvider)
+      .ordersTodayBySalesman(distributorId);
+}
+
+@riverpod
 class AdminSalesmenList extends _$AdminSalesmenList {
   @override
   Future<List<Salesman>> build() async {

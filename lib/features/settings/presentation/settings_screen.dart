@@ -7,7 +7,6 @@ import 'package:distro_link/features/exports/application/export_controller.dart'
 import 'package:distro_link/features/settings/application/settings_providers.dart';
 import 'package:distro_link/services/connectivity/connectivity_provider.dart';
 import 'package:distro_link/services/sync/pending_sync_provider.dart';
-import 'package:distro_link/services/sync/sync_worker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -142,16 +141,6 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  if (isOnline) ...[
-                    const SizedBox(height: AppSpacing.xs),
-                    AppButton(
-                      label: 'Force Sync Now',
-                      variant: AppButtonVariant.secondary,
-                      onPressed: () => ref
-                          .read(syncWorkerProvider.notifier)
-                          .drain(),
-                    ),
-                  ],
                 ],
               ),
             ),

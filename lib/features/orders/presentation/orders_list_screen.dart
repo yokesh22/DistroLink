@@ -9,6 +9,7 @@ import 'package:distro_link/services/hive/outbox_order.dart';
 import 'package:distro_link/services/sync/pending_sync_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class OrdersListScreen extends ConsumerStatefulWidget {
@@ -299,7 +300,9 @@ class _OrderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Container(
+    return GestureDetector(
+      onTap: () => context.push('/orders/${order.id}'),
+      child: Container(
       margin: const EdgeInsets.only(bottom: 2),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
@@ -371,6 +374,7 @@ class _OrderCard extends StatelessWidget {
           ],
         ),
       ),
+    ),
     );
   }
 }

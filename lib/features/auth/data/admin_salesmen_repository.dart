@@ -121,6 +121,26 @@ class AdminSalesmenRepository {
             .eq('id', userId),
       ]);
 
+  Future<Map<String, int>> ordersTodayBySalesman(
+    String distributorId,
+  ) async {
+    final today = DateTime.now();
+    final todayStr = '${today.year}-'
+        '${today.month.toString().padLeft(2, '0')}-'
+        '${today.day.toString().padLeft(2, '0')}';
+    final rows = await _client
+        .from('orders')
+        .select('salesman_id')
+        .eq('distributor_id', distributorId)
+        .eq('order_date', todayStr);
+    final counts = <String, int>{};
+    for (final row in rows) {
+      final sid = row['salesman_id'] as String;
+      counts[sid] = (counts[sid] ?? 0) + 1;
+    }
+    return counts;
+  }
+
   Future<void> resetPassword({
     required String userId,
     required String newPassword,

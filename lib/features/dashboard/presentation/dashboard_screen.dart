@@ -348,6 +348,7 @@ class _OrderRow extends StatelessWidget {
     final theme = Theme.of(context);
 
     return AppCard(
+      onTap: () => context.push('/orders/${order.id}'),
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
         vertical: AppSpacing.xs + 2,

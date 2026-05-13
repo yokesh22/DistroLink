@@ -57,6 +57,46 @@ final class AdminSalesmenRepositoryProvider
 String _$adminSalesmenRepositoryHash() =>
     r'a0be748d01e58b32c0a093cd90d2c27fa3aa91c8';
 
+@ProviderFor(salesmanOrdersTodayMap)
+final salesmanOrdersTodayMapProvider = SalesmanOrdersTodayMapProvider._();
+
+final class SalesmanOrdersTodayMapProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<Map<String, int>>,
+          Map<String, int>,
+          FutureOr<Map<String, int>>
+        >
+    with $FutureModifier<Map<String, int>>, $FutureProvider<Map<String, int>> {
+  SalesmanOrdersTodayMapProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'salesmanOrdersTodayMapProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$salesmanOrdersTodayMapHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<Map<String, int>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<Map<String, int>> create(Ref ref) {
+    return salesmanOrdersTodayMap(ref);
+  }
+}
+
+String _$salesmanOrdersTodayMapHash() =>
+    r'8d0d63096b575645af27fcf5baae2fe9dc79c868';
+
 @ProviderFor(AdminSalesmenList)
 final adminSalesmenListProvider = AdminSalesmenListProvider._();
 

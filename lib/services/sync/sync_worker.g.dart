@@ -46,7 +46,7 @@ final class SyncWorkerProvider extends $NotifierProvider<SyncWorker, void> {
   }
 }
 
-String _$syncWorkerHash() => r'bbf3ccb31e796da55e0f2efb071c27f19a137cf6';
+String _$syncWorkerHash() => r'c2e6747f75f7e0333a757cf149cfb4c539861aa0';
 
 /// Long-lived service that drains the outbox whenever connectivity returns.
 /// Eagerly started in DistroLinkApp via `ref.read(syncWorkerProvider)`.
