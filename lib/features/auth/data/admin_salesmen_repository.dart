@@ -23,20 +23,22 @@ class AdminSalesmenRepository {
     required String email,
     required String password,
   }) async {
+    print("salesmen add");
     // Step 1: create auth user via Edge Function.
     final response = await _client.functions.invoke(
       'create-user',
       body: {'email': email, 'password': password},
     );
+    print("response: ${response}");
     if (response.status != 200) {
-      final msg = (response.data as Map<String, dynamic>?)?['error']
-          as String? ??
+      final msg =
+          (response.data as Map<String, dynamic>?)?['error'] as String? ??
           'Failed to create auth user';
       throw Exception(msg);
     }
-    final authUserId = (response.data as Map<String, dynamic>)['auth_user_id']
-        as String;
-
+    final authUserId =
+        (response.data as Map<String, dynamic>)['auth_user_id'] as String;
+    print(authUserId);
     // Step 2: insert into public.users.
     final userRow = await _client
         .from('users')
@@ -51,6 +53,7 @@ class AdminSalesmenRepository {
         })
         .select('id')
         .single();
+    print("inseted");
     final userId = userRow['id'] as String;
 
     // Step 3: insert into public.salesmen.
@@ -66,7 +69,7 @@ class AdminSalesmenRepository {
         })
         .select()
         .single();
-
+    print("salesmen, ${salesmanRow}");
     return Salesman.fromJson(salesmanRow);
   }
 
@@ -97,11 +100,7 @@ class AdminSalesmenRepository {
           .eq('id', id),
     ]);
 
-    final row = await _client
-        .from('salesmen')
-        .select()
-        .eq('id', id)
-        .single();
+    final row = await _client.from('salesmen').select().eq('id', id).single();
     return Salesman.fromJson(row);
   }
 
@@ -109,23 +108,20 @@ class AdminSalesmenRepository {
     required String salesmanId,
     required String userId,
     required bool isActive,
-  }) =>
-      Future.wait([
-        _client
-            .from('salesmen')
-            .update({'is_active': isActive})
-            .eq('id', salesmanId),
-        _client
-            .from('users')
-            .update({'is_active': isActive})
-            .eq('id', userId),
-      ]);
+  }) => Future.wait([
+    _client
+        .from('salesmen')
+        .update({'is_active': isActive})
+        .eq('id', salesmanId),
+    _client.from('users').update({'is_active': isActive}).eq('id', userId),
+  ]);
 
   Future<Map<String, int>> ordersTodayBySalesman(
     String distributorId,
   ) async {
     final today = DateTime.now();
-    final todayStr = '${today.year}-'
+    final todayStr =
+        '${today.year}-'
         '${today.month.toString().padLeft(2, '0')}-'
         '${today.day.toString().padLeft(2, '0')}';
     final rows = await _client
@@ -150,8 +146,9 @@ class AdminSalesmenRepository {
       body: {'userId': userId, 'newPassword': newPassword},
     );
     if (response.status != 200) {
-      final msg = (response.data as Map<String, dynamic>?)?['error'] as String?
-          ?? 'Failed to reset password';
+      final msg =
+          (response.data as Map<String, dynamic>?)?['error'] as String? ??
+          'Failed to reset password';
       throw Exception(msg);
     }
   }

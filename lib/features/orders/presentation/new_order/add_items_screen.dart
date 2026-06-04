@@ -143,35 +143,41 @@ class _AddItemsScreenState extends ConsumerState<AddItemsScreen> {
           const Divider(height: 1),
 
           // ── Product search results ─────────────────────────────
-          if (_searchCtrl.text.isNotEmpty)
-            Expanded(
-              child: productsAsync.when(
-                data: (products) => ListView.builder(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.screenPadding,
-                  ),
-                  itemCount: products.length,
-                  itemBuilder: (_, i) {
-                    final p = products[i];
-                    return ListTile(
-                      title: Text(p.itemName),
-                      subtitle: Text('${p.itemCode} · MRP ₹${p.mrp}'),
-                      trailing: IconButton(
-                        icon: const Icon(
-                          Icons.add_circle_outline_rounded,
-                          color: AppColors.primary,
-                        ),
-                        onPressed: () =>
-                            notifier.addItem(DraftItem.fromProduct(p)),
+          Expanded(
+            child: productsAsync.when(
+              data: (products) => products.isEmpty
+                  ? Center(
+                      child: Text(
+                        'No products found.',
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
-                    );
-                  },
-                ),
-                loading: () =>
-                    const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(child: Text('Error: $e')),
-              ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.screenPadding,
+                      ),
+                      itemCount: products.length,
+                      itemBuilder: (_, i) {
+                        final p = products[i];
+                        return ListTile(
+                          title: Text(p.itemName),
+                          subtitle: Text('${p.itemCode} · MRP ₹${p.mrp}'),
+                          trailing: IconButton(
+                            icon: const Icon(
+                              Icons.add_circle_outline_rounded,
+                              color: AppColors.primary,
+                            ),
+                            onPressed: () =>
+                                notifier.addItem(DraftItem.fromProduct(p)),
+                          ),
+                        );
+                      },
+                    ),
+              loading: () =>
+                  const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Center(child: Text('Error: $e')),
             ),
+          ),
 
           // ── Cart items ─────────────────────────────────────────
           Expanded(
@@ -182,7 +188,7 @@ class _AddItemsScreenState extends ConsumerState<AddItemsScreen> {
                       padding: const EdgeInsets.all(32),
                       child: Text(
                         'No items added yet.\n'
-                        'Search or tap Quick Add to begin.',
+                        'Tap + on a product above to add it.',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurface
                               .withValues(alpha: 0.4),

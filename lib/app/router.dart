@@ -8,12 +8,15 @@ import 'package:distro_link/features/auth/domain/app_user.dart';
 import 'package:distro_link/features/auth/presentation/admin/add_edit_salesman_screen.dart';
 import 'package:distro_link/features/auth/presentation/admin/salesmen_list_screen.dart';
 import 'package:distro_link/features/auth/presentation/login_screen.dart';
+import 'package:distro_link/features/auth/presentation/signup_screen.dart';
+import 'package:distro_link/features/auth/presentation/verify_email_screen.dart';
 import 'package:distro_link/features/catalog/domain/product.dart';
 import 'package:distro_link/features/catalog/presentation/admin/add_edit_product_screen.dart';
 import 'package:distro_link/features/catalog/presentation/admin/products_list_screen.dart';
 import 'package:distro_link/features/dashboard/presentation/dashboard_screen.dart';
 import 'package:distro_link/features/exports/application/export_controller.dart';
 import 'package:distro_link/features/exports/presentation/export_screen.dart';
+import 'package:distro_link/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:distro_link/features/orders/presentation/new_order/add_items_screen.dart';
 import 'package:distro_link/features/orders/presentation/new_order/bill_preview_screen.dart';
 import 'package:distro_link/features/orders/presentation/new_order/order_details_screen.dart';
@@ -51,6 +54,20 @@ GoRouter router(Ref ref) {
       GoRoute(
         path: '/login',
         builder: (_, _) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/signup',
+        builder: (_, _) => const SignupScreen(),
+      ),
+      GoRoute(
+        path: '/verify-email',
+        builder: (_, state) => VerifyEmailScreen(
+          email: state.uri.queryParameters['email'] ?? '',
+        ),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        builder: (_, _) => const OnboardingScreen(),
       ),
 
       // ── Salesman shell ───────────────────────────────────────────
@@ -206,8 +223,10 @@ class _RouterNotifier extends ChangeNotifier {
     // Splash handles its own navigation after the timer — never redirect away.
     if (path == '/splash') return null;
 
+    // Public paths accessible without a session.
+    const publicPaths = ['/login', '/signup', '/verify-email'];
     if (!isLoggedIn) {
-      return path == '/login' ? null : '/login';
+      return publicPaths.contains(path) ? null : '/login';
     }
 
     final userAsync = _ref.read(currentAppUserProvider);
@@ -226,6 +245,11 @@ class _RouterNotifier extends ChangeNotifier {
 
     if (path == '/login') {
       return isAdmin ? '/admin/dashboard' : '/home';
+    }
+
+    // /onboarding is admin-only but not under /admin — let it through.
+    if (path == '/onboarding') {
+      return isAdmin ? null : '/home';
     }
 
     if (isAdmin && _isSalesmanPath(path)) return '/admin/dashboard';

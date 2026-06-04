@@ -37,6 +37,7 @@ class AdminSalesmenList extends _$AdminSalesmenList {
     required String password,
   }) async {
     final user = await ref.read(currentAppUserProvider.future);
+    if (!ref.mounted) return;
     final distributorId = user?.distributorId ?? '';
     await ref.read(adminSalesmenRepositoryProvider).create(
           distributorId: distributorId,
@@ -45,6 +46,7 @@ class AdminSalesmenList extends _$AdminSalesmenList {
           email: email,
           password: password,
         );
+    if (!ref.mounted) return;
     ref.invalidateSelf();
   }
 
@@ -62,6 +64,7 @@ class AdminSalesmenList extends _$AdminSalesmenList {
           phone: phone,
           email: email,
         );
+    if (!ref.mounted) return;
     ref.invalidateSelf();
   }
 
@@ -75,6 +78,7 @@ class AdminSalesmenList extends _$AdminSalesmenList {
           userId: userId,
           isActive: isActive,
         );
+    if (!ref.mounted) return;
     ref.invalidateSelf();
   }
 

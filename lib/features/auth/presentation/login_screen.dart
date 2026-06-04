@@ -163,7 +163,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 onPressed: _submit,
               ),
 
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'New distributor?',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  TextButton(
+                    onPressed: () => context.go('/signup'),
+                    child: const Text('Create account'),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: AppSpacing.sm),
               Center(
                 child: Text(
                   'DistroLink · By logging in you agree to our Terms',

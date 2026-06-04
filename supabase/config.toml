@@ -1,0 +1,13 @@
+# Supabase project configuration.
+# Each function handles JWT verification internally — disabling gateway-level
+# JWT check avoids the "forbitten" 403 that Supabase's edge runtime returns
+# when it can't verify the JWT before the function code even runs.
+
+[functions.create-user]
+verify_jwt = false
+
+[functions.create-distributor]
+verify_jwt = false
+
+[functions.update-user-password]
+verify_jwt = false

@@ -10,7 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-const List<double> _gstSlabs = [0, 5, 12, 18, 28];
+const List<double> _gstSlabs = [0, 5, 18, 40];
 
 class AddEditProductScreen extends ConsumerStatefulWidget {
   const AddEditProductScreen({super.key, this.product});

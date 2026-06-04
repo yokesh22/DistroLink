@@ -5,7 +5,9 @@ import 'package:distro_link/core/widgets/app_card.dart';
 import 'package:distro_link/core/widgets/app_stat_card.dart';
 import 'package:distro_link/features/admin/application/admin_dashboard_providers.dart';
 import 'package:distro_link/features/admin/data/admin_dashboard_repository.dart';
+import 'package:distro_link/features/auth/application/admin_salesman_providers.dart';
 import 'package:distro_link/features/auth/application/auth_providers.dart';
+import 'package:distro_link/features/onboarding/application/onboarding_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -21,6 +23,19 @@ class AdminDashboardScreen extends ConsumerWidget {
     final kpisAsync = ref.watch(adminDashboardKpisProvider);
     final activityAsync = ref.watch(adminRecentActivityProvider);
     final filter = ref.watch(activityFilterProvider);
+
+    // Redirect to onboarding only when there are no salesmen AND the admin
+    // hasn't already dismissed the wizard via "Go to Dashboard".
+    final dismissed = ref.watch(onboardingDismissedProvider);
+    ref.listen(adminSalesmenListProvider, (_, next) {
+      next.whenData((list) {
+        if (list.isEmpty && !dismissed) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) context.go('/onboarding');
+          });
+        }
+      });
+    });
     final fmt = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
 
     return Scaffold(

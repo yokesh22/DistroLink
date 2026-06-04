@@ -40,14 +40,21 @@ serve(async (req) => {
     });
   }
 
-  const { data: callerRow } = await adminClient
+  const { data: callerRow, error: callerRowErr } = await adminClient
     .from('users')
     .select('role')
     .eq('auth_user_id', callerAuth.id)
     .maybeSingle();
 
+  if (callerRowErr) {
+    return new Response(JSON.stringify({ error: `DB error fetching caller role: ${callerRowErr.message}` }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   if (!callerRow || !['admin', 'super_admin'].includes(callerRow.role)) {
-    return new Response(JSON.stringify({ error: 'Forbidden' }), {
+    return new Response(JSON.stringify({ error: `Forbidden: caller role is '${callerRow?.role ?? 'not found'}' for auth_user_id ${callerAuth.id}` }), {
       status: 403,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
