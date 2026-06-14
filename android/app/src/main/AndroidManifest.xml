@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required for all network calls (Supabase auth/db/storage). Debug/profile
+         builds auto-add this; release builds must declare it explicitly or DNS
+         lookups fail with errno 7 "No address associated with hostname". -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="DistroLink"
         android:name="${applicationName}"
