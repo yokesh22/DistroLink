@@ -5,15 +5,19 @@ class AdminAreasRepository {
   const AdminAreasRepository(this._client);
   final SupabaseClient _client;
 
-  Future<List<Area>> list() async {
-    final rows = await _client.from('areas').select().order('name');
+  Future<List<Area>> list(String distributorId) async {
+    final rows = await _client
+        .from('areas')
+        .select()
+        .eq('distributor_id', distributorId)
+        .order('name');
     return rows.map(Area.fromJson).toList();
   }
 
-  Future<Area> create(String name) async {
+  Future<Area> create(String distributorId, String name) async {
     final row = await _client
         .from('areas')
-        .insert({'name': name.trim()})
+        .insert({'distributor_id': distributorId, 'name': name.trim()})
         .select()
         .single();
     return Area.fromJson(row);

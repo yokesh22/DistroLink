@@ -11,3 +11,12 @@ verify_jwt = false
 
 [functions.update-user-password]
 verify_jwt = false
+
+[functions.submit-signup-request]
+verify_jwt = false
+
+[functions.review-signup-request]
+verify_jwt = false
+
+[functions.list-signup-requests]
+verify_jwt = false

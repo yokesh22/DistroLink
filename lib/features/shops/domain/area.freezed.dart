@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Area {
 
- String get id; String get name;@JsonKey(name: 'created_at') DateTime get createdAt;
+ String get id; String get name;@JsonKey(name: 'distributor_id') String get distributorId;@JsonKey(name: 'created_at') DateTime get createdAt;
 /// Create a copy of Area
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $AreaCopyWith<Area> get copyWith => _$AreaCopyWithImpl<Area>(this as Area, _$ide
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Area&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Area&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.distributorId, distributorId) || other.distributorId == distributorId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,createdAt);
+int get hashCode => Object.hash(runtimeType,id,name,distributorId,createdAt);
 
 @override
 String toString() {
-  return 'Area(id: $id, name: $name, createdAt: $createdAt)';
+  return 'Area(id: $id, name: $name, distributorId: $distributorId, createdAt: $createdAt)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $AreaCopyWith<$Res>  {
   factory $AreaCopyWith(Area value, $Res Function(Area) _then) = _$AreaCopyWithImpl;
 @useResult
 $Res call({
- String id, String name,@JsonKey(name: 'created_at') DateTime createdAt
+ String id, String name,@JsonKey(name: 'distributor_id') String distributorId,@JsonKey(name: 'created_at') DateTime createdAt
 });
 
 
@@ -65,10 +65,11 @@ class _$AreaCopyWithImpl<$Res>
 
 /// Create a copy of Area
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? createdAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? distributorId = null,Object? createdAt = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,distributorId: null == distributorId ? _self.distributorId : distributorId // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,
   ));
@@ -155,10 +156,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name, @JsonKey(name: 'created_at')  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name, @JsonKey(name: 'distributor_id')  String distributorId, @JsonKey(name: 'created_at')  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Area() when $default != null:
-return $default(_that.id,_that.name,_that.createdAt);case _:
+return $default(_that.id,_that.name,_that.distributorId,_that.createdAt);case _:
   return orElse();
 
 }
@@ -176,10 +177,10 @@ return $default(_that.id,_that.name,_that.createdAt);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name, @JsonKey(name: 'created_at')  DateTime createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name, @JsonKey(name: 'distributor_id')  String distributorId, @JsonKey(name: 'created_at')  DateTime createdAt)  $default,) {final _that = this;
 switch (_that) {
 case _Area():
-return $default(_that.id,_that.name,_that.createdAt);case _:
+return $default(_that.id,_that.name,_that.distributorId,_that.createdAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -196,10 +197,10 @@ return $default(_that.id,_that.name,_that.createdAt);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name, @JsonKey(name: 'created_at')  DateTime createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name, @JsonKey(name: 'distributor_id')  String distributorId, @JsonKey(name: 'created_at')  DateTime createdAt)?  $default,) {final _that = this;
 switch (_that) {
 case _Area() when $default != null:
-return $default(_that.id,_that.name,_that.createdAt);case _:
+return $default(_that.id,_that.name,_that.distributorId,_that.createdAt);case _:
   return null;
 
 }
@@ -211,11 +212,12 @@ return $default(_that.id,_that.name,_that.createdAt);case _:
 @JsonSerializable()
 
 class _Area implements Area {
-  const _Area({required this.id, required this.name, @JsonKey(name: 'created_at') required this.createdAt});
+  const _Area({required this.id, required this.name, @JsonKey(name: 'distributor_id') required this.distributorId, @JsonKey(name: 'created_at') required this.createdAt});
   factory _Area.fromJson(Map<String, dynamic> json) => _$AreaFromJson(json);
 
 @override final  String id;
 @override final  String name;
+@override@JsonKey(name: 'distributor_id') final  String distributorId;
 @override@JsonKey(name: 'created_at') final  DateTime createdAt;
 
 /// Create a copy of Area
@@ -231,16 +233,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Area&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Area&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.distributorId, distributorId) || other.distributorId == distributorId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,createdAt);
+int get hashCode => Object.hash(runtimeType,id,name,distributorId,createdAt);
 
 @override
 String toString() {
-  return 'Area(id: $id, name: $name, createdAt: $createdAt)';
+  return 'Area(id: $id, name: $name, distributorId: $distributorId, createdAt: $createdAt)';
 }
 
 
@@ -251,7 +253,7 @@ abstract mixin class _$AreaCopyWith<$Res> implements $AreaCopyWith<$Res> {
   factory _$AreaCopyWith(_Area value, $Res Function(_Area) _then) = __$AreaCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name,@JsonKey(name: 'created_at') DateTime createdAt
+ String id, String name,@JsonKey(name: 'distributor_id') String distributorId,@JsonKey(name: 'created_at') DateTime createdAt
 });
 
 
@@ -268,10 +270,11 @@ class __$AreaCopyWithImpl<$Res>
 
 /// Create a copy of Area
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? createdAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? distributorId = null,Object? createdAt = null,}) {
   return _then(_Area(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,distributorId: null == distributorId ? _self.distributorId : distributorId // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,
   ));

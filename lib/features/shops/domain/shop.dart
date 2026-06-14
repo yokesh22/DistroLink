@@ -7,6 +7,7 @@ part 'shop.g.dart';
 abstract class Shop with _$Shop {
   const factory Shop({
     required String id,
+    @JsonKey(name: 'distributor_id') required String distributorId,
     @JsonKey(name: 'area_id') required String areaId,
     @JsonKey(name: 'shop_name') required String shopName,
     @JsonKey(name: 'shop_address') required String shopAddress,

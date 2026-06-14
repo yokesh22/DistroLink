@@ -46,4 +46,4 @@ final class HiveServiceProvider
   }
 }
 
-String _$hiveServiceHash() => r'0a1313a98a905ecc2d8b4dc7e5fa67e5e5dee643';
+String _$hiveServiceHash() => r'b18ff116cd2237ec999f38949d2eb12c3db7401f';

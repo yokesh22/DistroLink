@@ -13,7 +13,8 @@ Defined in [lib/core/theme/app_colors.dart](../lib/core/theme/app_colors.dart).
 ### Brand
 | Token | Hex | Use |
 |---|---|---|
-| `AppColors.primary` | `#2563EB` | Primary buttons, active states, links |
+| `AppColors.primary` | `#2563EB` | Primary buttons, active states, links (admin/super-admin flow, and pre-login screens) |
+| `AppColors.salesmanPrimary` | `#F28C28` | Same role as `primary`, but for the **salesman flow** — swapped in at the theme level once a `salesman`-role user is logged in, so salesmen and distributor/admin logins are visually distinct |
 | `AppColors.accent` | `#10B981` | **Success / totals / completed only** — never as a primary action colour |
 
 ### Status
@@ -42,9 +43,12 @@ Defined in [lib/core/theme/app_colors.dart](../lib/core/theme/app_colors.dart).
 | `darkTextSecondary` | `#94A3B8` |
 
 ### Rules
-- **Blue is the only colour for primary actions.**
+- **Blue (or, in the salesman flow, orange) is the only colour for primary actions** — see "Role-based theming" below.
 - **Green is reserved for success / totals / completed states** — do not reach for it as a generic accent.
 - Avoid using more than ~3 colours on a single screen (brand + neutral + one status).
+
+### Role-based theming
+`AppTheme.light()`/`AppTheme.dark()` (in [lib/app/theme.dart](../lib/app/theme.dart)) accept a `primary` color override, defaulting to `AppColors.primary`. `DistroLinkApp` ([lib/app/app.dart](../lib/app/app.dart)) watches `currentAppUserProvider` and passes `AppColors.salesmanPrimary` when `role == UserRole.salesman`, otherwise `AppColors.primary`. Pre-login screens (splash/onboarding/login) render before role is known, so they get the default blue. Widgets must read `Theme.of(context).colorScheme.primary` (not the `AppColors.primary` constant directly) to pick up this override correctly.
 
 ---
 

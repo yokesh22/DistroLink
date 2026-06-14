@@ -170,7 +170,7 @@ class _BillPreviewScreenState
                 // ── Grand total ───────────────────────────────────
                 Container(
                   decoration: BoxDecoration(
-                    color: AppColors.primary,
+                    color: Theme.of(context).colorScheme.primary,
                     borderRadius:
                         BorderRadius.circular(AppSpacing.radiusCard),
                   ),

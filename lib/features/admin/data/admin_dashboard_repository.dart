@@ -56,6 +56,7 @@ class AdminDashboardRepository {
     final shopsRes = await _client
         .from('shops')
         .select('id')
+        .eq('distributor_id', distributorId)
         .count(CountOption.exact);
 
     final productsRes = await _client

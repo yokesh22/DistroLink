@@ -135,8 +135,9 @@ class _AddEditShopScreenState extends ConsumerState<AddEditShopScreen> {
                   const SizedBox(width: 4),
                   Text(
                     _isEdit ? 'Edit Shop' : 'Add Shop',
-                    style: theme.textTheme.headlineSmall
-                        ?.copyWith(fontWeight: FontWeight.w800),
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ],
               ),
@@ -152,8 +153,9 @@ class _AddEditShopScreenState extends ConsumerState<AddEditShopScreen> {
                       padding: const EdgeInsets.all(AppSpacing.sm),
                       decoration: BoxDecoration(
                         color: AppColors.orangeLight,
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusCard),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusCard,
+                        ),
                         border: Border.all(
                           color: AppColors.warning.withValues(alpha: 0.4),
                         ),
@@ -182,8 +184,8 @@ class _AddEditShopScreenState extends ConsumerState<AddEditShopScreen> {
                     // Shop Name
                     AppTextField(
                       controller: _name,
-                      label: 'Shop Name',
-                      hint: 'Enter shop name...',
+                      label: 'Retailer Name',
+                      hint: 'Enter retailer name...',
                       textInputAction: TextInputAction.next,
                     ),
                     const SizedBox(height: AppSpacing.sm),
@@ -191,7 +193,7 @@ class _AddEditShopScreenState extends ConsumerState<AddEditShopScreen> {
                     // Shop Number
                     AppTextField(
                       controller: _number,
-                      label: 'Shop Number',
+                      label: 'Retailer Code',
                       hint: 'e.g. SH-042',
                       textInputAction: TextInputAction.next,
                     ),
@@ -200,8 +202,9 @@ class _AddEditShopScreenState extends ConsumerState<AddEditShopScreen> {
                     // Area picker
                     Text(
                       'Area *',
-                      style: theme.textTheme.bodyMedium
-                          ?.copyWith(fontWeight: FontWeight.w600),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     areasAsync.when(
@@ -261,8 +264,9 @@ class _AddEditShopScreenState extends ConsumerState<AddEditShopScreen> {
                       const SizedBox(height: AppSpacing.sm),
                       Text(
                         _error!,
-                        style: theme.textTheme.bodySmall
-                            ?.copyWith(color: theme.colorScheme.error),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.error,
+                        ),
                       ),
                     ],
                     const SizedBox(height: AppSpacing.md),
@@ -323,13 +327,13 @@ class _AreaPickerFieldState extends ConsumerState<_AreaPickerField> {
   }
 
   void _toggle() => setState(() {
-        _open = !_open;
-        if (!_open) {
-          _creatingNew = false;
-          _searchCtrl.clear();
-          _newAreaCtrl.clear();
-        }
-      });
+    _open = !_open;
+    if (!_open) {
+      _creatingNew = false;
+      _searchCtrl.clear();
+      _newAreaCtrl.clear();
+    }
+  });
 
   void _select(Area a) {
     widget.onAreaSelected(a);
@@ -345,8 +349,7 @@ class _AreaPickerFieldState extends ConsumerState<_AreaPickerField> {
     if (name.isEmpty) return;
     setState(() => _savingArea = true);
     try {
-      final area =
-          await ref.read(adminAreasListProvider.notifier).create(name);
+      final area = await ref.read(adminAreasListProvider.notifier).create(name);
       if (mounted) _select(area);
     } finally {
       if (mounted) setState(() => _savingArea = false);
@@ -361,8 +364,9 @@ class _AreaPickerFieldState extends ConsumerState<_AreaPickerField> {
     final borderColor = _open
         ? AppColors.primary
         : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0));
-    final fillColor =
-        isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC);
+    final fillColor = isDark
+        ? const Color(0xFF1E293B)
+        : const Color(0xFFF8FAFC);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -450,8 +454,10 @@ class _AreaPickerFieldState extends ConsumerState<_AreaPickerField> {
               hintText: 'Search areas...',
               prefixIcon: const Icon(Icons.search, size: 18),
               isDense: true,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(
@@ -502,8 +508,9 @@ class _AreaPickerFieldState extends ConsumerState<_AreaPickerField> {
                           size: 16,
                           color: isSelected
                               ? AppColors.primary
-                              : theme.colorScheme.onSurface
-                                  .withValues(alpha: 0.5),
+                              : theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.5,
+                                ),
                         ),
                         const SizedBox(width: 10),
                         Text(
@@ -565,8 +572,9 @@ class _AreaPickerFieldState extends ConsumerState<_AreaPickerField> {
               Expanded(
                 child: Text(
                   'Create new area',
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w700),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
               GestureDetector(
@@ -594,8 +602,10 @@ class _AreaPickerFieldState extends ConsumerState<_AreaPickerField> {
             decoration: InputDecoration(
               hintText: 'Area name',
               isDense: true,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),

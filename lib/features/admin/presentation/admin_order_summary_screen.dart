@@ -370,7 +370,7 @@ class _TotalsSection extends StatelessWidget {
               vertical: 14,
             ),
             decoration: BoxDecoration(
-              color: AppColors.primary,
+              color: theme.colorScheme.primary,
               borderRadius: BorderRadius.circular(AppSpacing.radiusButton),
             ),
             child: Row(

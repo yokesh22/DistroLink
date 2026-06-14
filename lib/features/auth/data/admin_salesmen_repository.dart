@@ -23,13 +23,11 @@ class AdminSalesmenRepository {
     required String email,
     required String password,
   }) async {
-    print("salesmen add");
     // Step 1: create auth user via Edge Function.
     final response = await _client.functions.invoke(
       'create-user',
       body: {'email': email, 'password': password},
     );
-    print("response: ${response}");
     if (response.status != 200) {
       final msg =
           (response.data as Map<String, dynamic>?)?['error'] as String? ??
@@ -38,7 +36,6 @@ class AdminSalesmenRepository {
     }
     final authUserId =
         (response.data as Map<String, dynamic>)['auth_user_id'] as String;
-    print(authUserId);
     // Step 2: insert into public.users.
     final userRow = await _client
         .from('users')
@@ -53,7 +50,6 @@ class AdminSalesmenRepository {
         })
         .select('id')
         .single();
-    print("inseted");
     final userId = userRow['id'] as String;
 
     // Step 3: insert into public.salesmen.
@@ -69,7 +65,6 @@ class AdminSalesmenRepository {
         })
         .select()
         .single();
-    print("salesmen, ${salesmanRow}");
     return Salesman.fromJson(salesmanRow);
   }
 

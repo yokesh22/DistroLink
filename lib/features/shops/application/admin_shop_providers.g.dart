@@ -81,7 +81,7 @@ final class AdminShopsListProvider
   AdminShopsList create() => AdminShopsList();
 }
 
-String _$adminShopsListHash() => r'954e1366a000e5dbc6c902e8d7e939546895ca9d';
+String _$adminShopsListHash() => r'78dfb1e3a4ef8dde94992181c36d242deceb6ecb';
 
 abstract class _$AdminShopsList extends $AsyncNotifier<List<Shop>> {
   FutureOr<List<Shop>> build();

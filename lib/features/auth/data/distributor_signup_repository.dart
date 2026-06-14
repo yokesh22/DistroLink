@@ -6,12 +6,16 @@ class DistributorSignupRepository {
 
   /// Signs up a new distributor:
   /// 1. Creates a Supabase auth user and sends a confirmation email.
-  /// 2. Calls the `create-distributor` Edge Function to insert the
-  ///    `distributors` + `users` rows (requires service-role, hence Edge Fn).
+  /// 2. Calls the `submit-signup-request` Edge Function to file a *pending*
+  ///    request (service-role, hence Edge Fn).
   ///
-  /// Throws if either step fails. If the Edge Function fails after
-  /// auth sign-up, the auth user exists without DB rows — acceptable Phase 1
-  /// debt (cleaned up manually or via a future cron).
+  /// The distributor + users rows are NOT created here — that happens only when
+  /// a super_admin approves the request (review-signup-request). Until then the
+  /// app shows the pending-approval screen.
+  ///
+  /// Throws if either step fails. If the Edge Function fails after auth
+  /// sign-up, the auth user exists without a request row — acceptable debt
+  /// (the user can retry; submit is idempotent on auth_user_id).
   Future<void> signup({
     required String email,
     required String password,
@@ -36,9 +40,9 @@ class DistributorSignupRepository {
       );
     }
 
-    // Step 2: create distributor + users rows via Edge Function.
+    // Step 2: file a pending signup request via Edge Function.
     final fnResponse = await _client.functions.invoke(
-      'create-distributor',
+      'submit-signup-request',
       body: {
         'authUserId': authUserId,
         'businessName': businessName.trim(),
@@ -51,7 +55,7 @@ class DistributorSignupRepository {
     if (fnResponse.status != 200) {
       final error = (fnResponse.data as Map<String, dynamic>?)?['error']
           as String? ??
-          'Failed to set up distributor account';
+          'Failed to submit your signup request';
       throw Exception(error);
     }
   }

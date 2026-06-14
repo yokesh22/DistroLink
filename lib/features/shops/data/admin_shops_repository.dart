@@ -6,19 +6,19 @@ class AdminShopsRepository {
   final SupabaseClient _client;
 
   Future<List<Shop>> list(String distributorId) async {
-    // Shops aren't directly scoped by distributor_id in the schema,
-    // but areas are accessible to the logged-in admin via RLS.
     final rows = await _client
         .from('shops')
         .select(
-          'id, area_id, shop_name, shop_number, shop_address, '
-          'shop_owner, phone_no, gstin, created_at',
+          'id, distributor_id, area_id, shop_name, shop_number, '
+          'shop_address, shop_owner, phone_no, gstin, created_at',
         )
+        .eq('distributor_id', distributorId)
         .order('shop_name');
     return rows.map(Shop.fromJson).toList();
   }
 
   Future<Shop> create({
+    required String distributorId,
     required String areaId,
     required String shopName,
     required String shopAddress,
@@ -30,6 +30,7 @@ class AdminShopsRepository {
     final row = await _client
         .from('shops')
         .insert({
+          'distributor_id': distributorId,
           'area_id': areaId,
           'shop_name': shopName.trim(),
           'shop_address': shopAddress.trim(),

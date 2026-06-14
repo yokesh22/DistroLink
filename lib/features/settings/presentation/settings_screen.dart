@@ -43,7 +43,7 @@ class SettingsScreen extends ConsumerWidget {
                 children: [
                   CircleAvatar(
                     radius: 25,
-                    backgroundColor: AppColors.primary,
+                    backgroundColor: theme.colorScheme.primary,
                     child: salesmanAsync.whenOrNull(
                           data: (s) => Text(
                             s?.name.isNotEmpty == true
@@ -315,7 +315,7 @@ class _PrefRow extends StatelessWidget {
           Switch.adaptive(
             value: value,
             onChanged: onChanged,
-            activeThumbColor: AppColors.primary,
+            activeThumbColor: Theme.of(context).colorScheme.primary,
           ),
         ],
       ),

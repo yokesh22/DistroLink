@@ -16,8 +16,7 @@ class AddItemsScreen extends ConsumerStatefulWidget {
   const AddItemsScreen({super.key});
 
   @override
-  ConsumerState<AddItemsScreen> createState() =>
-      _AddItemsScreenState();
+  ConsumerState<AddItemsScreen> createState() => _AddItemsScreenState();
 }
 
 class _AddItemsScreenState extends ConsumerState<AddItemsScreen> {
@@ -33,8 +32,7 @@ class _AddItemsScreenState extends ConsumerState<AddItemsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final draft = ref.watch(orderDraftProvider);
-    final notifier =
-        ref.read(orderDraftProvider.notifier);
+    final notifier = ref.read(orderDraftProvider.notifier);
     final productsAsync = _searchCtrl.text.isNotEmpty
         ? ref.watch(
             productSearchProvider(_searchCtrl.text),
@@ -48,156 +46,145 @@ class _AddItemsScreenState extends ConsumerState<AddItemsScreen> {
       canPop: false,
       onPopInvokedWithResult: (_, _) => context.go('/orders/new/2'),
       child: Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.go('/orders/new/2'),
-        ),
-        title: const Text('Add Items'),
-        actions: [
-          if (draft.items.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(right: 16),
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.blueLight,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '${draft.items.length} items',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary,
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_rounded),
+            onPressed: () => context.go('/orders/new/2'),
+          ),
+          title: const Text('Add Items'),
+          actions: [
+            if (draft.items.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.blueLight,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '${draft.items.length} items',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.primary,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-        ],
-      ),
-      body: Column(
-        children: [
-          const AppStepIndicator(currentStep: 3),
+          ],
+        ),
+        body: Column(
+          children: [
+            const AppStepIndicator(currentStep: 3),
 
-          // ── Search + scan/voice (Phase 2) ─────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.screenPadding,
-              4,
-              AppSpacing.screenPadding,
-              0,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchCtrl,
-                    decoration: const InputDecoration(
-                      hintText: 'Search item / code…',
-                      prefixIcon:
-                          Icon(Icons.search_rounded, size: 20),
+            // ── Search + scan/voice (Phase 2) ─────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.screenPadding,
+                4,
+                AppSpacing.screenPadding,
+                20,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _searchCtrl,
+                      decoration: const InputDecoration(
+                        hintText: 'Search item / code…',
+                        prefixIcon: Icon(Icons.search_rounded, size: 20),
+                      ),
+                      onChanged: (_) => setState(() {}),
                     ),
-                    onChanged: (_) => setState(() {}),
                   ),
-                ),
-                const SizedBox(width: 8),
-                const _IconBox(
-                  icon: Icons.qr_code_scanner_rounded,
-                  tooltip: 'Scan barcode (Phase 4)',
-                ),
-                const SizedBox(width: 8),
-                const _IconBox(
-                  icon: Icons.mic_rounded,
-                  tooltip: 'Voice input (Phase 4)',
-                ),
-              ],
+                  // const SizedBox(width: 8),
+                  // const _IconBox(
+                  //   icon: Icons.qr_code_scanner_rounded,
+                  //   tooltip: 'Scan barcode (Phase 4)',
+                  // ),
+                  // const SizedBox(width: 8),
+                  // const _IconBox(
+                  //   icon: Icons.mic_rounded,
+                  //   tooltip: 'Voice input (Phase 4)',
+                  // ),
+                ],
+              ),
             ),
-          ),
 
-          // ── Quick Add chips ────────────────────────────────────
-          lastItemsAsync.when(
-            data: (names) => names.isEmpty
-                ? const SizedBox.shrink()
-                : _QuickAddSection(
-                    names: names,
-                    productsAsync: productsAsync,
-                    onAdd: (name) {
-                      productsAsync.whenData((products) {
-                        final p = products.firstWhere(
-                          (p) => p.itemName == name,
-                          orElse: () => products.first,
-                        );
-                        notifier.addItem(DraftItem.fromProduct(p));
-                      });
-                    },
-                  ),
-            loading: () => const SizedBox.shrink(),
-            error: (_, _) => const SizedBox.shrink(),
-          ),
-
-          const Divider(height: 1),
-
-          // ── Product search results ─────────────────────────────
-          Expanded(
-            child: productsAsync.when(
-              data: (products) => products.isEmpty
-                  ? Center(
-                      child: Text(
-                        'No products found.',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.screenPadding,
-                      ),
-                      itemCount: products.length,
-                      itemBuilder: (_, i) {
-                        final p = products[i];
-                        return ListTile(
-                          title: Text(p.itemName),
-                          subtitle: Text('${p.itemCode} · MRP ₹${p.mrp}'),
-                          trailing: IconButton(
-                            icon: const Icon(
-                              Icons.add_circle_outline_rounded,
-                              color: AppColors.primary,
-                            ),
-                            onPressed: () =>
-                                notifier.addItem(DraftItem.fromProduct(p)),
-                          ),
-                        );
+            // ── Quick Add chips ────────────────────────────────────
+            lastItemsAsync.when(
+              data: (names) => names.isEmpty
+                  ? const SizedBox.shrink()
+                  : _QuickAddSection(
+                      names: names,
+                      productsAsync: productsAsync,
+                      onAdd: (name) {
+                        productsAsync.whenData((products) {
+                          final p = products.firstWhere(
+                            (p) => p.itemName == name,
+                            orElse: () => products.first,
+                          );
+                          notifier.addItem(DraftItem.fromProduct(p));
+                        });
                       },
                     ),
-              loading: () =>
-                  const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Error: $e')),
+              loading: () => const SizedBox.shrink(),
+              error: (_, _) => const SizedBox.shrink(),
             ),
-          ),
 
-          // ── Cart items ─────────────────────────────────────────
-          Expanded(
-            flex: 2,
-            child: draft.items.isEmpty
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Text(
-                        'No items added yet.\n'
-                        'Tap + on a product above to add it.',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.4),
+            const Divider(height: 1),
+
+            // ── Product search results ─────────────────────────────
+            Expanded(
+              child: productsAsync.when(
+                data: (products) => products.isEmpty
+                    ? Center(
+                        child: Text(
+                          'No products found.',
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
-                        textAlign: TextAlign.center,
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.screenPadding,
+                        ),
+                        itemCount: products.length,
+                        itemBuilder: (_, i) {
+                          final p = products[i];
+                          return ListTile(
+                            title: Text(p.itemName),
+                            subtitle: Text('${p.itemCode} · MRP ₹${p.mrp}'),
+                            trailing: IconButton(
+                              icon: Icon(
+                                Icons.add_circle_outline_rounded,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              onPressed: () =>
+                                  notifier.addItem(DraftItem.fromProduct(p)),
+                            ),
+                          );
+                        },
                       ),
-                    ),
-                  )
-                : ListView.builder(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, _) => Center(child: Text('Error: $e')),
+              ),
+            ),
+
+            // ── Cart items ─────────────────────────────────────────
+            // Only reserve space once at least one item is selected; until
+            // then the product list above uses the full section.
+            if (draft.items.isNotEmpty) ...[
+              const Divider(height: 1),
+              Expanded(
+                flex: 2,
+                child: ColoredBox(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.05),
+                  child: ListView.builder(
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.screenPadding,
                     ),
@@ -205,8 +192,7 @@ class _AddItemsScreenState extends ConsumerState<AddItemsScreen> {
                     itemBuilder: (_, i) => _ItemRow(
                       item: draft.items[i],
                       onQtyChanged: (qty) {
-                        final delta =
-                            qty - draft.items[i].quantity;
+                        final delta = qty - draft.items[i].quantity;
                         notifier.changeQty(
                           draft.items[i].productId,
                           delta,
@@ -221,48 +207,50 @@ class _AddItemsScreenState extends ConsumerState<AddItemsScreen> {
                       ),
                     ),
                   ),
-          ),
-
-          // ── Sticky footer ──────────────────────────────────────
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.screenPadding),
-            decoration: BoxDecoration(
-              color: theme.scaffoldBackgroundColor,
-              border: Border(
-                top: BorderSide(
-                  color: theme.colorScheme.outline,
                 ),
               ),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${draft.items.length} items · Subtotal',
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                    Text(
-                      '₹${draft.subtotal.toStringAsFixed(0)}',
-                      style: theme.textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.w800),
-                    ),
-                  ],
+            ],
+
+            // ── Sticky footer ──────────────────────────────────────
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.screenPadding),
+              decoration: BoxDecoration(
+                color: theme.scaffoldBackgroundColor,
+                border: Border(
+                  top: BorderSide(
+                    color: theme.colorScheme.outline,
+                  ),
                 ),
-                const SizedBox(height: AppSpacing.xs),
-                AppButton(
-                  label: 'Next: Preview Bill →',
-                  onPressed:
-                      draft.items.isNotEmpty && !hasInvalidRate
-                          ? () => context.go('/orders/new/4')
-                          : null,
-                ),
-              ],
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${draft.items.length} items · Subtotal',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                      Text(
+                        '₹${draft.subtotal.toStringAsFixed(0)}',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  AppButton(
+                    label: 'Next: Preview Bill →',
+                    onPressed: draft.items.isNotEmpty && !hasInvalidRate
+                        ? () => context.go('/orders/new/4')
+                        : null,
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -294,14 +282,13 @@ class _QuickAddSection extends StatelessWidget {
           Text(
             'QUICK ADD — LAST ORDER',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.8,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.5),
-                ),
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.8,
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
           ),
           const SizedBox(height: 8),
           SingleChildScrollView(
@@ -361,8 +348,7 @@ class _ItemRowState extends State<_ItemRow> {
     super.didUpdateWidget(oldWidget);
     if (!_editingRate &&
         oldWidget.item.sellingRate != widget.item.sellingRate) {
-      _rateCtrl.text =
-          widget.item.sellingRate.toStringAsFixed(0);
+      _rateCtrl.text = widget.item.sellingRate.toStringAsFixed(0);
     }
   }
 
@@ -398,8 +384,9 @@ class _ItemRowState extends State<_ItemRow> {
                     ),
                     Text(
                       item.itemName,
-                      style: theme.textTheme.bodyLarge
-                          ?.copyWith(fontWeight: FontWeight.w700),
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     Row(
                       children: [
@@ -421,16 +408,16 @@ class _ItemRowState extends State<_ItemRow> {
                             ),
                             decoration: BoxDecoration(
                               color: theme.colorScheme.surface,
-                              borderRadius:
-                                  BorderRadius.circular(4),
+                              borderRadius: BorderRadius.circular(4),
                               border: Border.all(
                                 color: theme.colorScheme.outline,
                               ),
                             ),
                             child: Text(
                               'GST ${item.gstPercent.toStringAsFixed(0)}%',
-                              style: theme.textTheme.bodySmall
-                                  ?.copyWith(fontSize: 10),
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontSize: 10,
+                              ),
                             ),
                           ),
                         ],
@@ -448,8 +435,9 @@ class _ItemRowState extends State<_ItemRow> {
                   ),
                   Text(
                     '₹${item.lineTotal.toStringAsFixed(0)}',
-                    style: theme.textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w800),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                   if (item.gstPercent > 0)
                     Text(
@@ -491,7 +479,7 @@ class _ItemRowState extends State<_ItemRow> {
                         fontWeight: FontWeight.w700,
                         color: isRateInvalid
                             ? AppColors.error
-                            : AppColors.primary,
+                            : theme.colorScheme.primary,
                       ),
                       decoration: InputDecoration(
                         contentPadding: const EdgeInsets.symmetric(
@@ -503,30 +491,28 @@ class _ItemRowState extends State<_ItemRow> {
                           borderSide: BorderSide(
                             color: isRateInvalid
                                 ? AppColors.error
-                                : AppColors.primary,
+                                : theme.colorScheme.primary,
                             width: 1.5,
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(
-                            color: AppColors.primary,
+                          borderSide: BorderSide(
+                            color: theme.colorScheme.primary,
                             width: 1.5,
                           ),
                         ),
                         fillColor: AppColors.blueLight,
                         filled: true,
                       ),
-                      onTap: () =>
-                          setState(() => _editingRate = true),
+                      onTap: () => setState(() => _editingRate = true),
                       onChanged: (v) {
                         final parsed = double.tryParse(v);
                         if (parsed != null) {
                           widget.onRateChanged(parsed);
                         }
                       },
-                      onSubmitted: (_) =>
-                          setState(() => _editingRate = false),
+                      onSubmitted: (_) => setState(() => _editingRate = false),
                     ),
                   ],
                 ),
@@ -535,8 +521,7 @@ class _ItemRowState extends State<_ItemRow> {
               IconButton(
                 icon: Icon(
                   Icons.close_rounded,
-                  color: theme.colorScheme.onSurface
-                      .withValues(alpha: 0.4),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                 ),
                 onPressed: widget.onRemove,
               ),
@@ -578,17 +563,13 @@ class _IconBox extends StatelessWidget {
             color: Theme.of(context).colorScheme.outline,
             width: 1.5,
           ),
-          borderRadius:
-              BorderRadius.circular(AppSpacing.radiusInput),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusInput),
           color: Theme.of(context).colorScheme.surface,
         ),
         child: Icon(
           icon,
           size: 22,
-          color: Theme.of(context)
-              .colorScheme
-              .onSurface
-              .withValues(alpha: 0.3),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
         ),
       ),
     );

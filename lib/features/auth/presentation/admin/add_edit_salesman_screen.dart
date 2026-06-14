@@ -32,6 +32,18 @@ class _AddEditSalesmanScreenState
 
   bool get _isEdit => widget.salesman != null;
 
+  /// Leave this screen safely. Normally pops back to wherever we came from
+  /// (e.g. the salesmen list). When there's nothing to pop — the onboarding
+  /// flow reaches here via `context.go`, which replaces the stack — fall back
+  /// to the dashboard instead of throwing "nothing to pop".
+  void _close() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/admin/dashboard');
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -102,7 +114,7 @@ class _AddEditSalesmanScreenState
           password: password,
         );
       }
-      if (mounted) context.pop();
+      if (mounted) _close();
     } on Exception catch (e) {
       setState(() => _error = e.toString());
     } finally {
@@ -119,7 +131,7 @@ class _AddEditSalesmanScreenState
             userId: s.userId ?? '',
             isActive: !s.isActive,
           );
-      if (mounted) context.pop();
+      if (mounted) _close();
     } on Exception catch (e) {
       setState(() => _error = e.toString());
     } finally {
@@ -146,7 +158,7 @@ class _AddEditSalesmanScreenState
               child: Row(
                 children: [
                   IconButton(
-                    onPressed: () => context.pop(),
+                    onPressed: _close,
                     icon: const Icon(Icons.arrow_back_rounded),
                   ),
                   const SizedBox(width: 4),

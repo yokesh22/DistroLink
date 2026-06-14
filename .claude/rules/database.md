@@ -78,12 +78,13 @@ Admin-controlled list of geographic areas (e.g. "Sector 12", "MG Road").
 | Column | Type | Notes |
 |---|---|---|
 | id | uuid PK | |
+| distributor_id | uuid | FK → `distributors.id`. **Per-distributor tenant scope** (added migration `0001`). |
 | name | text | |
 | created_at | timestamptz | |
 
-**Has many:** `shops`.
+**Has many:** `shops`. **Belongs to:** `distributors`.
 
-> Areas are **not** scoped per-salesman in the schema. Filter shops by area at the UI; assignment of areas-to-salesmen (if needed) is a future enhancement.
+> Areas are scoped per-**distributor** (not per-salesman). RLS (`areas_tenant_rw`) restricts rows to the caller's distributor via `public.auth_distributor_id()`; the app also filters by `distributor_id` as defence-in-depth. Assignment of areas-to-salesmen (if needed) is a future enhancement.
 
 ---
 
@@ -94,12 +95,17 @@ Catalog of shops a salesman can place orders against. **Salesmen cannot create s
 | Column | Type | Notes |
 |---|---|---|
 | id | uuid PK | |
+| distributor_id | uuid | FK → `distributors.id`. **Per-distributor tenant scope** (added migration `0001`). |
 | area_id | uuid | FK → `areas.id` |
 | shop_name | text | |
 | shop_number | text | Human-readable code, e.g. `SH-041` |
 | shop_address | text | |
+| shop_owner | text | Optional |
+| phone_no | text | Optional |
+| gstin | text | Optional |
 | created_at | timestamptz | |
 
+> Scoped per-**distributor**. RLS (`shops_tenant_rw`) restricts rows to the caller's distributor via `public.auth_distributor_id()`; the app also filters by `distributor_id`.
 > No `is_active` column today. If a shop needs to be hidden, plan an `is_active` migration.
 
 ---

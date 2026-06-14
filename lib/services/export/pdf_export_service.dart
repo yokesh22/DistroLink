@@ -14,11 +14,12 @@ class PdfExportService {
   static final _filenameFmt = DateFormat('ddMMyyyy');
   static final _numFmt = NumberFormat('#,##0.00', 'en_IN');
 
-  static const _blue = PdfColor.fromInt(0xFF2563EB);
-  static const _blueLight = PdfColor.fromInt(0xFFEFF6FF);
+  // Gold palette — premium commercial-billing look.
+  static const _gold = PdfColor.fromInt(0xFFA67C00); // deep gold (header/accent)
+  static const _goldLight = PdfColor.fromInt(0xFFFBF4E0); // soft cream tint
+  static const _goldMid = PdfColor.fromInt(0xFFE8D38A); // badge / highlight
   static const _border = PdfColor.fromInt(0xFFE2E8F0);
   static const _textMuted = PdfColor.fromInt(0xFF64748B);
-  static const _blueMid = PdfColor.fromInt(0xFF93C5FD);
 
   Future<File> generate({
     required List<OrderWithItems> data,
@@ -64,7 +65,7 @@ class PdfExportService {
       pw.SizedBox(height: 10),
       _itemsTable(items),
       pw.SizedBox(height: 8),
-      _totals(order),
+      _totals(order, items),
       pw.SizedBox(height: 10),
       _notesAndTerms(),
       pw.SizedBox(height: 10),
@@ -77,7 +78,7 @@ class PdfExportService {
   pw.Widget _header(Order order) {
     return pw.Container(
       decoration: const pw.BoxDecoration(
-        color: _blue,
+        color: _gold,
         borderRadius: pw.BorderRadius.all(pw.Radius.circular(8)),
       ),
       padding: const pw.EdgeInsets.all(14),
@@ -124,14 +125,14 @@ class PdfExportService {
                   vertical: 3,
                 ),
                 decoration: const pw.BoxDecoration(
-                  color: _blueMid,
+                  color: _goldMid,
                   borderRadius:
                       pw.BorderRadius.all(pw.Radius.circular(10)),
                 ),
                 child: pw.Text(
                   'Thank you for your order!',
                   style: pw.TextStyle(
-                    color: _blue,
+                    color: _gold,
                     fontSize: 7,
                     fontWeight: pw.FontWeight.bold,
                   ),
@@ -256,7 +257,7 @@ class PdfExportService {
             style: pw.TextStyle(
               fontSize: 7,
               fontWeight: pw.FontWeight.bold,
-              color: _blue,
+              color: _gold,
             ),
           ),
           pw.SizedBox(height: 3),
@@ -333,10 +334,10 @@ class PdfExportService {
         fontSize: 8,
         fontWeight: pw.FontWeight.bold,
       ),
-      headerDecoration: const pw.BoxDecoration(color: _blue),
+      headerDecoration: const pw.BoxDecoration(color: _gold),
       cellStyle: const pw.TextStyle(fontSize: 8),
       cellPadding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-      oddRowDecoration: const pw.BoxDecoration(color: _blueLight),
+      oddRowDecoration: const pw.BoxDecoration(color: _goldLight),
       cellAlignments: {
         0: pw.Alignment.center,
         3: pw.Alignment.centerRight,
@@ -358,83 +359,193 @@ class PdfExportService {
 
   // ─── Totals ───────────────────────────────────────────────────────
 
-  pw.Widget _totals(Order order) {
-    return pw.Align(
-      alignment: pw.Alignment.centerRight,
-      child: pw.SizedBox(
-        width: 210,
-        child: pw.Column(
-          children: [
-            pw.Container(
-              padding: const pw.EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 6,
-              ),
-              decoration: pw.BoxDecoration(
-                border: pw.Border.all(color: _border),
-                borderRadius: const pw.BorderRadius.only(
-                  topLeft: pw.Radius.circular(6),
-                  topRight: pw.Radius.circular(6),
-                ),
-              ),
-              child: pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Text(
-                    'Sub Total',
-                    style: const pw.TextStyle(
-                      fontSize: 9,
-                      color: _textMuted,
-                    ),
-                  ),
-                  pw.Text(
-                    _numFmt.format(order.subtotal),
-                    style: pw.TextStyle(
-                      fontSize: 9,
-                      fontWeight: pw.FontWeight.bold,
-                    ),
-                  ),
-                ],
+  pw.Widget _totals(Order order, List<OrderItem> items) {
+    final gst = order.gstTotal;
+    // CGST/SGST split per business-rules (intra-state). Remainder goes to SGST
+    // so cgst + sgst == gstTotal exactly and subtotal + tax == grandTotal.
+    final cgst = gst / 2;
+    final sgst = gst - cgst;
+    final taxLines = _taxBreakup(items);
+    final hasGst = taxLines.any((l) => l.rate > 0);
+
+    final totalsBox = pw.SizedBox(
+      width: 220,
+      child: pw.Column(
+        children: [
+          pw.Container(
+            padding: const pw.EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 8,
+            ),
+            decoration: pw.BoxDecoration(
+              border: pw.Border.all(color: _border),
+              borderRadius: const pw.BorderRadius.only(
+                topLeft: pw.Radius.circular(6),
+                topRight: pw.Radius.circular(6),
               ),
             ),
-            pw.Container(
-              padding: const pw.EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 8,
-              ),
-              decoration: const pw.BoxDecoration(
-                color: _blue,
-                borderRadius: pw.BorderRadius.only(
-                  bottomLeft: pw.Radius.circular(6),
-                  bottomRight: pw.Radius.circular(6),
-                ),
-              ),
-              child: pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Text(
-                    'Grand Total',
-                    style: pw.TextStyle(
-                      color: PdfColors.white,
-                      fontSize: 11,
-                      fontWeight: pw.FontWeight.bold,
-                    ),
-                  ),
-                  pw.Text(
-                    _numFmt.format(order.grandTotal),
-                    style: pw.TextStyle(
-                      color: PdfColors.white,
-                      fontSize: 13,
-                      fontWeight: pw.FontWeight.bold,
-                    ),
-                  ),
-                ],
+            child: pw.Column(
+              children: [
+                _totalRow('Sub Total (Taxable)', order.subtotal),
+                pw.SizedBox(height: 5),
+                _totalRow('CGST', cgst),
+                pw.SizedBox(height: 5),
+                _totalRow('SGST', sgst),
+                pw.SizedBox(height: 5),
+                pw.Divider(height: 1, color: _border),
+                pw.SizedBox(height: 5),
+                _totalRow('Total Tax (GST)', gst),
+              ],
+            ),
+          ),
+          pw.Container(
+            padding: const pw.EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 8,
+            ),
+            decoration: const pw.BoxDecoration(
+              color: _gold,
+              borderRadius: pw.BorderRadius.only(
+                bottomLeft: pw.Radius.circular(6),
+                bottomRight: pw.Radius.circular(6),
               ),
             ),
-          ],
-        ),
+            child: pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Text(
+                  'Grand Total',
+                  style: pw.TextStyle(
+                    color: PdfColors.white,
+                    fontSize: 11,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+                pw.Text(
+                  _numFmt.format(order.grandTotal),
+                  style: pw.TextStyle(
+                    color: PdfColors.white,
+                    fontSize: 13,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
+
+    // No GST on any line → just the totals box, right-aligned.
+    if (!hasGst) {
+      return pw.Align(
+        alignment: pw.Alignment.centerRight,
+        child: totalsBox,
+      );
+    }
+
+    // Standard GST-invoice footer: rate-wise tax summary on the left, the
+    // payable totals on the right.
+    return pw.Row(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Expanded(child: _taxSummaryTable(taxLines)),
+        pw.SizedBox(width: 12),
+        totalsBox,
+      ],
+    );
+  }
+
+  pw.Widget _totalRow(String label, double value) {
+    return pw.Row(
+      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+      children: [
+        pw.Text(
+          label,
+          style: const pw.TextStyle(fontSize: 9, color: _textMuted),
+        ),
+        pw.Text(
+          _numFmt.format(value),
+          style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+        ),
+      ],
+    );
+  }
+
+  // ─── Tax summary (rate-wise CGST/SGST) ─────────────────────────────
+
+  pw.Widget _taxSummaryTable(List<_TaxLine> lines) {
+    final taxed = lines.where((l) => l.rate > 0).toList();
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text(
+          'TAX SUMMARY (GST)',
+          style: pw.TextStyle(
+            fontSize: 7,
+            fontWeight: pw.FontWeight.bold,
+            color: _gold,
+          ),
+        ),
+        pw.SizedBox(height: 4),
+        pw.TableHelper.fromTextArray(
+          headers: ['GST %', 'Taxable', 'CGST', 'SGST', 'Total Tax'],
+          data: taxed
+              .map(
+                (l) => [
+                  _pct(l.rate),
+                  _numFmt.format(l.taxable),
+                  _numFmt.format(l.cgst),
+                  _numFmt.format(l.sgst),
+                  _numFmt.format(l.tax),
+                ],
+              )
+              .toList(),
+          headerStyle: pw.TextStyle(
+            color: PdfColors.white,
+            fontSize: 7,
+            fontWeight: pw.FontWeight.bold,
+          ),
+          headerDecoration: const pw.BoxDecoration(color: _gold),
+          cellStyle: const pw.TextStyle(fontSize: 7),
+          cellPadding: const pw.EdgeInsets.symmetric(
+            horizontal: 4,
+            vertical: 3,
+          ),
+          oddRowDecoration: const pw.BoxDecoration(color: _goldLight),
+          cellAlignments: {
+            0: pw.Alignment.center,
+            1: pw.Alignment.centerRight,
+            2: pw.Alignment.centerRight,
+            3: pw.Alignment.centerRight,
+            4: pw.Alignment.centerRight,
+          },
+        ),
+      ],
+    );
+  }
+
+  String _pct(double rate) => rate % 1 == 0
+      ? '${rate.toStringAsFixed(0)}%'
+      : '${rate.toStringAsFixed(2)}%';
+
+  List<_TaxLine> _taxBreakup(List<OrderItem> items) {
+    final byRate = <double, double>{};
+    for (final it in items) {
+      byRate[it.gstPercent] = (byRate[it.gstPercent] ?? 0) + it.lineTotal;
+    }
+    final lines = byRate.entries.map((e) {
+      final tax = e.value * e.key / 100;
+      final cgst = tax / 2;
+      return _TaxLine(
+        rate: e.key,
+        taxable: e.value,
+        cgst: cgst,
+        sgst: tax - cgst,
+      );
+    }).toList()
+      ..sort((a, b) => a.rate.compareTo(b.rate));
+    return lines;
   }
 
   // ─── Notes & Terms ────────────────────────────────────────────────
@@ -486,7 +597,7 @@ class PdfExportService {
             style: pw.TextStyle(
               fontSize: 7,
               fontWeight: pw.FontWeight.bold,
-              color: _blue,
+              color: _gold,
             ),
           ),
           pw.SizedBox(height: 3),
@@ -536,7 +647,7 @@ class PdfExportService {
     return pw.Container(
       padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: pw.BoxDecoration(
-        color: _blueLight,
+        color: _goldLight,
         border: pw.Border.all(color: _border),
         borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
       ),
@@ -554,7 +665,7 @@ class PdfExportService {
             style: pw.TextStyle(
               fontSize: 10,
               fontWeight: pw.FontWeight.bold,
-              color: _blue,
+              color: _gold,
             ),
             textAlign: pw.TextAlign.center,
           ),
@@ -562,4 +673,21 @@ class PdfExportService {
       ),
     );
   }
+}
+
+/// One GST-rate group for the rate-wise tax summary.
+class _TaxLine {
+  const _TaxLine({
+    required this.rate,
+    required this.taxable,
+    required this.cgst,
+    required this.sgst,
+  });
+
+  final double rate;
+  final double taxable;
+  final double cgst;
+  final double sgst;
+
+  double get tax => cgst + sgst;
 }

@@ -4,11 +4,16 @@ import 'package:distro_link/features/admin/presentation/admin_order_summary_scre
 import 'package:distro_link/features/admin/presentation/admin_shell.dart';
 import 'package:distro_link/features/analytics/presentation/analytics_screen.dart';
 import 'package:distro_link/features/auth/application/auth_providers.dart';
+import 'package:distro_link/features/auth/application/signup_request_providers.dart';
 import 'package:distro_link/features/auth/domain/app_user.dart';
+import 'package:distro_link/features/auth/domain/signup_request.dart';
+import 'package:distro_link/features/auth/presentation/account_declined_screen.dart';
 import 'package:distro_link/features/auth/presentation/admin/add_edit_salesman_screen.dart';
 import 'package:distro_link/features/auth/presentation/admin/salesmen_list_screen.dart';
 import 'package:distro_link/features/auth/presentation/login_screen.dart';
+import 'package:distro_link/features/auth/presentation/pending_approval_screen.dart';
 import 'package:distro_link/features/auth/presentation/signup_screen.dart';
+import 'package:distro_link/features/auth/presentation/super_admin/approvals_screen.dart';
 import 'package:distro_link/features/auth/presentation/verify_email_screen.dart';
 import 'package:distro_link/features/catalog/domain/product.dart';
 import 'package:distro_link/features/catalog/presentation/admin/add_edit_product_screen.dart';
@@ -64,6 +69,18 @@ GoRouter router(Ref ref) {
         builder: (_, state) => VerifyEmailScreen(
           email: state.uri.queryParameters['email'] ?? '',
         ),
+      ),
+      GoRoute(
+        path: '/pending-approval',
+        builder: (_, _) => const PendingApprovalScreen(),
+      ),
+      GoRoute(
+        path: '/account-declined',
+        builder: (_, _) => const AccountDeclinedScreen(),
+      ),
+      GoRoute(
+        path: '/super-admin/approvals',
+        builder: (_, _) => const SuperAdminApprovalsScreen(),
       ),
       GoRoute(
         path: '/onboarding',
@@ -209,8 +226,20 @@ GoRouter router(Ref ref) {
 class _RouterNotifier extends ChangeNotifier {
   _RouterNotifier(this._ref) {
     _ref
-      ..listen(authStateStreamProvider, (_, _) => notifyListeners())
-      ..listen(currentAppUserProvider, (_, _) => notifyListeners());
+      ..listen(authStateStreamProvider, (_, next) {
+        // Only refresh routing on identity changes — NOT on token refreshes or
+        // user-metadata updates. A spurious refresh makes GoRouter rebuild from
+        // the current URI, discarding imperative `push` history; `pop()`/back
+        // then throws "nothing to pop" mid-form (e.g. admin add-salesman, where
+        // invoking an Edge Function can trigger a background token refresh).
+        final event = next.asData?.value.event;
+        if (event == AuthChangeEvent.signedIn ||
+            event == AuthChangeEvent.signedOut) {
+          notifyListeners();
+        }
+      })
+      ..listen(currentAppUserProvider, (_, _) => notifyListeners())
+      ..listen(mySignupRequestProvider, (_, _) => notifyListeners());
   }
 
   final Ref _ref;
@@ -230,22 +259,55 @@ class _RouterNotifier extends ChangeNotifier {
     }
 
     final userAsync = _ref.read(currentAppUserProvider);
+
+    // Still resolving identity — stay put to avoid a premature redirect.
+    if (userAsync.isLoading) return null;
+
     final user = userAsync.asData?.value;
 
-    // Still fetching — stay put to avoid premature redirect.
-    if (userAsync.isLoading || (user == null && !userAsync.hasError)) {
-      return null;
+    // Logged in but no provisioned `users` row → an unapproved distributor.
+    // Route to the pending / declined screen based on their request status.
+    if (user == null) {
+      final reqAsync = _ref.read(mySignupRequestProvider);
+      if (reqAsync.isLoading) return null;
+
+      final target = reqAsync.asData?.value?.status ==
+              SignupRequestStatus.rejected
+          ? '/account-declined'
+          : '/pending-approval';
+      return path == target ? null : target;
     }
 
-    if (user == null) return path == '/login' ? null : '/login';
+    // Provisioned but disabled (e.g. a super admin revoked an approved account,
+    // or an admin deactivated a salesman) → same dead-end as a declined signup.
+    if (!user.isActive) {
+      return path == '/account-declined' ? null : '/account-declined';
+    }
 
-    final isAdmin = user.role == UserRole.admin ||
-        user.role == UserRole.superAdmin;
+    final isSuperAdmin = user.role == UserRole.superAdmin;
+    final isAdmin = user.role == UserRole.admin;
     final isSalesman = user.role == UserRole.salesman;
 
-    if (path == '/login') {
-      return isAdmin ? '/admin/dashboard' : '/home';
+    // Provisioned users never belong on the signup / account-status screens.
+    const limboPaths = [
+      '/login',
+      '/signup',
+      '/verify-email',
+      '/pending-approval',
+      '/account-declined',
+    ];
+    String homeFor() => isSuperAdmin
+        ? '/super-admin/approvals'
+        : (isAdmin ? '/admin/dashboard' : '/home');
+
+    if (limboPaths.contains(path)) return homeFor();
+
+    // Super admin lives only in the /super-admin area.
+    if (isSuperAdmin) {
+      return path.startsWith('/super-admin') ? null : '/super-admin/approvals';
     }
+    // Everyone else is kept out of it.
+    if (path.startsWith('/super-admin')) return homeFor();
 
     // /onboarding is admin-only but not under /admin — let it through.
     if (path == '/onboarding') {

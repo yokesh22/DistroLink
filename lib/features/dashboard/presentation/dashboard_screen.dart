@@ -27,8 +27,7 @@ class DashboardScreen extends ConsumerWidget {
     final statsAsync = ref.watch(salesmanStatsProvider);
     final recentAsync = ref.watch(recentOrdersProvider);
     final isOnline = ref.watch(isOnlineProvider);
-    final pendingCount =
-        ref.watch(pendingSyncCountProvider).asData?.value ?? 0;
+    final pendingCount = ref.watch(pendingSyncCountProvider).asData?.value ?? 0;
 
     // Pre-warm areas cache so they're available offline when starting an order.
     ref.listen(areasProvider, (_, _) {});
@@ -58,9 +57,7 @@ class DashboardScreen extends ConsumerWidget {
                           children: [
                             Text(
                               'Good morning 👋',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
+                              style: Theme.of(context).textTheme.bodyMedium
                                   ?.copyWith(
                                     color: Theme.of(context)
                                         .colorScheme
@@ -90,7 +87,9 @@ class DashboardScreen extends ConsumerWidget {
                         salesmanAsync.when(
                           data: (s) => CircleAvatar(
                             radius: 22,
-                            backgroundColor: AppColors.primary,
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.primary,
                             child: Text(
                               s?.name.isNotEmpty == true
                                   ? s!.name[0].toUpperCase()
@@ -132,9 +131,9 @@ class DashboardScreen extends ConsumerWidget {
                     OutlinedButton.icon(
                       onPressed: isOnline
                           ? () => context.push(
-                                '/settings/export',
-                                extra: ExportFormat.excel,
-                              )
+                              '/settings/export',
+                              extra: ExportFormat.excel,
+                            )
                           : null,
                       icon: const Icon(Icons.download_rounded, size: 18),
                       label: const Text('Export Report'),
@@ -169,14 +168,13 @@ class DashboardScreen extends ConsumerWidget {
                     Text(
                       'RECENT ORDERS',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.8,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.5),
-                          ),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.8,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.5),
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     recentAsync.when(
@@ -223,7 +221,7 @@ class _StatsGrid extends StatelessWidget {
       children: [
         Container(
           decoration: BoxDecoration(
-            color: AppColors.primary,
+            color: Theme.of(context).colorScheme.primary,
             borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
           ),
           padding: const EdgeInsets.all(AppSpacing.sm),
@@ -284,8 +282,7 @@ class _StatsGrid extends StatelessWidget {
               child: AppStatCard(
                 label: 'Pending Sync',
                 value: '${stats.pendingSync}',
-                footnote:
-                    hasPending ? '⚠ No internet' : '✓ All synced',
+                footnote: hasPending ? '⚠ No internet' : '✓ All synced',
                 footnoteColor: hasPending
                     ? const Color(0xFFB45309)
                     : AppColors.accent,
@@ -362,10 +359,10 @@ class _OrderRow extends StatelessWidget {
               color: AppColors.blueLight,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.storefront_rounded,
               size: 20,
-              color: AppColors.primary,
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
           const SizedBox(width: 12),
@@ -375,8 +372,9 @@ class _OrderRow extends StatelessWidget {
               children: [
                 Text(
                   order.shopName ?? 'Shop',
-                  style: theme.textTheme.bodyMedium
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -393,8 +391,9 @@ class _OrderRow extends StatelessWidget {
             children: [
               Text(
                 '₹${order.grandTotal.toStringAsFixed(0)}',
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(fontWeight: FontWeight.w700),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(

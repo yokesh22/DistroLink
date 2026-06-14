@@ -8,6 +8,7 @@ part of 'shop.dart';
 
 _Shop _$ShopFromJson(Map<String, dynamic> json) => _Shop(
   id: json['id'] as String,
+  distributorId: json['distributor_id'] as String,
   areaId: json['area_id'] as String,
   shopName: json['shop_name'] as String,
   shopAddress: json['shop_address'] as String,
@@ -20,6 +21,7 @@ _Shop _$ShopFromJson(Map<String, dynamic> json) => _Shop(
 
 Map<String, dynamic> _$ShopToJson(_Shop instance) => <String, dynamic>{
   'id': instance.id,
+  'distributor_id': instance.distributorId,
   'area_id': instance.areaId,
   'shop_name': instance.shopName,
   'shop_address': instance.shopAddress,

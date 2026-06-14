@@ -25,14 +25,18 @@ Future<ShopsRepository> shopsRepository(Ref ref) async {
 
 @riverpod
 Future<List<Area>> areas(Ref ref) async {
+  final user = await ref.watch(currentAppUserProvider.future);
+  if (user == null) return [];
   final repo = await ref.watch(areasRepositoryProvider.future);
-  return repo.listAreas();
+  return repo.listAreas(user.distributorId);
 }
 
 @riverpod
 Future<List<Shop>> shopsByArea(Ref ref, String areaId) async {
+  final user = await ref.watch(currentAppUserProvider.future);
+  if (user == null) return [];
   final repo = await ref.watch(shopsRepositoryProvider.future);
-  return repo.listByArea(areaId);
+  return repo.listByArea(user.distributorId, areaId);
 }
 
 @riverpod

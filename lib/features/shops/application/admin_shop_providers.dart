@@ -29,7 +29,10 @@ class AdminShopsList extends _$AdminShopsList {
     String? phoneNo,
     String? gstin,
   }) async {
+    final user = await ref.read(currentAppUserProvider.future);
+    final distributorId = user?.distributorId ?? '';
     await ref.read(adminShopsRepositoryProvider).create(
+          distributorId: distributorId,
           areaId: areaId,
           shopName: shopName,
           shopAddress: shopAddress,

@@ -3,6 +3,7 @@ import 'package:distro_link/core/theme/app_spacing.dart';
 import 'package:distro_link/core/widgets/app_button.dart';
 import 'package:distro_link/core/widgets/app_text_field.dart';
 import 'package:distro_link/features/auth/application/auth_providers.dart';
+import 'package:distro_link/features/auth/domain/app_user.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -44,7 +45,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             email: email,
             password: password,
           );
-      if (mounted) context.go('/home');
+      // Resolve the role before navigating so admins/super-admins aren't
+      // dropped onto the salesman home (which also leaves the wrong theme
+      // primary applied). Invalidate to force a fresh fetch for the new
+      // session rather than reading a stale cached value.
+      ref.invalidate(currentAppUserProvider);
+      final user = await ref.read(currentAppUserProvider.future);
+      if (!mounted) return;
+      if (user == null) {
+        setState(() => _error =
+            'Your account is not set up yet. Please contact your admin.');
+        return;
+      }
+      final isAdmin = user.role == UserRole.admin ||
+          user.role == UserRole.superAdmin;
+      context.go(isAdmin ? '/admin/dashboard' : '/home');
     } on Exception catch (e) {
       if (mounted) {
         final msg = e.toString().replaceFirst('Exception: ', '');

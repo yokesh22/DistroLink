@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Shop {
 
- String get id;@JsonKey(name: 'area_id') String get areaId;@JsonKey(name: 'shop_name') String get shopName;@JsonKey(name: 'shop_address') String get shopAddress;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'shop_number') String? get shopNumber;@JsonKey(name: 'shop_owner') String? get shopOwner;@JsonKey(name: 'phone_no') String? get phoneNo; String? get gstin;
+ String get id;@JsonKey(name: 'distributor_id') String get distributorId;@JsonKey(name: 'area_id') String get areaId;@JsonKey(name: 'shop_name') String get shopName;@JsonKey(name: 'shop_address') String get shopAddress;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'shop_number') String? get shopNumber;@JsonKey(name: 'shop_owner') String? get shopOwner;@JsonKey(name: 'phone_no') String? get phoneNo; String? get gstin;
 /// Create a copy of Shop
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $ShopCopyWith<Shop> get copyWith => _$ShopCopyWithImpl<Shop>(this as Shop, _$ide
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Shop&&(identical(other.id, id) || other.id == id)&&(identical(other.areaId, areaId) || other.areaId == areaId)&&(identical(other.shopName, shopName) || other.shopName == shopName)&&(identical(other.shopAddress, shopAddress) || other.shopAddress == shopAddress)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.shopNumber, shopNumber) || other.shopNumber == shopNumber)&&(identical(other.shopOwner, shopOwner) || other.shopOwner == shopOwner)&&(identical(other.phoneNo, phoneNo) || other.phoneNo == phoneNo)&&(identical(other.gstin, gstin) || other.gstin == gstin));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Shop&&(identical(other.id, id) || other.id == id)&&(identical(other.distributorId, distributorId) || other.distributorId == distributorId)&&(identical(other.areaId, areaId) || other.areaId == areaId)&&(identical(other.shopName, shopName) || other.shopName == shopName)&&(identical(other.shopAddress, shopAddress) || other.shopAddress == shopAddress)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.shopNumber, shopNumber) || other.shopNumber == shopNumber)&&(identical(other.shopOwner, shopOwner) || other.shopOwner == shopOwner)&&(identical(other.phoneNo, phoneNo) || other.phoneNo == phoneNo)&&(identical(other.gstin, gstin) || other.gstin == gstin));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,areaId,shopName,shopAddress,createdAt,shopNumber,shopOwner,phoneNo,gstin);
+int get hashCode => Object.hash(runtimeType,id,distributorId,areaId,shopName,shopAddress,createdAt,shopNumber,shopOwner,phoneNo,gstin);
 
 @override
 String toString() {
-  return 'Shop(id: $id, areaId: $areaId, shopName: $shopName, shopAddress: $shopAddress, createdAt: $createdAt, shopNumber: $shopNumber, shopOwner: $shopOwner, phoneNo: $phoneNo, gstin: $gstin)';
+  return 'Shop(id: $id, distributorId: $distributorId, areaId: $areaId, shopName: $shopName, shopAddress: $shopAddress, createdAt: $createdAt, shopNumber: $shopNumber, shopOwner: $shopOwner, phoneNo: $phoneNo, gstin: $gstin)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $ShopCopyWith<$Res>  {
   factory $ShopCopyWith(Shop value, $Res Function(Shop) _then) = _$ShopCopyWithImpl;
 @useResult
 $Res call({
- String id,@JsonKey(name: 'area_id') String areaId,@JsonKey(name: 'shop_name') String shopName,@JsonKey(name: 'shop_address') String shopAddress,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'shop_number') String? shopNumber,@JsonKey(name: 'shop_owner') String? shopOwner,@JsonKey(name: 'phone_no') String? phoneNo, String? gstin
+ String id,@JsonKey(name: 'distributor_id') String distributorId,@JsonKey(name: 'area_id') String areaId,@JsonKey(name: 'shop_name') String shopName,@JsonKey(name: 'shop_address') String shopAddress,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'shop_number') String? shopNumber,@JsonKey(name: 'shop_owner') String? shopOwner,@JsonKey(name: 'phone_no') String? phoneNo, String? gstin
 });
 
 
@@ -65,9 +65,10 @@ class _$ShopCopyWithImpl<$Res>
 
 /// Create a copy of Shop
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? areaId = null,Object? shopName = null,Object? shopAddress = null,Object? createdAt = null,Object? shopNumber = freezed,Object? shopOwner = freezed,Object? phoneNo = freezed,Object? gstin = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? distributorId = null,Object? areaId = null,Object? shopName = null,Object? shopAddress = null,Object? createdAt = null,Object? shopNumber = freezed,Object? shopOwner = freezed,Object? phoneNo = freezed,Object? gstin = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,distributorId: null == distributorId ? _self.distributorId : distributorId // ignore: cast_nullable_to_non_nullable
 as String,areaId: null == areaId ? _self.areaId : areaId // ignore: cast_nullable_to_non_nullable
 as String,shopName: null == shopName ? _self.shopName : shopName // ignore: cast_nullable_to_non_nullable
 as String,shopAddress: null == shopAddress ? _self.shopAddress : shopAddress // ignore: cast_nullable_to_non_nullable
@@ -161,10 +162,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'area_id')  String areaId, @JsonKey(name: 'shop_name')  String shopName, @JsonKey(name: 'shop_address')  String shopAddress, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'shop_number')  String? shopNumber, @JsonKey(name: 'shop_owner')  String? shopOwner, @JsonKey(name: 'phone_no')  String? phoneNo,  String? gstin)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'distributor_id')  String distributorId, @JsonKey(name: 'area_id')  String areaId, @JsonKey(name: 'shop_name')  String shopName, @JsonKey(name: 'shop_address')  String shopAddress, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'shop_number')  String? shopNumber, @JsonKey(name: 'shop_owner')  String? shopOwner, @JsonKey(name: 'phone_no')  String? phoneNo,  String? gstin)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Shop() when $default != null:
-return $default(_that.id,_that.areaId,_that.shopName,_that.shopAddress,_that.createdAt,_that.shopNumber,_that.shopOwner,_that.phoneNo,_that.gstin);case _:
+return $default(_that.id,_that.distributorId,_that.areaId,_that.shopName,_that.shopAddress,_that.createdAt,_that.shopNumber,_that.shopOwner,_that.phoneNo,_that.gstin);case _:
   return orElse();
 
 }
@@ -182,10 +183,10 @@ return $default(_that.id,_that.areaId,_that.shopName,_that.shopAddress,_that.cre
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'area_id')  String areaId, @JsonKey(name: 'shop_name')  String shopName, @JsonKey(name: 'shop_address')  String shopAddress, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'shop_number')  String? shopNumber, @JsonKey(name: 'shop_owner')  String? shopOwner, @JsonKey(name: 'phone_no')  String? phoneNo,  String? gstin)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'distributor_id')  String distributorId, @JsonKey(name: 'area_id')  String areaId, @JsonKey(name: 'shop_name')  String shopName, @JsonKey(name: 'shop_address')  String shopAddress, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'shop_number')  String? shopNumber, @JsonKey(name: 'shop_owner')  String? shopOwner, @JsonKey(name: 'phone_no')  String? phoneNo,  String? gstin)  $default,) {final _that = this;
 switch (_that) {
 case _Shop():
-return $default(_that.id,_that.areaId,_that.shopName,_that.shopAddress,_that.createdAt,_that.shopNumber,_that.shopOwner,_that.phoneNo,_that.gstin);case _:
+return $default(_that.id,_that.distributorId,_that.areaId,_that.shopName,_that.shopAddress,_that.createdAt,_that.shopNumber,_that.shopOwner,_that.phoneNo,_that.gstin);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -202,10 +203,10 @@ return $default(_that.id,_that.areaId,_that.shopName,_that.shopAddress,_that.cre
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'area_id')  String areaId, @JsonKey(name: 'shop_name')  String shopName, @JsonKey(name: 'shop_address')  String shopAddress, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'shop_number')  String? shopNumber, @JsonKey(name: 'shop_owner')  String? shopOwner, @JsonKey(name: 'phone_no')  String? phoneNo,  String? gstin)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'distributor_id')  String distributorId, @JsonKey(name: 'area_id')  String areaId, @JsonKey(name: 'shop_name')  String shopName, @JsonKey(name: 'shop_address')  String shopAddress, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'shop_number')  String? shopNumber, @JsonKey(name: 'shop_owner')  String? shopOwner, @JsonKey(name: 'phone_no')  String? phoneNo,  String? gstin)?  $default,) {final _that = this;
 switch (_that) {
 case _Shop() when $default != null:
-return $default(_that.id,_that.areaId,_that.shopName,_that.shopAddress,_that.createdAt,_that.shopNumber,_that.shopOwner,_that.phoneNo,_that.gstin);case _:
+return $default(_that.id,_that.distributorId,_that.areaId,_that.shopName,_that.shopAddress,_that.createdAt,_that.shopNumber,_that.shopOwner,_that.phoneNo,_that.gstin);case _:
   return null;
 
 }
@@ -217,10 +218,11 @@ return $default(_that.id,_that.areaId,_that.shopName,_that.shopAddress,_that.cre
 @JsonSerializable()
 
 class _Shop implements Shop {
-  const _Shop({required this.id, @JsonKey(name: 'area_id') required this.areaId, @JsonKey(name: 'shop_name') required this.shopName, @JsonKey(name: 'shop_address') required this.shopAddress, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'shop_number') this.shopNumber, @JsonKey(name: 'shop_owner') this.shopOwner, @JsonKey(name: 'phone_no') this.phoneNo, this.gstin});
+  const _Shop({required this.id, @JsonKey(name: 'distributor_id') required this.distributorId, @JsonKey(name: 'area_id') required this.areaId, @JsonKey(name: 'shop_name') required this.shopName, @JsonKey(name: 'shop_address') required this.shopAddress, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'shop_number') this.shopNumber, @JsonKey(name: 'shop_owner') this.shopOwner, @JsonKey(name: 'phone_no') this.phoneNo, this.gstin});
   factory _Shop.fromJson(Map<String, dynamic> json) => _$ShopFromJson(json);
 
 @override final  String id;
+@override@JsonKey(name: 'distributor_id') final  String distributorId;
 @override@JsonKey(name: 'area_id') final  String areaId;
 @override@JsonKey(name: 'shop_name') final  String shopName;
 @override@JsonKey(name: 'shop_address') final  String shopAddress;
@@ -243,16 +245,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Shop&&(identical(other.id, id) || other.id == id)&&(identical(other.areaId, areaId) || other.areaId == areaId)&&(identical(other.shopName, shopName) || other.shopName == shopName)&&(identical(other.shopAddress, shopAddress) || other.shopAddress == shopAddress)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.shopNumber, shopNumber) || other.shopNumber == shopNumber)&&(identical(other.shopOwner, shopOwner) || other.shopOwner == shopOwner)&&(identical(other.phoneNo, phoneNo) || other.phoneNo == phoneNo)&&(identical(other.gstin, gstin) || other.gstin == gstin));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Shop&&(identical(other.id, id) || other.id == id)&&(identical(other.distributorId, distributorId) || other.distributorId == distributorId)&&(identical(other.areaId, areaId) || other.areaId == areaId)&&(identical(other.shopName, shopName) || other.shopName == shopName)&&(identical(other.shopAddress, shopAddress) || other.shopAddress == shopAddress)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.shopNumber, shopNumber) || other.shopNumber == shopNumber)&&(identical(other.shopOwner, shopOwner) || other.shopOwner == shopOwner)&&(identical(other.phoneNo, phoneNo) || other.phoneNo == phoneNo)&&(identical(other.gstin, gstin) || other.gstin == gstin));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,areaId,shopName,shopAddress,createdAt,shopNumber,shopOwner,phoneNo,gstin);
+int get hashCode => Object.hash(runtimeType,id,distributorId,areaId,shopName,shopAddress,createdAt,shopNumber,shopOwner,phoneNo,gstin);
 
 @override
 String toString() {
-  return 'Shop(id: $id, areaId: $areaId, shopName: $shopName, shopAddress: $shopAddress, createdAt: $createdAt, shopNumber: $shopNumber, shopOwner: $shopOwner, phoneNo: $phoneNo, gstin: $gstin)';
+  return 'Shop(id: $id, distributorId: $distributorId, areaId: $areaId, shopName: $shopName, shopAddress: $shopAddress, createdAt: $createdAt, shopNumber: $shopNumber, shopOwner: $shopOwner, phoneNo: $phoneNo, gstin: $gstin)';
 }
 
 
@@ -263,7 +265,7 @@ abstract mixin class _$ShopCopyWith<$Res> implements $ShopCopyWith<$Res> {
   factory _$ShopCopyWith(_Shop value, $Res Function(_Shop) _then) = __$ShopCopyWithImpl;
 @override @useResult
 $Res call({
- String id,@JsonKey(name: 'area_id') String areaId,@JsonKey(name: 'shop_name') String shopName,@JsonKey(name: 'shop_address') String shopAddress,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'shop_number') String? shopNumber,@JsonKey(name: 'shop_owner') String? shopOwner,@JsonKey(name: 'phone_no') String? phoneNo, String? gstin
+ String id,@JsonKey(name: 'distributor_id') String distributorId,@JsonKey(name: 'area_id') String areaId,@JsonKey(name: 'shop_name') String shopName,@JsonKey(name: 'shop_address') String shopAddress,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'shop_number') String? shopNumber,@JsonKey(name: 'shop_owner') String? shopOwner,@JsonKey(name: 'phone_no') String? phoneNo, String? gstin
 });
 
 
@@ -280,9 +282,10 @@ class __$ShopCopyWithImpl<$Res>
 
 /// Create a copy of Shop
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? areaId = null,Object? shopName = null,Object? shopAddress = null,Object? createdAt = null,Object? shopNumber = freezed,Object? shopOwner = freezed,Object? phoneNo = freezed,Object? gstin = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? distributorId = null,Object? areaId = null,Object? shopName = null,Object? shopAddress = null,Object? createdAt = null,Object? shopNumber = freezed,Object? shopOwner = freezed,Object? phoneNo = freezed,Object? gstin = freezed,}) {
   return _then(_Shop(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,distributorId: null == distributorId ? _self.distributorId : distributorId // ignore: cast_nullable_to_non_nullable
 as String,areaId: null == areaId ? _self.areaId : areaId // ignore: cast_nullable_to_non_nullable
 as String,shopName: null == shopName ? _self.shopName : shopName // ignore: cast_nullable_to_non_nullable
 as String,shopAddress: null == shopAddress ? _self.shopAddress : shopAddress // ignore: cast_nullable_to_non_nullable

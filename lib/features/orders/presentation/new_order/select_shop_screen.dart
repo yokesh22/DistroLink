@@ -332,14 +332,16 @@ class _ShopTile extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: selected
-                    ? AppColors.primary
+                    ? Theme.of(context).colorScheme.primary
                     : AppColors.blueLight,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 Icons.storefront_rounded,
                 size: 20,
-                color: selected ? Colors.white : AppColors.primary,
+                color: selected
+                    ? Colors.white
+                    : Theme.of(context).colorScheme.primary,
               ),
             ),
             const SizedBox(width: 12),

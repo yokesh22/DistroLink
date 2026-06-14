@@ -1,4 +1,3 @@
-import 'package:distro_link/core/theme/app_colors.dart';
 import 'package:distro_link/core/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 
@@ -43,7 +42,7 @@ class AppSegmented extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 9),
                   decoration: BoxDecoration(
                     color: i == selectedIndex
-                        ? AppColors.primary
+                        ? theme.colorScheme.primary
                         : Colors.transparent,
                     borderRadius:
                         BorderRadius.circular(AppSpacing.radiusButton - 2),

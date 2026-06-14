@@ -61,7 +61,7 @@ class _StepDot extends StatelessWidget {
       bg = AppColors.accent;
       fg = Colors.white;
     } else if (isActive) {
-      bg = AppColors.primary;
+      bg = Theme.of(context).colorScheme.primary;
       fg = Colors.white;
     } else {
       bg = Theme.of(context).colorScheme.surface;

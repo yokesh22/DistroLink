@@ -7,22 +7,24 @@ import 'package:flutter/material.dart';
 ///
 /// Source of truth for the visual language is docs/design-system.md.
 abstract final class AppTheme {
-  static ThemeData light() => _build(
+  static ThemeData light({Color primary = AppColors.primary}) => _build(
     brightness: Brightness.light,
     background: AppColors.lightBackground,
     surface: AppColors.lightSurface,
     border: AppColors.lightBorder,
     textPrimary: AppColors.lightTextPrimary,
     textSecondary: AppColors.lightTextSecondary,
+    primary: primary,
   );
 
-  static ThemeData dark() => _build(
+  static ThemeData dark({Color primary = AppColors.primary}) => _build(
     brightness: Brightness.dark,
     background: AppColors.darkBackground,
     surface: AppColors.darkSurface,
     border: AppColors.darkBorder,
     textPrimary: AppColors.darkTextPrimary,
     textSecondary: AppColors.darkTextSecondary,
+    primary: primary,
   );
 
   static ThemeData _build({
@@ -32,10 +34,11 @@ abstract final class AppTheme {
     required Color border,
     required Color textPrimary,
     required Color textSecondary,
+    required Color primary,
   }) {
     final colorScheme = ColorScheme(
       brightness: brightness,
-      primary: AppColors.primary,
+      primary: primary,
       onPrimary: Colors.white,
       secondary: AppColors.accent,
       onSecondary: Colors.white,
@@ -86,7 +89,7 @@ abstract final class AppTheme {
 
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
+          backgroundColor: primary,
           foregroundColor: Colors.white,
           disabledBackgroundColor: border,
           disabledForegroundColor: textSecondary,
@@ -105,7 +108,7 @@ abstract final class AppTheme {
 
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.primary,
+          foregroundColor: primary,
           side: BorderSide(color: border),
           minimumSize: const Size(0, 48),
           padding: const EdgeInsets.symmetric(
@@ -121,7 +124,7 @@ abstract final class AppTheme {
 
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.primary,
+          foregroundColor: primary,
           textStyle: textTheme.labelLarge,
         ),
       ),
@@ -145,7 +148,7 @@ abstract final class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusInput),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          borderSide: BorderSide(color: primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusInput),
@@ -183,6 +186,10 @@ abstract final class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusInput),
         ),
+      ),
+
+      navigationBarTheme: NavigationBarThemeData(
+        indicatorColor: primary.withValues(alpha: 0.15),
       ),
     );
   }

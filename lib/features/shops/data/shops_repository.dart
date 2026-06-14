@@ -8,18 +8,22 @@ class ShopsRepository {
   final SupabaseClient _client;
   final HiveService _hive;
 
-  Future<List<Shop>> listByArea(String areaId) async {
+  Future<List<Shop>> listByArea(String distributorId, String areaId) async {
     final cached = _hive.shopsBox.values
-        .where((dynamic m) => _field(m, 'area_id') == areaId)
+        .where(
+          (dynamic m) =>
+              _field(m, 'area_id') == areaId &&
+              _field(m, 'distributor_id') == distributorId,
+        )
         .map(_toShop)
         .toList()
       ..sort((a, b) => a.shopName.compareTo(b.shopName));
     if (cached.isNotEmpty) {
-      _revalidate(areaId).ignore();
+      _revalidate(distributorId, areaId).ignore();
       return cached;
     }
     try {
-      return await _revalidate(areaId);
+      return await _revalidate(distributorId, areaId);
     } on Exception {
       throw Exception(
         'No internet connection and no cached shops available. '
@@ -28,10 +32,11 @@ class ShopsRepository {
     }
   }
 
-  Future<List<Shop>> _revalidate(String areaId) async {
+  Future<List<Shop>> _revalidate(String distributorId, String areaId) async {
     final rows = await _client
         .from('shops')
         .select()
+        .eq('distributor_id', distributorId)
         .eq('area_id', areaId)
         .order('shop_name');
     final shops = rows.map(Shop.fromJson).toList();
@@ -55,7 +60,8 @@ class ShopsRepository {
     int limit = 5,
   }) async {
     const shopFields =
-        'id, area_id, shop_name, shop_number, shop_address, created_at';
+        'id, distributor_id, area_id, shop_name, shop_number, '
+        'shop_address, created_at';
     final rows = await _client
         .from('orders')
         .select('shop_id, created_at, shops!inner($shopFields)')

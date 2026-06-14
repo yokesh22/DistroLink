@@ -123,7 +123,7 @@ final class AreasProvider
   }
 }
 
-String _$areasHash() => r'4e25d891ee8671540b00b2a73489399f28fbc35b';
+String _$areasHash() => r'1ebabac7f64ad6d071eebe7a0ced45ad34d9d1d8';
 
 @ProviderFor(shopsByArea)
 final shopsByAreaProvider = ShopsByAreaFamily._();
@@ -179,7 +179,7 @@ final class ShopsByAreaProvider
   }
 }
 
-String _$shopsByAreaHash() => r'22489ad65d8463f93950164b16577067bd7f16e3';
+String _$shopsByAreaHash() => r'0163b8496250bd3abceca12be3e796cd89be6578';
 
 final class ShopsByAreaFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<Shop>>, String> {

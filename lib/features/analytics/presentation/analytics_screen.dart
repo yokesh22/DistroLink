@@ -187,7 +187,7 @@ class _AnalyticsGrid extends StatelessWidget {
         AppStatCard(
           label: 'Order Count',
           value: '${data.orderCount}',
-          footnoteColor: AppColors.primary,
+          footnoteColor: Theme.of(context).colorScheme.primary,
         ),
         AppStatCard(
           label: 'Avg Order Value',
@@ -252,7 +252,7 @@ class _WeeklyBarChart extends StatelessWidget {
                       height: math.max(height, 4),
                       decoration: BoxDecoration(
                         color: isToday
-                            ? AppColors.primary
+                            ? theme.colorScheme.primary
                             : AppColors.blueMid,
                         borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(4),
@@ -278,7 +278,7 @@ class _WeeklyBarChart extends StatelessWidget {
                         ? FontWeight.w700
                         : FontWeight.w400,
                     color: isToday
-                        ? AppColors.primary
+                        ? theme.colorScheme.primary
                         : theme.colorScheme.onSurface
                             .withValues(alpha: 0.5),
                   ),
@@ -313,7 +313,7 @@ class _TopProductRow extends StatelessWidget {
             height: 32,
             decoration: BoxDecoration(
               color: rank == 1
-                  ? AppColors.primary
+                  ? theme.colorScheme.primary
                   : theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(

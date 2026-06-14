@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 abstract final class AppColors {
   // Brand
   static const Color primary = Color(0xFF2563EB); // blue
+  // Orange — salesman flow brand color
+  static const Color salesmanPrimary = Color(0xFFF28C28);
   static const Color accent = Color(0xFF10B981); // green — totals/success only
 
   // Status

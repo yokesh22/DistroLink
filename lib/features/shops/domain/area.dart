@@ -8,6 +8,7 @@ abstract class Area with _$Area {
   const factory Area({
     required String id,
     required String name,
+    @JsonKey(name: 'distributor_id') required String distributorId,
     @JsonKey(name: 'created_at') required DateTime createdAt,
   }) = _Area;
 

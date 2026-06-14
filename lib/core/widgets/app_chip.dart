@@ -1,4 +1,3 @@
-import 'package:distro_link/core/theme/app_colors.dart';
 import 'package:distro_link/core/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 
@@ -31,10 +30,11 @@ class AppChip extends StatelessWidget {
           vertical: 6,
         ),
         decoration: BoxDecoration(
-          color: active ? AppColors.primary : theme.colorScheme.surface,
+          color:
+              active ? theme.colorScheme.primary : theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: active ? AppColors.primary : border,
+            color: active ? theme.colorScheme.primary : border,
             width: 1.5,
           ),
         ),
