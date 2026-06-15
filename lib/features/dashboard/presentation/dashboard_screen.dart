@@ -56,7 +56,7 @@ class DashboardScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Good morning 👋',
+                              '${_greeting()} 👋',
                               style: Theme.of(context).textTheme.bodyMedium
                                   ?.copyWith(
                                     color: Theme.of(context)
@@ -84,25 +84,57 @@ class DashboardScreen extends ConsumerWidget {
                             ),
                           ],
                         ),
-                        salesmanAsync.when(
-                          data: (s) => CircleAvatar(
-                            radius: 22,
-                            backgroundColor: Theme.of(
-                              context,
-                            ).colorScheme.primary,
-                            child: Text(
-                              s?.name.isNotEmpty == true
-                                  ? s!.name[0].toUpperCase()
-                                  : 'S',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 18,
+                        PopupMenuButton<_DashboardAction>(
+                          onSelected: (action) async {
+                            if (action == _DashboardAction.logout) {
+                              await ref
+                                  .read(authRepositoryProvider)
+                                  .signOut();
+                              if (context.mounted) context.go('/login');
+                            }
+                          },
+                          itemBuilder: (_) => [
+                            const PopupMenuItem(
+                              value: _DashboardAction.logout,
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.logout_rounded,
+                                    size: 18,
+                                    color: AppColors.error,
+                                  ),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    'Logout',
+                                    style: TextStyle(
+                                      color: AppColors.error,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
+                          ],
+                          child: salesmanAsync.when(
+                            data: (s) => CircleAvatar(
+                              radius: 22,
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.primary,
+                              child: Text(
+                                s?.name.isNotEmpty == true
+                                    ? s!.name[0].toUpperCase()
+                                    : 'S',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 18,
+                                ),
+                              ),
+                            ),
+                            loading: () => const CircleAvatar(radius: 22),
+                            error: (_, _) => const CircleAvatar(radius: 22),
                           ),
-                          loading: () => const CircleAvatar(radius: 22),
-                          error: (_, _) => const CircleAvatar(radius: 22),
                         ),
                       ],
                     ),
@@ -202,6 +234,17 @@ class DashboardScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+enum _DashboardAction { logout }
+
+/// Time-of-day greeting based on the device's local hour.
+/// Morning: 05:00–11:59 · Afternoon: 12:00–16:59 · Evening: 17:00–04:59.
+String _greeting() {
+  final hour = DateTime.now().hour;
+  if (hour >= 5 && hour < 12) return 'Good morning';
+  if (hour >= 12 && hour < 17) return 'Good afternoon';
+  return 'Good evening';
 }
 
 class _StatsGrid extends StatelessWidget {
