@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:distro_link/core/theme/app_colors.dart';
 import 'package:distro_link/core/theme/app_spacing.dart';
 import 'package:distro_link/core/widgets/app_button.dart';
@@ -40,7 +42,8 @@ class _AddItemsScreenState extends ConsumerState<AddItemsScreen> {
         : ref.watch(productsProvider);
     final lastItemsAsync = ref.watch(lastOrderItemNamesProvider);
 
-    final hasInvalidRate = draft.items.any((i) => !i.isRateValid());
+    // Fast lookup so each product row can show its current cart quantity.
+    final cartById = {for (final it in draft.items) it.productId: it};
 
     return PopScope(
       canPop: false,
@@ -78,178 +81,408 @@ class _AddItemsScreenState extends ConsumerState<AddItemsScreen> {
               ),
           ],
         ),
-        body: Column(
-          children: [
-            const AppStepIndicator(currentStep: 3),
+        body: GestureDetector(
+          // Tapping outside the search field force-dismisses the keyboard.
+          onTap: () => FocusScope.of(context).unfocus(),
+          behavior: HitTestBehavior.opaque,
+          child: Column(
+            children: [
+              const AppStepIndicator(currentStep: 3),
 
-            // ── Search + scan/voice (Phase 2) ─────────────────────
+              // ── Search + scan/voice (Phase 2) ─────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.screenPadding,
+                  4,
+                  AppSpacing.screenPadding,
+                  20,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _searchCtrl,
+                        decoration: const InputDecoration(
+                          hintText: 'Search item / code…',
+                          prefixIcon: Icon(Icons.search_rounded, size: 20),
+                        ),
+                        onChanged: (_) => setState(() {}),
+                      ),
+                    ),
+                    // const SizedBox(width: 8),
+                    // const _IconBox(
+                    //   icon: Icons.qr_code_scanner_rounded,
+                    //   tooltip: 'Scan barcode (Phase 4)',
+                    // ),
+                    // const SizedBox(width: 8),
+                    // const _IconBox(
+                    //   icon: Icons.mic_rounded,
+                    //   tooltip: 'Voice input (Phase 4)',
+                    // ),
+                  ],
+                ),
+              ),
+
+              // ── Quick Add chips ────────────────────────────────────
+              lastItemsAsync.when(
+                data: (names) => names.isEmpty
+                    ? const SizedBox.shrink()
+                    : _QuickAddSection(
+                        names: names,
+                        productsAsync: productsAsync,
+                        onAdd: (name) {
+                          productsAsync.whenData((products) {
+                            final p = products.firstWhere(
+                              (p) => p.itemName == name,
+                              orElse: () => products.first,
+                            );
+                            notifier.addItem(DraftItem.fromProduct(p));
+                          });
+                        },
+                      ),
+                loading: () => const SizedBox.shrink(),
+                error: (_, _) => const SizedBox.shrink(),
+              ),
+
+              const Divider(height: 1),
+
+              // ── Product search results ─────────────────────────────
+              Expanded(
+                child: productsAsync.when(
+                  data: (products) => products.isEmpty
+                      ? Center(
+                          child: Text(
+                            'No products found.',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.screenPadding,
+                          ),
+                          itemCount: products.length,
+                          itemBuilder: (_, i) {
+                            final p = products[i];
+                            final inCart = cartById[p.id];
+                            return ListTile(
+                              title: Text(p.itemName),
+                              subtitle: Text(
+                                inCart != null
+                                    ? '${p.itemCode} · MRP ₹${p.mrp} · in cart'
+                                    : '${p.itemCode} · MRP ₹${p.mrp}',
+                              ),
+                              trailing: inCart != null
+                                  ? AppQtyStepper(
+                                      value: inCart.quantity,
+                                      onChanged: (qty) => notifier.changeQty(
+                                        p.id,
+                                        qty - inCart.quantity,
+                                      ),
+                                    )
+                                  : IconButton(
+                                      icon: Icon(
+                                        Icons.add_circle_outline_rounded,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
+                                      ),
+                                      onPressed: () => notifier.addItem(
+                                        DraftItem.fromProduct(p),
+                                      ),
+                                    ),
+                            );
+                          },
+                        ),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (e, _) => Center(child: Text('Error: $e')),
+                ),
+              ),
+
+              // ── Bottom cart bar (opens the cart sheet) ─────────────
+              // The cart no longer competes for body space — it lives behind
+              // this bar so the product list/search gets the full screen.
+              _CartBar(
+                itemCount: draft.items.length,
+                subtotal: draft.subtotal,
+                onTap: () => _showCartSheet(context),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showCartSheet(BuildContext context) {
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppSpacing.radiusCard),
+          ),
+        ),
+        builder: (_) => const _CartSheet(),
+      ),
+    );
+  }
+}
+
+class _CartSheet extends ConsumerWidget {
+  const _CartSheet();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final draft = ref.watch(orderDraftProvider);
+    final notifier = ref.read(orderDraftProvider.notifier);
+    final hasInvalidRate = draft.items.any((i) => !i.isRateValid());
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.85,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (context, scrollController) {
+        return Column(
+          children: [
+            // ── Grab handle + header ───────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.screenPadding,
-                4,
-                AppSpacing.screenPadding,
-                20,
+                AppSpacing.xs,
+                AppSpacing.xs,
+                0,
               ),
               child: Row(
                 children: [
                   Expanded(
-                    child: TextField(
-                      controller: _searchCtrl,
-                      decoration: const InputDecoration(
-                        hintText: 'Search item / code…',
-                        prefixIcon: Icon(Icons.search_rounded, size: 20),
+                    child: Text(
+                      'Cart · ${draft.items.length} items',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
                       ),
-                      onChanged: (_) => setState(() {}),
                     ),
                   ),
-                  // const SizedBox(width: 8),
-                  // const _IconBox(
-                  //   icon: Icons.qr_code_scanner_rounded,
-                  //   tooltip: 'Scan barcode (Phase 4)',
-                  // ),
-                  // const SizedBox(width: 8),
-                  // const _IconBox(
-                  //   icon: Icons.mic_rounded,
-                  //   tooltip: 'Voice input (Phase 4)',
-                  // ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
                 ],
               ),
             ),
-
-            // ── Quick Add chips ────────────────────────────────────
-            lastItemsAsync.when(
-              data: (names) => names.isEmpty
-                  ? const SizedBox.shrink()
-                  : _QuickAddSection(
-                      names: names,
-                      productsAsync: productsAsync,
-                      onAdd: (name) {
-                        productsAsync.whenData((products) {
-                          final p = products.firstWhere(
-                            (p) => p.itemName == name,
-                            orElse: () => products.first,
-                          );
-                          notifier.addItem(DraftItem.fromProduct(p));
-                        });
-                      },
-                    ),
-              loading: () => const SizedBox.shrink(),
-              error: (_, _) => const SizedBox.shrink(),
-            ),
-
             const Divider(height: 1),
 
-            // ── Product search results ─────────────────────────────
+            // ── Cart items (or empty state) ────────────────────────
             Expanded(
-              child: productsAsync.when(
-                data: (products) => products.isEmpty
-                    ? Center(
-                        child: Text(
-                          'No products found.',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      )
-                    : ListView.builder(
+              child: draft.items.isEmpty
+                  ? Center(
+                      child: Text(
+                        'Your cart is empty.',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    )
+                  : ColoredBox(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.05),
+                      child: ListView.builder(
+                        controller: scrollController,
                         padding: const EdgeInsets.symmetric(
                           horizontal: AppSpacing.screenPadding,
                         ),
-                        itemCount: products.length,
-                        itemBuilder: (_, i) {
-                          final p = products[i];
-                          return ListTile(
-                            title: Text(p.itemName),
-                            subtitle: Text('${p.itemCode} · MRP ₹${p.mrp}'),
-                            trailing: IconButton(
-                              icon: Icon(
-                                Icons.add_circle_outline_rounded,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                              onPressed: () =>
-                                  notifier.addItem(DraftItem.fromProduct(p)),
-                            ),
-                          );
-                        },
+                        itemCount: draft.items.length,
+                        itemBuilder: (_, i) => _ItemRow(
+                          item: draft.items[i],
+                          onQtyChanged: (qty) {
+                            final delta = qty - draft.items[i].quantity;
+                            notifier.changeQty(
+                              draft.items[i].productId,
+                              delta,
+                            );
+                          },
+                          onRateChanged: (rate) => notifier.changeRate(
+                            draft.items[i].productId,
+                            rate,
+                          ),
+                          onRemove: () => notifier.removeItem(
+                            draft.items[i].productId,
+                          ),
+                        ),
                       ),
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(child: Text('Error: $e')),
-              ),
+                    ),
             ),
 
-            // ── Cart items ─────────────────────────────────────────
-            // Only reserve space once at least one item is selected; until
-            // then the product list above uses the full section.
-            if (draft.items.isNotEmpty) ...[
-              const Divider(height: 1),
-              Expanded(
-                flex: 2,
-                child: ColoredBox(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.05),
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.screenPadding,
-                    ),
-                    itemCount: draft.items.length,
-                    itemBuilder: (_, i) => _ItemRow(
-                      item: draft.items[i],
-                      onQtyChanged: (qty) {
-                        final delta = qty - draft.items[i].quantity;
-                        notifier.changeQty(
-                          draft.items[i].productId,
-                          delta,
-                        );
-                      },
-                      onRateChanged: (rate) => notifier.changeRate(
-                        draft.items[i].productId,
-                        rate,
-                      ),
-                      onRemove: () => notifier.removeItem(
-                        draft.items[i].productId,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-
-            // ── Sticky footer ──────────────────────────────────────
+            // ── Sticky footer inside the sheet ─────────────────────
             Container(
               padding: const EdgeInsets.all(AppSpacing.screenPadding),
               decoration: BoxDecoration(
                 color: theme.scaffoldBackgroundColor,
                 border: Border(
-                  top: BorderSide(
-                    color: theme.colorScheme.outline,
-                  ),
+                  top: BorderSide(color: theme.colorScheme.outline),
                 ),
               ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${draft.items.length} items · Subtotal',
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                      Text(
-                        '₹${draft.subtotal.toStringAsFixed(0)}',
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${draft.items.length} items · Subtotal',
+                          style: theme.textTheme.bodyMedium,
                         ),
-                      ),
-                    ],
+                        Text(
+                          '₹${draft.subtotal.toStringAsFixed(0)}',
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    AppButton(
+                      label: 'Next: Preview Bill →',
+                      onPressed: draft.items.isNotEmpty && !hasInvalidRate
+                          ? () {
+                              Navigator.of(context).pop();
+                              context.go('/orders/new/4');
+                            }
+                          : null,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _CartBar extends StatefulWidget {
+  const _CartBar({
+    required this.itemCount,
+    required this.subtotal,
+    required this.onTap,
+  });
+
+  final int itemCount;
+  final double subtotal;
+  final VoidCallback onTap;
+
+  @override
+  State<_CartBar> createState() => _CartBarState();
+}
+
+class _CartBarState extends State<_CartBar>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 220),
+    );
+    // A brief blink so even non-tech users notice an item went into the cart.
+    _scale = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1, end: 1.06), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 1.06, end: 1), weight: 1),
+    ]).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+  }
+
+  @override
+  void didUpdateWidget(_CartBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.itemCount > oldWidget.itemCount) {
+      unawaited(_controller.forward(from: 0));
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    // Empty state: a muted, non-tappable bar keeps the footprint stable.
+    if (widget.itemCount == 0) {
+      return Container(
+        width: double.infinity,
+        constraints: const BoxConstraints(minHeight: 56),
+        padding: const EdgeInsets.all(AppSpacing.screenPadding),
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackgroundColor,
+          border: Border(top: BorderSide(color: theme.colorScheme.outline)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Center(
+            child: Text(
+              'No items yet — tap + to add',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Material(
+      color: theme.colorScheme.primary,
+      child: InkWell(
+        onTap: widget.onTap,
+        child: SafeArea(
+          top: false,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 56),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.screenPadding,
+                vertical: AppSpacing.xs,
+              ),
+              child: Row(
+                children: [
+                  ScaleTransition(
+                    scale: _scale,
+                    child: const Icon(
+                      Icons.shopping_cart_rounded,
+                      color: Colors.white,
+                    ),
                   ),
-                  const SizedBox(height: AppSpacing.xs),
-                  AppButton(
-                    label: 'Next: Preview Bill →',
-                    onPressed: draft.items.isNotEmpty && !hasInvalidRate
-                        ? () => context.go('/orders/new/4')
-                        : null,
+                  const SizedBox(width: AppSpacing.xs),
+                  Expanded(
+                    child: Text(
+                      '${widget.itemCount} items · '
+                      '₹${widget.subtotal.toStringAsFixed(0)}',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    'View Cart →',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );

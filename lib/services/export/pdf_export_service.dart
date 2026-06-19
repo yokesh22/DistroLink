@@ -14,10 +14,10 @@ class PdfExportService {
   static final _filenameFmt = DateFormat('ddMMyyyy');
   static final _numFmt = NumberFormat('#,##0.00', 'en_IN');
 
-  // Gold palette — premium commercial-billing look.
-  static const _gold = PdfColor.fromInt(0xFFA67C00); // deep gold (header/accent)
-  static const _goldLight = PdfColor.fromInt(0xFFFBF4E0); // soft cream tint
-  static const _goldMid = PdfColor.fromInt(0xFFE8D38A); // badge / highlight
+  // Brand-blue palette — premium commercial-billing look.
+  static const _brand = PdfColor.fromInt(0xFF668EE7); // brand blue (header/accent)
+  static const _brandLight = PdfColor.fromInt(0xFFEDF2FC); // soft blue tint
+  static const _brandMid = PdfColor.fromInt(0xFFB9CDF4); // badge / highlight
   static const _border = PdfColor.fromInt(0xFFE2E8F0);
   static const _textMuted = PdfColor.fromInt(0xFF64748B);
 
@@ -78,7 +78,7 @@ class PdfExportService {
   pw.Widget _header(Order order) {
     return pw.Container(
       decoration: const pw.BoxDecoration(
-        color: _gold,
+        color: _brand,
         borderRadius: pw.BorderRadius.all(pw.Radius.circular(8)),
       ),
       padding: const pw.EdgeInsets.all(14),
@@ -125,14 +125,14 @@ class PdfExportService {
                   vertical: 3,
                 ),
                 decoration: const pw.BoxDecoration(
-                  color: _goldMid,
+                  color: _brandMid,
                   borderRadius:
                       pw.BorderRadius.all(pw.Radius.circular(10)),
                 ),
                 child: pw.Text(
                   'Thank you for your order!',
                   style: pw.TextStyle(
-                    color: _gold,
+                    color: _brand,
                     fontSize: 7,
                     fontWeight: pw.FontWeight.bold,
                   ),
@@ -257,7 +257,7 @@ class PdfExportService {
             style: pw.TextStyle(
               fontSize: 7,
               fontWeight: pw.FontWeight.bold,
-              color: _gold,
+              color: _brand,
             ),
           ),
           pw.SizedBox(height: 3),
@@ -334,10 +334,10 @@ class PdfExportService {
         fontSize: 8,
         fontWeight: pw.FontWeight.bold,
       ),
-      headerDecoration: const pw.BoxDecoration(color: _gold),
+      headerDecoration: const pw.BoxDecoration(color: _brand),
       cellStyle: const pw.TextStyle(fontSize: 8),
       cellPadding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-      oddRowDecoration: const pw.BoxDecoration(color: _goldLight),
+      oddRowDecoration: const pw.BoxDecoration(color: _brandLight),
       cellAlignments: {
         0: pw.Alignment.center,
         3: pw.Alignment.centerRight,
@@ -404,7 +404,7 @@ class PdfExportService {
               vertical: 8,
             ),
             decoration: const pw.BoxDecoration(
-              color: _gold,
+              color: _brand,
               borderRadius: pw.BorderRadius.only(
                 bottomLeft: pw.Radius.circular(6),
                 bottomRight: pw.Radius.circular(6),
@@ -484,7 +484,7 @@ class PdfExportService {
           style: pw.TextStyle(
             fontSize: 7,
             fontWeight: pw.FontWeight.bold,
-            color: _gold,
+            color: _brand,
           ),
         ),
         pw.SizedBox(height: 4),
@@ -506,13 +506,13 @@ class PdfExportService {
             fontSize: 7,
             fontWeight: pw.FontWeight.bold,
           ),
-          headerDecoration: const pw.BoxDecoration(color: _gold),
+          headerDecoration: const pw.BoxDecoration(color: _brand),
           cellStyle: const pw.TextStyle(fontSize: 7),
           cellPadding: const pw.EdgeInsets.symmetric(
             horizontal: 4,
             vertical: 3,
           ),
-          oddRowDecoration: const pw.BoxDecoration(color: _goldLight),
+          oddRowDecoration: const pw.BoxDecoration(color: _brandLight),
           cellAlignments: {
             0: pw.Alignment.center,
             1: pw.Alignment.centerRight,
@@ -597,7 +597,7 @@ class PdfExportService {
             style: pw.TextStyle(
               fontSize: 7,
               fontWeight: pw.FontWeight.bold,
-              color: _gold,
+              color: _brand,
             ),
           ),
           pw.SizedBox(height: 3),
@@ -647,7 +647,7 @@ class PdfExportService {
     return pw.Container(
       padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: pw.BoxDecoration(
-        color: _goldLight,
+        color: _brandLight,
         border: pw.Border.all(color: _border),
         borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
       ),
@@ -665,7 +665,7 @@ class PdfExportService {
             style: pw.TextStyle(
               fontSize: 10,
               fontWeight: pw.FontWeight.bold,
-              color: _gold,
+              color: _brand,
             ),
             textAlign: pw.TextAlign.center,
           ),
