@@ -315,6 +315,8 @@ class PdfExportService {
         'MRP',
         'Rate',
         'Qty',
+        'Disc%',
+        'Free',
         'Total',
       ],
       data: items.asMap().entries.map((e) {
@@ -326,6 +328,8 @@ class PdfExportService {
           _numFmt.format(item.mrp),
           _numFmt.format(item.sellingRate),
           '${item.quantity}',
+          _pct(item.discountPercent),
+          '${item.freeQty}',
           _numFmt.format(item.lineTotal),
         ];
       }).toList(),
@@ -344,6 +348,8 @@ class PdfExportService {
         4: pw.Alignment.centerRight,
         5: pw.Alignment.center,
         6: pw.Alignment.centerRight,
+        7: pw.Alignment.center,
+        8: pw.Alignment.centerRight,
       },
       columnWidths: {
         0: const pw.FixedColumnWidth(18),
@@ -352,7 +358,9 @@ class PdfExportService {
         3: const pw.FlexColumnWidth(1.5),
         4: const pw.FlexColumnWidth(1.5),
         5: const pw.FixedColumnWidth(24),
-        6: const pw.FlexColumnWidth(1.8),
+        6: const pw.FlexColumnWidth(1.3),
+        7: const pw.FixedColumnWidth(24),
+        8: const pw.FlexColumnWidth(1.8),
       },
     );
   }

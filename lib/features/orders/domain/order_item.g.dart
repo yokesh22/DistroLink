@@ -18,6 +18,8 @@ _OrderItem _$OrderItemFromJson(Map<String, dynamic> json) => _OrderItem(
   gstPercent: (json['gst_percent'] as num).toDouble(),
   lineTotal: (json['line_total'] as num).toDouble(),
   createdAt: DateTime.parse(json['created_at'] as String),
+  discountPercent: (json['discount_percent'] as num?)?.toDouble() ?? 0,
+  freeQty: (json['free_qty'] as num?)?.toInt() ?? 0,
 );
 
 Map<String, dynamic> _$OrderItemToJson(_OrderItem instance) =>
@@ -33,4 +35,6 @@ Map<String, dynamic> _$OrderItemToJson(_OrderItem instance) =>
       'gst_percent': instance.gstPercent,
       'line_total': instance.lineTotal,
       'created_at': instance.createdAt.toIso8601String(),
+      'discount_percent': instance.discountPercent,
+      'free_qty': instance.freeQty,
     };

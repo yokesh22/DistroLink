@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$OrderItem {
 
- String get id;@JsonKey(name: 'order_id') String get orderId;@JsonKey(name: 'product_id') String get productId;@JsonKey(name: 'item_code') String get itemCode;@JsonKey(name: 'item_name') String get itemName; double get mrp;@JsonKey(name: 'selling_rate') double get sellingRate; int get quantity;@JsonKey(name: 'gst_percent') double get gstPercent;@JsonKey(name: 'line_total') double get lineTotal;@JsonKey(name: 'created_at') DateTime get createdAt;
+ String get id;@JsonKey(name: 'order_id') String get orderId;@JsonKey(name: 'product_id') String get productId;@JsonKey(name: 'item_code') String get itemCode;@JsonKey(name: 'item_name') String get itemName; double get mrp;@JsonKey(name: 'selling_rate') double get sellingRate; int get quantity;@JsonKey(name: 'gst_percent') double get gstPercent;@JsonKey(name: 'line_total') double get lineTotal;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'discount_percent') double get discountPercent;@JsonKey(name: 'free_qty') int get freeQty;
 /// Create a copy of OrderItem
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $OrderItemCopyWith<OrderItem> get copyWith => _$OrderItemCopyWithImpl<OrderItem>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is OrderItem&&(identical(other.id, id) || other.id == id)&&(identical(other.orderId, orderId) || other.orderId == orderId)&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.itemCode, itemCode) || other.itemCode == itemCode)&&(identical(other.itemName, itemName) || other.itemName == itemName)&&(identical(other.mrp, mrp) || other.mrp == mrp)&&(identical(other.sellingRate, sellingRate) || other.sellingRate == sellingRate)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.gstPercent, gstPercent) || other.gstPercent == gstPercent)&&(identical(other.lineTotal, lineTotal) || other.lineTotal == lineTotal)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OrderItem&&(identical(other.id, id) || other.id == id)&&(identical(other.orderId, orderId) || other.orderId == orderId)&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.itemCode, itemCode) || other.itemCode == itemCode)&&(identical(other.itemName, itemName) || other.itemName == itemName)&&(identical(other.mrp, mrp) || other.mrp == mrp)&&(identical(other.sellingRate, sellingRate) || other.sellingRate == sellingRate)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.gstPercent, gstPercent) || other.gstPercent == gstPercent)&&(identical(other.lineTotal, lineTotal) || other.lineTotal == lineTotal)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.discountPercent, discountPercent) || other.discountPercent == discountPercent)&&(identical(other.freeQty, freeQty) || other.freeQty == freeQty));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,orderId,productId,itemCode,itemName,mrp,sellingRate,quantity,gstPercent,lineTotal,createdAt);
+int get hashCode => Object.hash(runtimeType,id,orderId,productId,itemCode,itemName,mrp,sellingRate,quantity,gstPercent,lineTotal,createdAt,discountPercent,freeQty);
 
 @override
 String toString() {
-  return 'OrderItem(id: $id, orderId: $orderId, productId: $productId, itemCode: $itemCode, itemName: $itemName, mrp: $mrp, sellingRate: $sellingRate, quantity: $quantity, gstPercent: $gstPercent, lineTotal: $lineTotal, createdAt: $createdAt)';
+  return 'OrderItem(id: $id, orderId: $orderId, productId: $productId, itemCode: $itemCode, itemName: $itemName, mrp: $mrp, sellingRate: $sellingRate, quantity: $quantity, gstPercent: $gstPercent, lineTotal: $lineTotal, createdAt: $createdAt, discountPercent: $discountPercent, freeQty: $freeQty)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $OrderItemCopyWith<$Res>  {
   factory $OrderItemCopyWith(OrderItem value, $Res Function(OrderItem) _then) = _$OrderItemCopyWithImpl;
 @useResult
 $Res call({
- String id,@JsonKey(name: 'order_id') String orderId,@JsonKey(name: 'product_id') String productId,@JsonKey(name: 'item_code') String itemCode,@JsonKey(name: 'item_name') String itemName, double mrp,@JsonKey(name: 'selling_rate') double sellingRate, int quantity,@JsonKey(name: 'gst_percent') double gstPercent,@JsonKey(name: 'line_total') double lineTotal,@JsonKey(name: 'created_at') DateTime createdAt
+ String id,@JsonKey(name: 'order_id') String orderId,@JsonKey(name: 'product_id') String productId,@JsonKey(name: 'item_code') String itemCode,@JsonKey(name: 'item_name') String itemName, double mrp,@JsonKey(name: 'selling_rate') double sellingRate, int quantity,@JsonKey(name: 'gst_percent') double gstPercent,@JsonKey(name: 'line_total') double lineTotal,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'discount_percent') double discountPercent,@JsonKey(name: 'free_qty') int freeQty
 });
 
 
@@ -65,7 +65,7 @@ class _$OrderItemCopyWithImpl<$Res>
 
 /// Create a copy of OrderItem
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? orderId = null,Object? productId = null,Object? itemCode = null,Object? itemName = null,Object? mrp = null,Object? sellingRate = null,Object? quantity = null,Object? gstPercent = null,Object? lineTotal = null,Object? createdAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? orderId = null,Object? productId = null,Object? itemCode = null,Object? itemName = null,Object? mrp = null,Object? sellingRate = null,Object? quantity = null,Object? gstPercent = null,Object? lineTotal = null,Object? createdAt = null,Object? discountPercent = null,Object? freeQty = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,orderId: null == orderId ? _self.orderId : orderId // ignore: cast_nullable_to_non_nullable
@@ -78,7 +78,9 @@ as double,quantity: null == quantity ? _self.quantity : quantity // ignore: cast
 as int,gstPercent: null == gstPercent ? _self.gstPercent : gstPercent // ignore: cast_nullable_to_non_nullable
 as double,lineTotal: null == lineTotal ? _self.lineTotal : lineTotal // ignore: cast_nullable_to_non_nullable
 as double,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,discountPercent: null == discountPercent ? _self.discountPercent : discountPercent // ignore: cast_nullable_to_non_nullable
+as double,freeQty: null == freeQty ? _self.freeQty : freeQty // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 
@@ -163,10 +165,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'order_id')  String orderId, @JsonKey(name: 'product_id')  String productId, @JsonKey(name: 'item_code')  String itemCode, @JsonKey(name: 'item_name')  String itemName,  double mrp, @JsonKey(name: 'selling_rate')  double sellingRate,  int quantity, @JsonKey(name: 'gst_percent')  double gstPercent, @JsonKey(name: 'line_total')  double lineTotal, @JsonKey(name: 'created_at')  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'order_id')  String orderId, @JsonKey(name: 'product_id')  String productId, @JsonKey(name: 'item_code')  String itemCode, @JsonKey(name: 'item_name')  String itemName,  double mrp, @JsonKey(name: 'selling_rate')  double sellingRate,  int quantity, @JsonKey(name: 'gst_percent')  double gstPercent, @JsonKey(name: 'line_total')  double lineTotal, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'discount_percent')  double discountPercent, @JsonKey(name: 'free_qty')  int freeQty)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _OrderItem() when $default != null:
-return $default(_that.id,_that.orderId,_that.productId,_that.itemCode,_that.itemName,_that.mrp,_that.sellingRate,_that.quantity,_that.gstPercent,_that.lineTotal,_that.createdAt);case _:
+return $default(_that.id,_that.orderId,_that.productId,_that.itemCode,_that.itemName,_that.mrp,_that.sellingRate,_that.quantity,_that.gstPercent,_that.lineTotal,_that.createdAt,_that.discountPercent,_that.freeQty);case _:
   return orElse();
 
 }
@@ -184,10 +186,10 @@ return $default(_that.id,_that.orderId,_that.productId,_that.itemCode,_that.item
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'order_id')  String orderId, @JsonKey(name: 'product_id')  String productId, @JsonKey(name: 'item_code')  String itemCode, @JsonKey(name: 'item_name')  String itemName,  double mrp, @JsonKey(name: 'selling_rate')  double sellingRate,  int quantity, @JsonKey(name: 'gst_percent')  double gstPercent, @JsonKey(name: 'line_total')  double lineTotal, @JsonKey(name: 'created_at')  DateTime createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'order_id')  String orderId, @JsonKey(name: 'product_id')  String productId, @JsonKey(name: 'item_code')  String itemCode, @JsonKey(name: 'item_name')  String itemName,  double mrp, @JsonKey(name: 'selling_rate')  double sellingRate,  int quantity, @JsonKey(name: 'gst_percent')  double gstPercent, @JsonKey(name: 'line_total')  double lineTotal, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'discount_percent')  double discountPercent, @JsonKey(name: 'free_qty')  int freeQty)  $default,) {final _that = this;
 switch (_that) {
 case _OrderItem():
-return $default(_that.id,_that.orderId,_that.productId,_that.itemCode,_that.itemName,_that.mrp,_that.sellingRate,_that.quantity,_that.gstPercent,_that.lineTotal,_that.createdAt);case _:
+return $default(_that.id,_that.orderId,_that.productId,_that.itemCode,_that.itemName,_that.mrp,_that.sellingRate,_that.quantity,_that.gstPercent,_that.lineTotal,_that.createdAt,_that.discountPercent,_that.freeQty);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -204,10 +206,10 @@ return $default(_that.id,_that.orderId,_that.productId,_that.itemCode,_that.item
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'order_id')  String orderId, @JsonKey(name: 'product_id')  String productId, @JsonKey(name: 'item_code')  String itemCode, @JsonKey(name: 'item_name')  String itemName,  double mrp, @JsonKey(name: 'selling_rate')  double sellingRate,  int quantity, @JsonKey(name: 'gst_percent')  double gstPercent, @JsonKey(name: 'line_total')  double lineTotal, @JsonKey(name: 'created_at')  DateTime createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'order_id')  String orderId, @JsonKey(name: 'product_id')  String productId, @JsonKey(name: 'item_code')  String itemCode, @JsonKey(name: 'item_name')  String itemName,  double mrp, @JsonKey(name: 'selling_rate')  double sellingRate,  int quantity, @JsonKey(name: 'gst_percent')  double gstPercent, @JsonKey(name: 'line_total')  double lineTotal, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'discount_percent')  double discountPercent, @JsonKey(name: 'free_qty')  int freeQty)?  $default,) {final _that = this;
 switch (_that) {
 case _OrderItem() when $default != null:
-return $default(_that.id,_that.orderId,_that.productId,_that.itemCode,_that.itemName,_that.mrp,_that.sellingRate,_that.quantity,_that.gstPercent,_that.lineTotal,_that.createdAt);case _:
+return $default(_that.id,_that.orderId,_that.productId,_that.itemCode,_that.itemName,_that.mrp,_that.sellingRate,_that.quantity,_that.gstPercent,_that.lineTotal,_that.createdAt,_that.discountPercent,_that.freeQty);case _:
   return null;
 
 }
@@ -219,7 +221,7 @@ return $default(_that.id,_that.orderId,_that.productId,_that.itemCode,_that.item
 @JsonSerializable()
 
 class _OrderItem implements OrderItem {
-  const _OrderItem({required this.id, @JsonKey(name: 'order_id') required this.orderId, @JsonKey(name: 'product_id') required this.productId, @JsonKey(name: 'item_code') required this.itemCode, @JsonKey(name: 'item_name') required this.itemName, required this.mrp, @JsonKey(name: 'selling_rate') required this.sellingRate, required this.quantity, @JsonKey(name: 'gst_percent') required this.gstPercent, @JsonKey(name: 'line_total') required this.lineTotal, @JsonKey(name: 'created_at') required this.createdAt});
+  const _OrderItem({required this.id, @JsonKey(name: 'order_id') required this.orderId, @JsonKey(name: 'product_id') required this.productId, @JsonKey(name: 'item_code') required this.itemCode, @JsonKey(name: 'item_name') required this.itemName, required this.mrp, @JsonKey(name: 'selling_rate') required this.sellingRate, required this.quantity, @JsonKey(name: 'gst_percent') required this.gstPercent, @JsonKey(name: 'line_total') required this.lineTotal, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'discount_percent') this.discountPercent = 0, @JsonKey(name: 'free_qty') this.freeQty = 0});
   factory _OrderItem.fromJson(Map<String, dynamic> json) => _$OrderItemFromJson(json);
 
 @override final  String id;
@@ -233,6 +235,8 @@ class _OrderItem implements OrderItem {
 @override@JsonKey(name: 'gst_percent') final  double gstPercent;
 @override@JsonKey(name: 'line_total') final  double lineTotal;
 @override@JsonKey(name: 'created_at') final  DateTime createdAt;
+@override@JsonKey(name: 'discount_percent') final  double discountPercent;
+@override@JsonKey(name: 'free_qty') final  int freeQty;
 
 /// Create a copy of OrderItem
 /// with the given fields replaced by the non-null parameter values.
@@ -247,16 +251,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OrderItem&&(identical(other.id, id) || other.id == id)&&(identical(other.orderId, orderId) || other.orderId == orderId)&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.itemCode, itemCode) || other.itemCode == itemCode)&&(identical(other.itemName, itemName) || other.itemName == itemName)&&(identical(other.mrp, mrp) || other.mrp == mrp)&&(identical(other.sellingRate, sellingRate) || other.sellingRate == sellingRate)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.gstPercent, gstPercent) || other.gstPercent == gstPercent)&&(identical(other.lineTotal, lineTotal) || other.lineTotal == lineTotal)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OrderItem&&(identical(other.id, id) || other.id == id)&&(identical(other.orderId, orderId) || other.orderId == orderId)&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.itemCode, itemCode) || other.itemCode == itemCode)&&(identical(other.itemName, itemName) || other.itemName == itemName)&&(identical(other.mrp, mrp) || other.mrp == mrp)&&(identical(other.sellingRate, sellingRate) || other.sellingRate == sellingRate)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.gstPercent, gstPercent) || other.gstPercent == gstPercent)&&(identical(other.lineTotal, lineTotal) || other.lineTotal == lineTotal)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.discountPercent, discountPercent) || other.discountPercent == discountPercent)&&(identical(other.freeQty, freeQty) || other.freeQty == freeQty));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,orderId,productId,itemCode,itemName,mrp,sellingRate,quantity,gstPercent,lineTotal,createdAt);
+int get hashCode => Object.hash(runtimeType,id,orderId,productId,itemCode,itemName,mrp,sellingRate,quantity,gstPercent,lineTotal,createdAt,discountPercent,freeQty);
 
 @override
 String toString() {
-  return 'OrderItem(id: $id, orderId: $orderId, productId: $productId, itemCode: $itemCode, itemName: $itemName, mrp: $mrp, sellingRate: $sellingRate, quantity: $quantity, gstPercent: $gstPercent, lineTotal: $lineTotal, createdAt: $createdAt)';
+  return 'OrderItem(id: $id, orderId: $orderId, productId: $productId, itemCode: $itemCode, itemName: $itemName, mrp: $mrp, sellingRate: $sellingRate, quantity: $quantity, gstPercent: $gstPercent, lineTotal: $lineTotal, createdAt: $createdAt, discountPercent: $discountPercent, freeQty: $freeQty)';
 }
 
 
@@ -267,7 +271,7 @@ abstract mixin class _$OrderItemCopyWith<$Res> implements $OrderItemCopyWith<$Re
   factory _$OrderItemCopyWith(_OrderItem value, $Res Function(_OrderItem) _then) = __$OrderItemCopyWithImpl;
 @override @useResult
 $Res call({
- String id,@JsonKey(name: 'order_id') String orderId,@JsonKey(name: 'product_id') String productId,@JsonKey(name: 'item_code') String itemCode,@JsonKey(name: 'item_name') String itemName, double mrp,@JsonKey(name: 'selling_rate') double sellingRate, int quantity,@JsonKey(name: 'gst_percent') double gstPercent,@JsonKey(name: 'line_total') double lineTotal,@JsonKey(name: 'created_at') DateTime createdAt
+ String id,@JsonKey(name: 'order_id') String orderId,@JsonKey(name: 'product_id') String productId,@JsonKey(name: 'item_code') String itemCode,@JsonKey(name: 'item_name') String itemName, double mrp,@JsonKey(name: 'selling_rate') double sellingRate, int quantity,@JsonKey(name: 'gst_percent') double gstPercent,@JsonKey(name: 'line_total') double lineTotal,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'discount_percent') double discountPercent,@JsonKey(name: 'free_qty') int freeQty
 });
 
 
@@ -284,7 +288,7 @@ class __$OrderItemCopyWithImpl<$Res>
 
 /// Create a copy of OrderItem
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? orderId = null,Object? productId = null,Object? itemCode = null,Object? itemName = null,Object? mrp = null,Object? sellingRate = null,Object? quantity = null,Object? gstPercent = null,Object? lineTotal = null,Object? createdAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? orderId = null,Object? productId = null,Object? itemCode = null,Object? itemName = null,Object? mrp = null,Object? sellingRate = null,Object? quantity = null,Object? gstPercent = null,Object? lineTotal = null,Object? createdAt = null,Object? discountPercent = null,Object? freeQty = null,}) {
   return _then(_OrderItem(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,orderId: null == orderId ? _self.orderId : orderId // ignore: cast_nullable_to_non_nullable
@@ -297,7 +301,9 @@ as double,quantity: null == quantity ? _self.quantity : quantity // ignore: cast
 as int,gstPercent: null == gstPercent ? _self.gstPercent : gstPercent // ignore: cast_nullable_to_non_nullable
 as double,lineTotal: null == lineTotal ? _self.lineTotal : lineTotal // ignore: cast_nullable_to_non_nullable
 as double,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,discountPercent: null == discountPercent ? _self.discountPercent : discountPercent // ignore: cast_nullable_to_non_nullable
+as double,freeQty: null == freeQty ? _self.freeQty : freeQty // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 

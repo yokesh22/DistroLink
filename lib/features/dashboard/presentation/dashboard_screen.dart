@@ -179,7 +179,10 @@ class DashboardScreen extends ConsumerWidget {
                         children: [
                           AppChip(
                             label: '📋 Repeat Last',
-                            onTap: () => context.go('/orders/new/1'),
+                            onTap: () {
+                              ref.read(orderDraftProvider.notifier).clear();
+                              context.go('/orders/new/1');
+                            },
                           ),
                           const SizedBox(width: 8),
                           const AppChip(label: '📍 Nearby Shops'),

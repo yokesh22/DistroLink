@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:distro_link/core/theme/app_colors.dart';
 import 'package:distro_link/core/theme/app_spacing.dart';
+import 'package:distro_link/core/utils/money.dart';
 import 'package:distro_link/core/widgets/app_button.dart';
 import 'package:distro_link/core/widgets/app_card.dart';
 import 'package:distro_link/core/widgets/app_step_indicator.dart';
+import 'package:distro_link/features/admin/application/admin_order_providers.dart';
 import 'package:distro_link/features/auth/application/auth_providers.dart';
 import 'package:distro_link/features/orders/application/order_providers.dart';
 import 'package:distro_link/features/orders/domain/order_draft.dart';
@@ -39,11 +43,18 @@ class _BillPreviewScreenState
 
       final isOnline = ref.read(isOnlineProvider);
       final repo = await ref.read(ordersRepositoryProvider.future);
-      await repo.submit(
-        draft: draft,
-        salesmanId: salesman.id,
-        distributorId: user.distributorId,
-      );
+      final editingOrderId = draft.editingOrderId;
+      final isEditing = editingOrderId != null;
+
+      if (isEditing) {
+        await repo.updateOrder(orderId: editingOrderId, draft: draft);
+      } else {
+        await repo.submit(
+          draft: draft,
+          salesmanId: salesman.id,
+          distributorId: user.distributorId,
+        );
+      }
 
       ref.read(orderDraftProvider.notifier).clear();
       ref
@@ -51,15 +62,28 @@ class _BillPreviewScreenState
         ..invalidate(salesmanStatsProvider)
         ..invalidate(recentShopsProvider)
         ..invalidate(pendingSyncCountProvider);
+      if (isEditing) {
+        ref.invalidate(adminOrderDetailProvider(editingOrderId));
+      }
 
       if (mounted) {
-        final message = isOnline
-            ? 'Order saved successfully!'
-            : 'Saved offline — will sync when connected';
+        final message = isEditing
+            ? 'Order updated successfully!'
+            : isOnline
+                ? 'Order saved successfully!'
+                : 'Saved offline — will sync when connected';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
-        context.go('/home');
+        // For an edit, return to the (refreshed) order summary but rebuild the
+        // stack so Home sits underneath — otherwise `go` leaves the summary as
+        // the only route and the back gesture exits the app.
+        if (isEditing) {
+          context.go('/home');
+          unawaited(context.push('/orders/$editingOrderId'));
+        } else {
+          context.go('/home');
+        }
       }
     } on Exception catch (e) {
       if (mounted) {
@@ -162,8 +186,17 @@ class _BillPreviewScreenState
                 // ── Totals ────────────────────────────────────────
                 _TotalRow(
                   label: 'Subtotal',
-                  value: '₹${draft.subtotal.toStringAsFixed(0)}',
+                  value: formatMoney(
+                    draft.discountTotal > 0
+                        ? draft.grossSubtotal
+                        : draft.subtotal,
+                  ),
                 ),
+                if (draft.discountTotal > 0)
+                  _TotalRow(
+                    label: 'Discount',
+                    value: '−${formatMoney(draft.discountTotal)}',
+                  ),
                 ..._buildGstRows(draft),
                 const SizedBox(height: AppSpacing.sm),
 
@@ -191,7 +224,7 @@ class _BillPreviewScreenState
                         ),
                       ),
                       Text(
-                        '₹${draft.grandTotal.toStringAsFixed(0)}',
+                        formatMoney(draft.grandTotal),
                         style: const TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.w800,
@@ -232,7 +265,9 @@ class _BillPreviewScreenState
             child: Column(
               children: [
                 AppButton(
-                  label: '✓ Confirm & Save Order',
+                  label: draft.editingOrderId != null
+                      ? '✓ Update Order'
+                      : '✓ Confirm & Save Order',
                   loading: _submitting,
                   onPressed: _confirm,
                 ),
@@ -278,8 +313,8 @@ class _BillPreviewScreenState
     }
     if (totalCgst > 0) {
       rows
-        ..add(_TotalRow(label: 'CGST', value: '₹$totalCgst'))
-        ..add(_TotalRow(label: 'SGST', value: '₹$totalSgst'));
+        ..add(_TotalRow(label: 'CGST', value: formatMoney(totalCgst)))
+        ..add(_TotalRow(label: 'SGST', value: formatMoney(totalSgst)));
     }
     return rows;
   }
@@ -375,7 +410,7 @@ class _ItemLine extends StatelessWidget {
               SizedBox(
                 width: 60,
                 child: Text(
-                  '₹${item.sellingRate.toStringAsFixed(0)}',
+                  formatMoney(item.sellingRate),
                   style: theme.textTheme.bodySmall
                       ?.copyWith(fontWeight: FontWeight.w600),
                   textAlign: TextAlign.right,
@@ -385,7 +420,7 @@ class _ItemLine extends StatelessWidget {
               SizedBox(
                 width: 64,
                 child: Text(
-                  '₹${item.lineTotal.toStringAsFixed(0)}',
+                  formatMoney(item.lineTotal),
                   style: theme.textTheme.bodySmall
                       ?.copyWith(fontWeight: FontWeight.w700),
                   textAlign: TextAlign.right,
@@ -394,6 +429,29 @@ class _ItemLine extends StatelessWidget {
             ],
           ),
         ),
+        if (item.discountPercent > 0 || item.freeQty > 0)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                [
+                  if (item.discountPercent > 0)
+                    'Disc ${item.discountPercent.toStringAsFixed(
+                      item.discountPercent ==
+                              item.discountPercent.truncateToDouble()
+                          ? 0
+                          : 2,
+                    )}% −${formatMoney(item.discountAmount)}',
+                  if (item.freeQty > 0) 'Free: ${item.freeQty}',
+                ].join(' · '),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface
+                      .withValues(alpha: 0.5),
+                ),
+              ),
+            ),
+          ),
         if (item.gstPercent > 0)
           Padding(
             padding: const EdgeInsets.only(bottom: 4),
@@ -401,7 +459,8 @@ class _ItemLine extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: Text(
                 'GST ${item.gstPercent.toStringAsFixed(0)}% → '
-                'CGST ₹${item.cgst} + SGST ₹${item.sgst}',
+                'CGST ${formatMoney(item.cgst)} + '
+                'SGST ${formatMoney(item.sgst)}',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurface
                       .withValues(alpha: 0.5),

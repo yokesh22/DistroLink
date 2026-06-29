@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:distro_link/core/theme/app_colors.dart';
 import 'package:distro_link/core/theme/app_spacing.dart';
+import 'package:distro_link/core/utils/money.dart';
 import 'package:distro_link/core/widgets/app_button.dart';
+import 'package:distro_link/core/widgets/app_card.dart';
 import 'package:distro_link/core/widgets/app_chip.dart';
 import 'package:distro_link/core/widgets/app_qty_stepper.dart';
 import 'package:distro_link/core/widgets/app_step_indicator.dart';
@@ -109,16 +111,6 @@ class _AddItemsScreenState extends ConsumerState<AddItemsScreen> {
                         onChanged: (_) => setState(() {}),
                       ),
                     ),
-                    // const SizedBox(width: 8),
-                    // const _IconBox(
-                    //   icon: Icons.qr_code_scanner_rounded,
-                    //   tooltip: 'Scan barcode (Phase 4)',
-                    // ),
-                    // const SizedBox(width: 8),
-                    // const _IconBox(
-                    //   icon: Icons.mic_rounded,
-                    //   tooltip: 'Voice input (Phase 4)',
-                    // ),
                   ],
                 ),
               ),
@@ -239,7 +231,8 @@ class _CartSheet extends ConsumerWidget {
     final theme = Theme.of(context);
     final draft = ref.watch(orderDraftProvider);
     final notifier = ref.read(orderDraftProvider.notifier);
-    final hasInvalidRate = draft.items.any((i) => !i.isRateValid());
+    final hasInvalidRate = draft.items
+        .any((i) => !i.isRateValid() || !i.isDiscountValid());
 
     return DraggableScrollableSheet(
       initialChildSize: 0.85,
@@ -249,32 +242,62 @@ class _CartSheet extends ConsumerWidget {
       builder: (context, scrollController) {
         return Column(
           children: [
-            // ── Grab handle + header ───────────────────────────────
+            // ── Header: "YOUR CART / N items" + circular close ─────
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.screenPadding,
-                AppSpacing.xs,
-                AppSpacing.xs,
-                0,
+                AppSpacing.sm,
+                AppSpacing.sm,
+                AppSpacing.sm,
               ),
               child: Row(
                 children: [
                   Expanded(
-                    child: Text(
-                      'Cart · ${draft.items.length} items',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'YOUR CART',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.8,
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.5),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${draft.items.length} items',
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded),
-                    onPressed: () => Navigator.of(context).pop(),
+                  // Circular grey close button.
+                  Material(
+                    color: theme.colorScheme.surface,
+                    shape: const CircleBorder(),
+                    clipBehavior: Clip.antiAlias,
+                    child: InkWell(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: Icon(
+                          Icons.close_rounded,
+                          size: 22,
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.6),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
-            const Divider(height: 1),
 
             // ── Cart items (or empty state) ────────────────────────
             Expanded(
@@ -289,8 +312,11 @@ class _CartSheet extends ConsumerWidget {
                       color: theme.colorScheme.primary.withValues(alpha: 0.05),
                       child: ListView.builder(
                         controller: scrollController,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.screenPadding,
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.screenPadding,
+                          AppSpacing.sm,
+                          AppSpacing.screenPadding,
+                          AppSpacing.sm,
                         ),
                         itemCount: draft.items.length,
                         itemBuilder: (_, i) => _ItemRow(
@@ -305,6 +331,14 @@ class _CartSheet extends ConsumerWidget {
                           onRateChanged: (rate) => notifier.changeRate(
                             draft.items[i].productId,
                             rate,
+                          ),
+                          onDiscountChanged: (pct) => notifier.changeDiscount(
+                            draft.items[i].productId,
+                            pct,
+                          ),
+                          onFreeQtyChanged: (qty) => notifier.changeFreeQty(
+                            draft.items[i].productId,
+                            qty,
                           ),
                           onRemove: () => notifier.removeItem(
                             draft.items[i].productId,
@@ -335,7 +369,7 @@ class _CartSheet extends ConsumerWidget {
                           style: theme.textTheme.bodyMedium,
                         ),
                         Text(
-                          '₹${draft.subtotal.toStringAsFixed(0)}',
+                          formatMoney(draft.subtotal),
                           style: theme.textTheme.headlineSmall?.copyWith(
                             fontWeight: FontWeight.w800,
                           ),
@@ -464,8 +498,8 @@ class _CartBarState extends State<_CartBar>
                   const SizedBox(width: AppSpacing.xs),
                   Expanded(
                     child: Text(
-                      '${widget.itemCount} items · '
-                      '₹${widget.subtotal.toStringAsFixed(0)}',
+                      '${widget.itemCount} items '
+                      '· ${formatMoney(widget.subtotal)}',
                       style: theme.textTheme.titleMedium?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
@@ -552,12 +586,16 @@ class _ItemRow extends StatefulWidget {
     required this.item,
     required this.onQtyChanged,
     required this.onRateChanged,
+    required this.onDiscountChanged,
+    required this.onFreeQtyChanged,
     required this.onRemove,
   });
 
   final DraftItem item;
   final ValueChanged<int> onQtyChanged;
   final ValueChanged<double> onRateChanged;
+  final ValueChanged<double> onDiscountChanged;
+  final ValueChanged<int> onFreeQtyChanged;
   final VoidCallback onRemove;
 
   @override
@@ -566,13 +604,33 @@ class _ItemRow extends StatefulWidget {
 
 class _ItemRowState extends State<_ItemRow> {
   late final TextEditingController _rateCtrl;
+  late final TextEditingController _discountCtrl;
+  final FocusNode _rateFocus = FocusNode();
   bool _editingRate = false;
+  bool _editingDiscount = false;
+
+  static String _fmtPct(double v) =>
+      v == v.truncateToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(2);
 
   @override
   void initState() {
     super.initState();
     _rateCtrl = TextEditingController(
-      text: widget.item.sellingRate.toStringAsFixed(0),
+      text: widget.item.sellingRate.toStringAsFixed(2),
+    );
+    _discountCtrl = TextEditingController(
+      text: _fmtPct(widget.item.discountPercent),
+    );
+  }
+
+  /// Focus the rate field and select its contents so the salesman can type
+  /// over the value immediately — the "EDIT" affordance from the design.
+  void _focusRate() {
+    setState(() => _editingRate = true);
+    _rateFocus.requestFocus();
+    _rateCtrl.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: _rateCtrl.text.length,
     );
   }
 
@@ -581,13 +639,19 @@ class _ItemRowState extends State<_ItemRow> {
     super.didUpdateWidget(oldWidget);
     if (!_editingRate &&
         oldWidget.item.sellingRate != widget.item.sellingRate) {
-      _rateCtrl.text = widget.item.sellingRate.toStringAsFixed(0);
+      _rateCtrl.text = widget.item.sellingRate.toStringAsFixed(2);
+    }
+    if (!_editingDiscount &&
+        oldWidget.item.discountPercent != widget.item.discountPercent) {
+      _discountCtrl.text = _fmtPct(widget.item.discountPercent);
     }
   }
 
   @override
   void dispose() {
     _rateCtrl.dispose();
+    _discountCtrl.dispose();
+    _rateFocus.dispose();
     super.dispose();
   }
 
@@ -596,12 +660,251 @@ class _ItemRowState extends State<_ItemRow> {
     final theme = Theme.of(context);
     final item = widget.item;
     final isRateInvalid = !item.isRateValid();
+    final isDiscountInvalid = !item.isDiscountValid();
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: AppCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Header: badge + name + meta | line total + remove ──
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Item-code pill badge.
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary
+                              .withValues(alpha: 0.14),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          item.itemCode,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.3,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        item.itemName,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              'MRP ${formatMoney(item.mrp)}'
+                              ' · Base ${formatMoney(item.baseRate)}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurface
+                                    .withValues(alpha: 0.6),
+                              ),
+                            ),
+                          ),
+                          if (item.gstPercent > 0) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 1,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.surface,
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                  color: theme.colorScheme.outline,
+                                ),
+                              ),
+                              child: Text(
+                                'GST ${item.gstPercent.toStringAsFixed(0)}%',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Line total — small remove X sits above it.
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    InkWell(
+                      onTap: widget.onRemove,
+                      borderRadius: BorderRadius.circular(14),
+                      child: Padding(
+                        padding: const EdgeInsets.all(2),
+                        child: Icon(
+                          Icons.close_rounded,
+                          size: 18,
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.4),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'LINE TOTAL',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.6,
+                        color: theme.colorScheme.onSurface
+                            .withValues(alpha: 0.5),
+                      ),
+                    ),
+                    Text(
+                      formatMoney(item.lineTotal),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    if (item.gstPercent > 0)
+                      Text(
+                        '+${formatMoney(item.gstAmount)} GST',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.6),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+            const Divider(height: AppSpacing.md),
+            // ── Quantity ──
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'QUANTITY',
+                style: _fieldLabelStyle(theme),
+              ),
+              AppQtyStepper(
+                value: item.quantity,
+                onChanged: widget.onQtyChanged,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          // ── Selling rate ──
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Text('SELLING RATE', style: _fieldLabelStyle(theme)),
+              ),
+              Text(
+                'Range ${formatMoney(item.baseRate)}'
+                ' – ${formatMoney(item.mrp)}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Full-width rate field: ₹ prefix · value · tap-to-focus EDIT.
+          Container(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: isRateInvalid
+                    ? AppColors.error
+                    : theme.colorScheme.primary,
+                width: 1.5,
+              ),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              children: [
+                Text(
+                  '₹',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
+                ),
+                Expanded(
+                  child: TextField(
+                    controller: _rateCtrl,
+                    focusNode: _rateFocus,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d+\.?\d{0,2}'),
+                      ),
+                    ],
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: isRateInvalid
+                          ? AppColors.error
+                          : theme.colorScheme.onSurface,
+                    ),
+                    decoration: const InputDecoration(
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(vertical: 12),
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      filled: false,
+                    ),
+                    onTap: () => setState(() => _editingRate = true),
+                    onChanged: (v) {
+                      final parsed = double.tryParse(v);
+                      if (parsed != null) {
+                        widget.onRateChanged(parsed);
+                      }
+                    },
+                    onSubmitted: (_) => setState(() => _editingRate = false),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: _focusRate,
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Text(
+                      'EDIT',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          // ── Discount % + Free Qty ──
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -609,202 +912,89 @@ class _ItemRowState extends State<_ItemRow> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      item.itemCode,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      item.itemName,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        Text(
-                          'MRP ₹${item.mrp.toStringAsFixed(0)}',
-                          style: theme.textTheme.bodySmall,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Base ₹${item.baseRate.toStringAsFixed(0)}',
-                          style: theme.textTheme.bodySmall,
-                        ),
-                        if (item.gstPercent > 0) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 1,
-                            ),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.surface,
-                              borderRadius: BorderRadius.circular(4),
-                              border: Border.all(
-                                color: theme.colorScheme.outline,
-                              ),
-                            ),
-                            child: Text(
-                              'GST ${item.gstPercent.toStringAsFixed(0)}%',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                fontSize: 10,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'Line total',
-                    style: theme.textTheme.bodySmall,
-                  ),
-                  Text(
-                    '₹${item.lineTotal.toStringAsFixed(0)}',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  if (item.gstPercent > 0)
-                    Text(
-                      '+₹${item.gstAmount.toStringAsFixed(0)} GST',
-                      style: theme.textTheme.bodySmall,
-                    ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              AppQtyStepper(
-                value: item.quantity,
-                onChanged: widget.onQtyChanged,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Selling Rate ₹',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
+                    Text('DISCOUNT %', style: _fieldLabelStyle(theme)),
+                    const SizedBox(height: 6),
                     TextField(
-                      controller: _rateCtrl,
+                      controller: _discountCtrl,
                       keyboardType: TextInputType.number,
                       inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'^\d+\.?\d{0,2}'),
+                        ),
                       ],
-                      textAlign: TextAlign.right,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: isRateInvalid
+                        color: isDiscountInvalid
                             ? AppColors.error
-                            : theme.colorScheme.primary,
+                            : theme.colorScheme.onSurface,
                       ),
                       decoration: InputDecoration(
+                        suffixText: '%',
+                        filled: true,
+                        fillColor: theme.colorScheme.surface,
                         contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
+                          horizontal: 12,
+                          vertical: 12,
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                           borderSide: BorderSide(
-                            color: isRateInvalid
+                            color: isDiscountInvalid
                                 ? AppColors.error
-                                : theme.colorScheme.primary,
+                                : Colors.transparent,
                             width: 1.5,
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                           borderSide: BorderSide(
-                            color: theme.colorScheme.primary,
+                            color: isDiscountInvalid
+                                ? AppColors.error
+                                : theme.colorScheme.primary,
                             width: 1.5,
                           ),
                         ),
-                        fillColor: AppColors.blueLight,
-                        filled: true,
                       ),
-                      onTap: () => setState(() => _editingRate = true),
+                      onTap: () => setState(() => _editingDiscount = true),
                       onChanged: (v) {
                         final parsed = double.tryParse(v);
                         if (parsed != null) {
-                          widget.onRateChanged(parsed);
+                          widget.onDiscountChanged(parsed);
                         }
                       },
-                      onSubmitted: (_) => setState(() => _editingRate = false),
+                      onSubmitted: (_) =>
+                          setState(() => _editingDiscount = false),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
-              IconButton(
-                icon: Icon(
-                  Icons.close_rounded,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                ),
-                onPressed: widget.onRemove,
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('FREE QTY', style: _fieldLabelStyle(theme)),
+                  const SizedBox(height: 6),
+                  AppQtyStepper(
+                    value: item.freeQty,
+                    min: 0,
+                    onChanged: widget.onFreeQtyChanged,
+                  ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            'Rate range: ₹${item.baseRate.toStringAsFixed(0)}'
-            ' – ₹${item.mrp.toStringAsFixed(0)} · Tap to edit',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-            ),
-          ),
-          const Divider(height: AppSpacing.md),
-        ],
-      ),
-    );
-  }
-}
-
-class _IconBox extends StatelessWidget {
-  const _IconBox({
-    required this.icon,
-    required this.tooltip,
-  });
-
-  final IconData icon;
-  final String tooltip;
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: Container(
-        width: 46,
-        height: 46,
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outline,
-            width: 1.5,
-          ),
-          borderRadius: BorderRadius.circular(AppSpacing.radiusInput),
-          color: Theme.of(context).colorScheme.surface,
-        ),
-        child: Icon(
-          icon,
-          size: 22,
-          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+          ],
         ),
       ),
     );
   }
+
+  TextStyle? _fieldLabelStyle(ThemeData theme) =>
+      theme.textTheme.bodySmall?.copyWith(
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.6,
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+      );
 }

@@ -1,5 +1,6 @@
 import 'package:distro_link/core/theme/app_colors.dart';
 import 'package:distro_link/core/theme/app_spacing.dart';
+import 'package:distro_link/core/utils/money.dart';
 import 'package:distro_link/core/widgets/app_chip.dart';
 import 'package:distro_link/core/widgets/app_offline_banner.dart';
 import 'package:distro_link/features/orders/application/order_providers.dart';
@@ -346,7 +347,7 @@ class _OrderCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '₹${order.grandTotal.toStringAsFixed(0)}',
+                  formatMoney(order.grandTotal),
                   style: theme.textTheme.bodyLarge
                       ?.copyWith(fontWeight: FontWeight.w700),
                 ),
@@ -453,7 +454,7 @@ class _OutboxOrderCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '₹${entry.grandTotal.toStringAsFixed(0)}',
+                      formatMoney(entry.grandTotal),
                       style: theme.textTheme.bodyLarge
                           ?.copyWith(fontWeight: FontWeight.w700),
                     ),

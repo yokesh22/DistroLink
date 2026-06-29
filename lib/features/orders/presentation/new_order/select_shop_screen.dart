@@ -288,20 +288,48 @@ class _AreaDropdown extends StatelessWidget {
       children: [
         const _InputLabel('Select Area'),
         const SizedBox(height: 6),
-        DropdownButtonFormField<String>(
-          initialValue: value,
-          hint: const Text('Choose your area…'),
-          decoration: const InputDecoration(),
-          items: areas
+        DropdownMenu<String>(
+          initialSelection: value,
+          // Tap-to-select only; don't pop the keyboard / allow free text.
+          requestFocusOnTap: false,
+          enableSearch: false,
+          hintText: 'Choose your area…',
+          // Match the field to the parent width.
+          expandedInsets: EdgeInsets.zero,
+          leadingIcon: const Icon(Icons.location_on_rounded, size: 20),
+          trailingIcon: Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+          ),
+          selectedTrailingIcon: Icon(
+            Icons.keyboard_arrow_up_rounded,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+          ),
+          textStyle: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: theme.colorScheme.onSurface,
+          ),
+          menuStyle: MenuStyle(
+            backgroundColor:
+                WidgetStatePropertyAll(theme.colorScheme.surface),
+            elevation: const WidgetStatePropertyAll(3),
+            shape: WidgetStatePropertyAll(
+              RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.circular(AppSpacing.radiusCard),
+                side: BorderSide(color: theme.colorScheme.outline),
+              ),
+            ),
+          ),
+          onSelected: onChanged,
+          dropdownMenuEntries: areas
               .map(
-                (a) => DropdownMenuItem(
+                (a) => DropdownMenuEntry(
                   value: a.id,
-                  child: Text(a.name),
+                  label: a.name,
                 ),
               )
               .toList(),
-          onChanged: onChanged,
-          style: theme.textTheme.bodyMedium,
         ),
       ],
     );

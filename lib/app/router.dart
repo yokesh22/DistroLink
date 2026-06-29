@@ -134,6 +134,7 @@ GoRouter router(Ref ref) {
         path: '/orders/:id',
         builder: (_, state) => AdminOrderSummaryScreen(
           orderId: state.pathParameters['id']!,
+          showEdit: true,
         ),
       ),
 

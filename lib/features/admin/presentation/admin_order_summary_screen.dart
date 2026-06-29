@@ -1,20 +1,33 @@
 import 'package:distro_link/core/theme/app_colors.dart';
 import 'package:distro_link/core/theme/app_spacing.dart';
 import 'package:distro_link/core/theme/app_typography.dart';
+import 'package:distro_link/core/widgets/app_button.dart';
 import 'package:distro_link/core/widgets/app_card.dart';
 import 'package:distro_link/features/admin/application/admin_order_providers.dart';
+import 'package:distro_link/features/catalog/application/product_providers.dart';
 import 'package:distro_link/features/exports/application/export_controller.dart';
+import 'package:distro_link/features/orders/application/order_providers.dart';
 import 'package:distro_link/features/orders/domain/order.dart';
 import 'package:distro_link/features/orders/domain/order_item.dart';
 import 'package:distro_link/features/orders/domain/order_with_items.dart';
+import 'package:distro_link/services/connectivity/connectivity_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class AdminOrderSummaryScreen extends ConsumerWidget {
-  const AdminOrderSummaryScreen({required this.orderId, super.key});
+  const AdminOrderSummaryScreen({
+    required this.orderId,
+    this.showEdit = false,
+    super.key,
+  });
 
   final String orderId;
+
+  /// Salesman-only: shows the "Edit Order" action above the export buttons.
+  /// Admins viewing an order keep the read-only view.
+  final bool showEdit;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -65,6 +78,7 @@ class AdminOrderSummaryScreen extends ConsumerWidget {
         data: (owt) => _OrderSummaryBody(
           owt: owt,
           orderId: orderId,
+          showEdit: showEdit,
         ),
       ),
     );
@@ -75,10 +89,12 @@ class _OrderSummaryBody extends ConsumerWidget {
   const _OrderSummaryBody({
     required this.owt,
     required this.orderId,
+    required this.showEdit,
   });
 
   final OrderWithItems owt;
   final String orderId;
+  final bool showEdit;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -99,11 +115,57 @@ class _OrderSummaryBody extends ConsumerWidget {
           const SizedBox(height: AppSpacing.xs),
           _TotalsSection(order: owt.order, currency: currency),
           const SizedBox(height: AppSpacing.md),
+          if (showEdit) ...[
+            _EditOrderButton(owt: owt),
+            const SizedBox(height: AppSpacing.md),
+          ],
           _ExportSection(orderId: orderId),
           const SizedBox(height: AppSpacing.md),
         ],
       ),
     );
+  }
+}
+
+class _EditOrderButton extends ConsumerWidget {
+  const _EditOrderButton({required this.owt});
+
+  final OrderWithItems owt;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final isOnline = ref.watch(isOnlineProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AppButton(
+          label: 'Edit Order',
+          icon: Icons.edit_rounded,
+          onPressed: isOnline ? () => _startEdit(context, ref) : null,
+        ),
+        if (!isOnline)
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.xs),
+            child: Text(
+              'Connect to the internet to edit this order.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppColors.warning,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Future<void> _startEdit(BuildContext context, WidgetRef ref) async {
+    final catalog = await ref.read(productsProvider.future);
+    ref.read(orderDraftProvider.notifier).seedForEdit(
+          owt: owt,
+          catalog: catalog,
+        );
+    if (context.mounted) await context.push('/orders/new/3');
   }
 }
 
@@ -294,7 +356,15 @@ class _ItemRow extends StatelessWidget {
                       ?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 Text(
-                  '${item.itemCode} · GST ${item.gstPercent.toInt()}%',
+                  [
+                    '${item.itemCode} · GST ${item.gstPercent.toInt()}%',
+                    if (item.discountPercent > 0)
+                      'Disc ${item.discountPercent ==
+                              item.discountPercent.truncateToDouble()
+                          ? item.discountPercent.toStringAsFixed(0)
+                          : item.discountPercent.toStringAsFixed(2)}%',
+                    if (item.freeQty > 0) 'Free ${item.freeQty}',
+                  ].join(' · '),
                   style: theme.textTheme.bodySmall,
                 ),
               ],
@@ -314,7 +384,7 @@ class _ItemRow extends StatelessWidget {
           SizedBox(
             width: 64,
             child: Text(
-              '₹${item.sellingRate.toStringAsFixed(0)}',
+              currency.format(item.sellingRate),
               style: AppTypography.numeric(
                 color: theme.colorScheme.onSurface,
                 size: 14,
@@ -325,7 +395,7 @@ class _ItemRow extends StatelessWidget {
           SizedBox(
             width: 64,
             child: Text(
-              '₹${item.lineTotal.toStringAsFixed(0)}',
+              currency.format(item.lineTotal),
               style: AppTypography.numeric(
                 color: theme.colorScheme.onSurface,
                 size: 14,

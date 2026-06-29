@@ -14,7 +14,9 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$OrderDraftState {
 
- Area? get area; Shop? get shop; DateTime? get orderDate; DateTime? get deliveryDate; OrderType get orderType; String get notes; List<DraftItem> get items;
+ Area? get area; Shop? get shop; DateTime? get orderDate; DateTime? get deliveryDate; OrderType get orderType; String get notes; List<DraftItem> get items;/// When non-null, this draft is editing an existing order (UPDATE) rather
+/// than creating a new one (INSERT). Holds the `orders.id` being edited.
+ String? get editingOrderId;
 /// Create a copy of OrderDraftState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +27,16 @@ $OrderDraftStateCopyWith<OrderDraftState> get copyWith => _$OrderDraftStateCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is OrderDraftState&&(identical(other.area, area) || other.area == area)&&(identical(other.shop, shop) || other.shop == shop)&&(identical(other.orderDate, orderDate) || other.orderDate == orderDate)&&(identical(other.deliveryDate, deliveryDate) || other.deliveryDate == deliveryDate)&&(identical(other.orderType, orderType) || other.orderType == orderType)&&(identical(other.notes, notes) || other.notes == notes)&&const DeepCollectionEquality().equals(other.items, items));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OrderDraftState&&(identical(other.area, area) || other.area == area)&&(identical(other.shop, shop) || other.shop == shop)&&(identical(other.orderDate, orderDate) || other.orderDate == orderDate)&&(identical(other.deliveryDate, deliveryDate) || other.deliveryDate == deliveryDate)&&(identical(other.orderType, orderType) || other.orderType == orderType)&&(identical(other.notes, notes) || other.notes == notes)&&const DeepCollectionEquality().equals(other.items, items)&&(identical(other.editingOrderId, editingOrderId) || other.editingOrderId == editingOrderId));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,area,shop,orderDate,deliveryDate,orderType,notes,const DeepCollectionEquality().hash(items));
+int get hashCode => Object.hash(runtimeType,area,shop,orderDate,deliveryDate,orderType,notes,const DeepCollectionEquality().hash(items),editingOrderId);
 
 @override
 String toString() {
-  return 'OrderDraftState(area: $area, shop: $shop, orderDate: $orderDate, deliveryDate: $deliveryDate, orderType: $orderType, notes: $notes, items: $items)';
+  return 'OrderDraftState(area: $area, shop: $shop, orderDate: $orderDate, deliveryDate: $deliveryDate, orderType: $orderType, notes: $notes, items: $items, editingOrderId: $editingOrderId)';
 }
 
 
@@ -45,7 +47,7 @@ abstract mixin class $OrderDraftStateCopyWith<$Res>  {
   factory $OrderDraftStateCopyWith(OrderDraftState value, $Res Function(OrderDraftState) _then) = _$OrderDraftStateCopyWithImpl;
 @useResult
 $Res call({
- Area? area, Shop? shop, DateTime? orderDate, DateTime? deliveryDate, OrderType orderType, String notes, List<DraftItem> items
+ Area? area, Shop? shop, DateTime? orderDate, DateTime? deliveryDate, OrderType orderType, String notes, List<DraftItem> items, String? editingOrderId
 });
 
 
@@ -62,7 +64,7 @@ class _$OrderDraftStateCopyWithImpl<$Res>
 
 /// Create a copy of OrderDraftState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? area = freezed,Object? shop = freezed,Object? orderDate = freezed,Object? deliveryDate = freezed,Object? orderType = null,Object? notes = null,Object? items = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? area = freezed,Object? shop = freezed,Object? orderDate = freezed,Object? deliveryDate = freezed,Object? orderType = null,Object? notes = null,Object? items = null,Object? editingOrderId = freezed,}) {
   return _then(_self.copyWith(
 area: freezed == area ? _self.area : area // ignore: cast_nullable_to_non_nullable
 as Area?,shop: freezed == shop ? _self.shop : shop // ignore: cast_nullable_to_non_nullable
@@ -71,7 +73,8 @@ as DateTime?,deliveryDate: freezed == deliveryDate ? _self.deliveryDate : delive
 as DateTime?,orderType: null == orderType ? _self.orderType : orderType // ignore: cast_nullable_to_non_nullable
 as OrderType,notes: null == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
 as String,items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
-as List<DraftItem>,
+as List<DraftItem>,editingOrderId: freezed == editingOrderId ? _self.editingOrderId : editingOrderId // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 /// Create a copy of OrderDraftState
@@ -180,10 +183,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Area? area,  Shop? shop,  DateTime? orderDate,  DateTime? deliveryDate,  OrderType orderType,  String notes,  List<DraftItem> items)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Area? area,  Shop? shop,  DateTime? orderDate,  DateTime? deliveryDate,  OrderType orderType,  String notes,  List<DraftItem> items,  String? editingOrderId)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _OrderDraftState() when $default != null:
-return $default(_that.area,_that.shop,_that.orderDate,_that.deliveryDate,_that.orderType,_that.notes,_that.items);case _:
+return $default(_that.area,_that.shop,_that.orderDate,_that.deliveryDate,_that.orderType,_that.notes,_that.items,_that.editingOrderId);case _:
   return orElse();
 
 }
@@ -201,10 +204,10 @@ return $default(_that.area,_that.shop,_that.orderDate,_that.deliveryDate,_that.o
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Area? area,  Shop? shop,  DateTime? orderDate,  DateTime? deliveryDate,  OrderType orderType,  String notes,  List<DraftItem> items)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Area? area,  Shop? shop,  DateTime? orderDate,  DateTime? deliveryDate,  OrderType orderType,  String notes,  List<DraftItem> items,  String? editingOrderId)  $default,) {final _that = this;
 switch (_that) {
 case _OrderDraftState():
-return $default(_that.area,_that.shop,_that.orderDate,_that.deliveryDate,_that.orderType,_that.notes,_that.items);case _:
+return $default(_that.area,_that.shop,_that.orderDate,_that.deliveryDate,_that.orderType,_that.notes,_that.items,_that.editingOrderId);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -221,10 +224,10 @@ return $default(_that.area,_that.shop,_that.orderDate,_that.deliveryDate,_that.o
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Area? area,  Shop? shop,  DateTime? orderDate,  DateTime? deliveryDate,  OrderType orderType,  String notes,  List<DraftItem> items)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Area? area,  Shop? shop,  DateTime? orderDate,  DateTime? deliveryDate,  OrderType orderType,  String notes,  List<DraftItem> items,  String? editingOrderId)?  $default,) {final _that = this;
 switch (_that) {
 case _OrderDraftState() when $default != null:
-return $default(_that.area,_that.shop,_that.orderDate,_that.deliveryDate,_that.orderType,_that.notes,_that.items);case _:
+return $default(_that.area,_that.shop,_that.orderDate,_that.deliveryDate,_that.orderType,_that.notes,_that.items,_that.editingOrderId);case _:
   return null;
 
 }
@@ -236,7 +239,7 @@ return $default(_that.area,_that.shop,_that.orderDate,_that.deliveryDate,_that.o
 
 
 class _OrderDraftState extends OrderDraftState {
-  const _OrderDraftState({this.area, this.shop, this.orderDate, this.deliveryDate, this.orderType = OrderType.regular, this.notes = '', final  List<DraftItem> items = const []}): _items = items,super._();
+  const _OrderDraftState({this.area, this.shop, this.orderDate, this.deliveryDate, this.orderType = OrderType.regular, this.notes = '', final  List<DraftItem> items = const [], this.editingOrderId}): _items = items,super._();
   
 
 @override final  Area? area;
@@ -252,6 +255,9 @@ class _OrderDraftState extends OrderDraftState {
   return EqualUnmodifiableListView(_items);
 }
 
+/// When non-null, this draft is editing an existing order (UPDATE) rather
+/// than creating a new one (INSERT). Holds the `orders.id` being edited.
+@override final  String? editingOrderId;
 
 /// Create a copy of OrderDraftState
 /// with the given fields replaced by the non-null parameter values.
@@ -263,16 +269,16 @@ _$OrderDraftStateCopyWith<_OrderDraftState> get copyWith => __$OrderDraftStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OrderDraftState&&(identical(other.area, area) || other.area == area)&&(identical(other.shop, shop) || other.shop == shop)&&(identical(other.orderDate, orderDate) || other.orderDate == orderDate)&&(identical(other.deliveryDate, deliveryDate) || other.deliveryDate == deliveryDate)&&(identical(other.orderType, orderType) || other.orderType == orderType)&&(identical(other.notes, notes) || other.notes == notes)&&const DeepCollectionEquality().equals(other._items, _items));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OrderDraftState&&(identical(other.area, area) || other.area == area)&&(identical(other.shop, shop) || other.shop == shop)&&(identical(other.orderDate, orderDate) || other.orderDate == orderDate)&&(identical(other.deliveryDate, deliveryDate) || other.deliveryDate == deliveryDate)&&(identical(other.orderType, orderType) || other.orderType == orderType)&&(identical(other.notes, notes) || other.notes == notes)&&const DeepCollectionEquality().equals(other._items, _items)&&(identical(other.editingOrderId, editingOrderId) || other.editingOrderId == editingOrderId));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,area,shop,orderDate,deliveryDate,orderType,notes,const DeepCollectionEquality().hash(_items));
+int get hashCode => Object.hash(runtimeType,area,shop,orderDate,deliveryDate,orderType,notes,const DeepCollectionEquality().hash(_items),editingOrderId);
 
 @override
 String toString() {
-  return 'OrderDraftState(area: $area, shop: $shop, orderDate: $orderDate, deliveryDate: $deliveryDate, orderType: $orderType, notes: $notes, items: $items)';
+  return 'OrderDraftState(area: $area, shop: $shop, orderDate: $orderDate, deliveryDate: $deliveryDate, orderType: $orderType, notes: $notes, items: $items, editingOrderId: $editingOrderId)';
 }
 
 
@@ -283,7 +289,7 @@ abstract mixin class _$OrderDraftStateCopyWith<$Res> implements $OrderDraftState
   factory _$OrderDraftStateCopyWith(_OrderDraftState value, $Res Function(_OrderDraftState) _then) = __$OrderDraftStateCopyWithImpl;
 @override @useResult
 $Res call({
- Area? area, Shop? shop, DateTime? orderDate, DateTime? deliveryDate, OrderType orderType, String notes, List<DraftItem> items
+ Area? area, Shop? shop, DateTime? orderDate, DateTime? deliveryDate, OrderType orderType, String notes, List<DraftItem> items, String? editingOrderId
 });
 
 
@@ -300,7 +306,7 @@ class __$OrderDraftStateCopyWithImpl<$Res>
 
 /// Create a copy of OrderDraftState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? area = freezed,Object? shop = freezed,Object? orderDate = freezed,Object? deliveryDate = freezed,Object? orderType = null,Object? notes = null,Object? items = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? area = freezed,Object? shop = freezed,Object? orderDate = freezed,Object? deliveryDate = freezed,Object? orderType = null,Object? notes = null,Object? items = null,Object? editingOrderId = freezed,}) {
   return _then(_OrderDraftState(
 area: freezed == area ? _self.area : area // ignore: cast_nullable_to_non_nullable
 as Area?,shop: freezed == shop ? _self.shop : shop // ignore: cast_nullable_to_non_nullable
@@ -309,7 +315,8 @@ as DateTime?,deliveryDate: freezed == deliveryDate ? _self.deliveryDate : delive
 as DateTime?,orderType: null == orderType ? _self.orderType : orderType // ignore: cast_nullable_to_non_nullable
 as OrderType,notes: null == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
 as String,items: null == items ? _self._items : items // ignore: cast_nullable_to_non_nullable
-as List<DraftItem>,
+as List<DraftItem>,editingOrderId: freezed == editingOrderId ? _self.editingOrderId : editingOrderId // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -343,7 +350,7 @@ $ShopCopyWith<$Res>? get shop {
 /// @nodoc
 mixin _$DraftItem {
 
- String get productId; String get itemCode; String get itemName; double get mrp; double get baseRate; double get sellingRate; int get quantity; double get gstPercent;
+ String get productId; String get itemCode; String get itemName; double get mrp; double get baseRate; double get sellingRate; int get quantity; double get gstPercent; double get discountPercent; int get freeQty;
 /// Create a copy of DraftItem
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -354,16 +361,16 @@ $DraftItemCopyWith<DraftItem> get copyWith => _$DraftItemCopyWithImpl<DraftItem>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DraftItem&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.itemCode, itemCode) || other.itemCode == itemCode)&&(identical(other.itemName, itemName) || other.itemName == itemName)&&(identical(other.mrp, mrp) || other.mrp == mrp)&&(identical(other.baseRate, baseRate) || other.baseRate == baseRate)&&(identical(other.sellingRate, sellingRate) || other.sellingRate == sellingRate)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.gstPercent, gstPercent) || other.gstPercent == gstPercent));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DraftItem&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.itemCode, itemCode) || other.itemCode == itemCode)&&(identical(other.itemName, itemName) || other.itemName == itemName)&&(identical(other.mrp, mrp) || other.mrp == mrp)&&(identical(other.baseRate, baseRate) || other.baseRate == baseRate)&&(identical(other.sellingRate, sellingRate) || other.sellingRate == sellingRate)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.gstPercent, gstPercent) || other.gstPercent == gstPercent)&&(identical(other.discountPercent, discountPercent) || other.discountPercent == discountPercent)&&(identical(other.freeQty, freeQty) || other.freeQty == freeQty));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,productId,itemCode,itemName,mrp,baseRate,sellingRate,quantity,gstPercent);
+int get hashCode => Object.hash(runtimeType,productId,itemCode,itemName,mrp,baseRate,sellingRate,quantity,gstPercent,discountPercent,freeQty);
 
 @override
 String toString() {
-  return 'DraftItem(productId: $productId, itemCode: $itemCode, itemName: $itemName, mrp: $mrp, baseRate: $baseRate, sellingRate: $sellingRate, quantity: $quantity, gstPercent: $gstPercent)';
+  return 'DraftItem(productId: $productId, itemCode: $itemCode, itemName: $itemName, mrp: $mrp, baseRate: $baseRate, sellingRate: $sellingRate, quantity: $quantity, gstPercent: $gstPercent, discountPercent: $discountPercent, freeQty: $freeQty)';
 }
 
 
@@ -374,7 +381,7 @@ abstract mixin class $DraftItemCopyWith<$Res>  {
   factory $DraftItemCopyWith(DraftItem value, $Res Function(DraftItem) _then) = _$DraftItemCopyWithImpl;
 @useResult
 $Res call({
- String productId, String itemCode, String itemName, double mrp, double baseRate, double sellingRate, int quantity, double gstPercent
+ String productId, String itemCode, String itemName, double mrp, double baseRate, double sellingRate, int quantity, double gstPercent, double discountPercent, int freeQty
 });
 
 
@@ -391,7 +398,7 @@ class _$DraftItemCopyWithImpl<$Res>
 
 /// Create a copy of DraftItem
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? productId = null,Object? itemCode = null,Object? itemName = null,Object? mrp = null,Object? baseRate = null,Object? sellingRate = null,Object? quantity = null,Object? gstPercent = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? productId = null,Object? itemCode = null,Object? itemName = null,Object? mrp = null,Object? baseRate = null,Object? sellingRate = null,Object? quantity = null,Object? gstPercent = null,Object? discountPercent = null,Object? freeQty = null,}) {
   return _then(_self.copyWith(
 productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
 as String,itemCode: null == itemCode ? _self.itemCode : itemCode // ignore: cast_nullable_to_non_nullable
@@ -401,7 +408,9 @@ as double,baseRate: null == baseRate ? _self.baseRate : baseRate // ignore: cast
 as double,sellingRate: null == sellingRate ? _self.sellingRate : sellingRate // ignore: cast_nullable_to_non_nullable
 as double,quantity: null == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
 as int,gstPercent: null == gstPercent ? _self.gstPercent : gstPercent // ignore: cast_nullable_to_non_nullable
-as double,
+as double,discountPercent: null == discountPercent ? _self.discountPercent : discountPercent // ignore: cast_nullable_to_non_nullable
+as double,freeQty: null == freeQty ? _self.freeQty : freeQty // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 
@@ -486,10 +495,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String productId,  String itemCode,  String itemName,  double mrp,  double baseRate,  double sellingRate,  int quantity,  double gstPercent)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String productId,  String itemCode,  String itemName,  double mrp,  double baseRate,  double sellingRate,  int quantity,  double gstPercent,  double discountPercent,  int freeQty)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _DraftItem() when $default != null:
-return $default(_that.productId,_that.itemCode,_that.itemName,_that.mrp,_that.baseRate,_that.sellingRate,_that.quantity,_that.gstPercent);case _:
+return $default(_that.productId,_that.itemCode,_that.itemName,_that.mrp,_that.baseRate,_that.sellingRate,_that.quantity,_that.gstPercent,_that.discountPercent,_that.freeQty);case _:
   return orElse();
 
 }
@@ -507,10 +516,10 @@ return $default(_that.productId,_that.itemCode,_that.itemName,_that.mrp,_that.ba
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String productId,  String itemCode,  String itemName,  double mrp,  double baseRate,  double sellingRate,  int quantity,  double gstPercent)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String productId,  String itemCode,  String itemName,  double mrp,  double baseRate,  double sellingRate,  int quantity,  double gstPercent,  double discountPercent,  int freeQty)  $default,) {final _that = this;
 switch (_that) {
 case _DraftItem():
-return $default(_that.productId,_that.itemCode,_that.itemName,_that.mrp,_that.baseRate,_that.sellingRate,_that.quantity,_that.gstPercent);case _:
+return $default(_that.productId,_that.itemCode,_that.itemName,_that.mrp,_that.baseRate,_that.sellingRate,_that.quantity,_that.gstPercent,_that.discountPercent,_that.freeQty);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -527,10 +536,10 @@ return $default(_that.productId,_that.itemCode,_that.itemName,_that.mrp,_that.ba
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String productId,  String itemCode,  String itemName,  double mrp,  double baseRate,  double sellingRate,  int quantity,  double gstPercent)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String productId,  String itemCode,  String itemName,  double mrp,  double baseRate,  double sellingRate,  int quantity,  double gstPercent,  double discountPercent,  int freeQty)?  $default,) {final _that = this;
 switch (_that) {
 case _DraftItem() when $default != null:
-return $default(_that.productId,_that.itemCode,_that.itemName,_that.mrp,_that.baseRate,_that.sellingRate,_that.quantity,_that.gstPercent);case _:
+return $default(_that.productId,_that.itemCode,_that.itemName,_that.mrp,_that.baseRate,_that.sellingRate,_that.quantity,_that.gstPercent,_that.discountPercent,_that.freeQty);case _:
   return null;
 
 }
@@ -542,7 +551,7 @@ return $default(_that.productId,_that.itemCode,_that.itemName,_that.mrp,_that.ba
 
 
 class _DraftItem extends DraftItem {
-  const _DraftItem({required this.productId, required this.itemCode, required this.itemName, required this.mrp, required this.baseRate, required this.sellingRate, required this.quantity, required this.gstPercent}): super._();
+  const _DraftItem({required this.productId, required this.itemCode, required this.itemName, required this.mrp, required this.baseRate, required this.sellingRate, required this.quantity, required this.gstPercent, this.discountPercent = 0, this.freeQty = 0}): super._();
   
 
 @override final  String productId;
@@ -553,6 +562,8 @@ class _DraftItem extends DraftItem {
 @override final  double sellingRate;
 @override final  int quantity;
 @override final  double gstPercent;
+@override@JsonKey() final  double discountPercent;
+@override@JsonKey() final  int freeQty;
 
 /// Create a copy of DraftItem
 /// with the given fields replaced by the non-null parameter values.
@@ -564,16 +575,16 @@ _$DraftItemCopyWith<_DraftItem> get copyWith => __$DraftItemCopyWithImpl<_DraftI
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DraftItem&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.itemCode, itemCode) || other.itemCode == itemCode)&&(identical(other.itemName, itemName) || other.itemName == itemName)&&(identical(other.mrp, mrp) || other.mrp == mrp)&&(identical(other.baseRate, baseRate) || other.baseRate == baseRate)&&(identical(other.sellingRate, sellingRate) || other.sellingRate == sellingRate)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.gstPercent, gstPercent) || other.gstPercent == gstPercent));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DraftItem&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.itemCode, itemCode) || other.itemCode == itemCode)&&(identical(other.itemName, itemName) || other.itemName == itemName)&&(identical(other.mrp, mrp) || other.mrp == mrp)&&(identical(other.baseRate, baseRate) || other.baseRate == baseRate)&&(identical(other.sellingRate, sellingRate) || other.sellingRate == sellingRate)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.gstPercent, gstPercent) || other.gstPercent == gstPercent)&&(identical(other.discountPercent, discountPercent) || other.discountPercent == discountPercent)&&(identical(other.freeQty, freeQty) || other.freeQty == freeQty));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,productId,itemCode,itemName,mrp,baseRate,sellingRate,quantity,gstPercent);
+int get hashCode => Object.hash(runtimeType,productId,itemCode,itemName,mrp,baseRate,sellingRate,quantity,gstPercent,discountPercent,freeQty);
 
 @override
 String toString() {
-  return 'DraftItem(productId: $productId, itemCode: $itemCode, itemName: $itemName, mrp: $mrp, baseRate: $baseRate, sellingRate: $sellingRate, quantity: $quantity, gstPercent: $gstPercent)';
+  return 'DraftItem(productId: $productId, itemCode: $itemCode, itemName: $itemName, mrp: $mrp, baseRate: $baseRate, sellingRate: $sellingRate, quantity: $quantity, gstPercent: $gstPercent, discountPercent: $discountPercent, freeQty: $freeQty)';
 }
 
 
@@ -584,7 +595,7 @@ abstract mixin class _$DraftItemCopyWith<$Res> implements $DraftItemCopyWith<$Re
   factory _$DraftItemCopyWith(_DraftItem value, $Res Function(_DraftItem) _then) = __$DraftItemCopyWithImpl;
 @override @useResult
 $Res call({
- String productId, String itemCode, String itemName, double mrp, double baseRate, double sellingRate, int quantity, double gstPercent
+ String productId, String itemCode, String itemName, double mrp, double baseRate, double sellingRate, int quantity, double gstPercent, double discountPercent, int freeQty
 });
 
 
@@ -601,7 +612,7 @@ class __$DraftItemCopyWithImpl<$Res>
 
 /// Create a copy of DraftItem
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? productId = null,Object? itemCode = null,Object? itemName = null,Object? mrp = null,Object? baseRate = null,Object? sellingRate = null,Object? quantity = null,Object? gstPercent = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? productId = null,Object? itemCode = null,Object? itemName = null,Object? mrp = null,Object? baseRate = null,Object? sellingRate = null,Object? quantity = null,Object? gstPercent = null,Object? discountPercent = null,Object? freeQty = null,}) {
   return _then(_DraftItem(
 productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
 as String,itemCode: null == itemCode ? _self.itemCode : itemCode // ignore: cast_nullable_to_non_nullable
@@ -611,7 +622,9 @@ as double,baseRate: null == baseRate ? _self.baseRate : baseRate // ignore: cast
 as double,sellingRate: null == sellingRate ? _self.sellingRate : sellingRate // ignore: cast_nullable_to_non_nullable
 as double,quantity: null == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
 as int,gstPercent: null == gstPercent ? _self.gstPercent : gstPercent // ignore: cast_nullable_to_non_nullable
-as double,
+as double,discountPercent: null == discountPercent ? _self.discountPercent : discountPercent // ignore: cast_nullable_to_non_nullable
+as double,freeQty: null == freeQty ? _self.freeQty : freeQty // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 

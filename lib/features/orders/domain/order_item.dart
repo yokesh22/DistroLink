@@ -17,6 +17,8 @@ abstract class OrderItem with _$OrderItem {
     @JsonKey(name: 'gst_percent') required double gstPercent,
     @JsonKey(name: 'line_total') required double lineTotal,
     @JsonKey(name: 'created_at') required DateTime createdAt,
+    @JsonKey(name: 'discount_percent') @Default(0) double discountPercent,
+    @JsonKey(name: 'free_qty') @Default(0) int freeQty,
   }) = _OrderItem;
 
   factory OrderItem.fromJson(Map<String, dynamic> json) =>

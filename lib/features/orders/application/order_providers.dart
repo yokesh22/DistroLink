@@ -1,9 +1,11 @@
 import 'package:distro_link/core/network/supabase_provider.dart';
 import 'package:distro_link/features/auth/application/auth_providers.dart';
+import 'package:distro_link/features/catalog/domain/product.dart';
 import 'package:distro_link/features/orders/data/orders_repository.dart';
 import 'package:distro_link/features/orders/domain/order.dart';
 import 'package:distro_link/features/orders/domain/order_draft.dart';
 import 'package:distro_link/features/orders/domain/order_type.dart';
+import 'package:distro_link/features/orders/domain/order_with_items.dart';
 import 'package:distro_link/features/shops/domain/area.dart';
 import 'package:distro_link/features/shops/domain/shop.dart';
 import 'package:distro_link/services/hive/hive_provider.dart';
@@ -86,6 +88,57 @@ class OrderDraftNotifier extends _$OrderDraftNotifier {
     state = state.copyWith(area: area, shop: shop);
   }
 
+  /// Seeds the draft from an existing order so it can be edited and saved back
+  /// (UPDATE). [catalog] is the current product list, used to recover each
+  /// item's `baseRate` (not stored on `order_items`); if a product is no longer
+  /// in the catalog we fall back to its snapshot selling rate so the line stays
+  /// rate-valid. See `seedForEdit` usage in the order summary screen.
+  void seedForEdit({
+    required OrderWithItems owt,
+    required List<Product> catalog,
+  }) {
+    final order = owt.order;
+    final area = Area(
+      id: order.areaId,
+      name: order.areaName ?? '',
+      distributorId: order.distributorId,
+      createdAt: order.createdAt,
+    );
+    final shop = Shop(
+      id: order.shopId,
+      distributorId: order.distributorId,
+      areaId: order.areaId,
+      shopName: order.shopName ?? '',
+      shopAddress: order.shopAddress ?? '',
+      createdAt: order.createdAt,
+      shopNumber: order.shopNumber,
+    );
+    final items = owt.items.map((oi) {
+      final product = catalog.where((p) => p.id == oi.productId).firstOrNull;
+      return DraftItem(
+        productId: oi.productId,
+        itemCode: oi.itemCode,
+        itemName: oi.itemName,
+        mrp: oi.mrp,
+        baseRate: product?.baseRate ?? oi.sellingRate,
+        sellingRate: oi.sellingRate,
+        quantity: oi.quantity,
+        gstPercent: oi.gstPercent,
+        discountPercent: oi.discountPercent,
+        freeQty: oi.freeQty,
+      );
+    }).toList();
+
+    state = OrderDraftState(
+      area: area,
+      shop: shop,
+      orderDate: order.orderDate,
+      notes: order.notes ?? '',
+      items: items,
+      editingOrderId: order.id,
+    );
+  }
+
   void setDetails({
     DateTime? deliveryDate,
     OrderType? orderType,
@@ -128,6 +181,22 @@ class OrderDraftNotifier extends _$OrderDraftNotifier {
       return item.copyWith(
         sellingRate: rate.clamp(item.baseRate, item.mrp),
       );
+    }).toList();
+    state = state.copyWith(items: updated);
+  }
+
+  void changeDiscount(String productId, double pct) {
+    final updated = state.items.map((item) {
+      if (item.productId != productId) return item;
+      return item.copyWith(discountPercent: pct.clamp(0, 100));
+    }).toList();
+    state = state.copyWith(items: updated);
+  }
+
+  void changeFreeQty(String productId, int qty) {
+    final updated = state.items.map((item) {
+      if (item.productId != productId) return item;
+      return item.copyWith(freeQty: qty.clamp(0, 999));
     }).toList();
     state = state.copyWith(items: updated);
   }

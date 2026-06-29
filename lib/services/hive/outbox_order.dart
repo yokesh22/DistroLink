@@ -13,6 +13,8 @@ class OutboxOrderItem {
     required this.quantity,
     required this.gstPercent,
     required this.lineTotal,
+    this.discountPercent = 0,
+    this.freeQty = 0,
   });
 
   factory OutboxOrderItem.fromJson(Map<String, dynamic> json) =>
@@ -25,6 +27,8 @@ class OutboxOrderItem {
         quantity: json['quantity'] as int,
         gstPercent: (json['gst_percent'] as num).toDouble(),
         lineTotal: (json['line_total'] as num).toDouble(),
+        discountPercent: (json['discount_percent'] as num?)?.toDouble() ?? 0,
+        freeQty: json['free_qty'] as int? ?? 0,
       );
 
   final String productId;
@@ -35,6 +39,8 @@ class OutboxOrderItem {
   final int quantity;
   final double gstPercent;
   final double lineTotal;
+  final double discountPercent;
+  final int freeQty;
 
   Map<String, dynamic> toJson() => {
         'product_id': productId,
@@ -45,6 +51,8 @@ class OutboxOrderItem {
         'quantity': quantity,
         'gst_percent': gstPercent,
         'line_total': lineTotal,
+        'discount_percent': discountPercent,
+        'free_qty': freeQty,
       };
 }
 

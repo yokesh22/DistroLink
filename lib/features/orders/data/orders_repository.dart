@@ -338,6 +338,57 @@ class OrdersRepository {
     }
   }
 
+  /// Updates an existing order in place (edit flow). Online-only — the edit
+  /// UI is disabled offline, so we let any [PostgrestException] propagate.
+  ///
+  /// Preserves `order_number`, `created_at`, `order_date`, `salesman_id`
+  /// and `distributor_id`; replaces line items wholesale (delete + re-insert).
+  /// Not wrapped in a transaction — same non-atomic tradeoff as
+  /// [_submitOnline].
+  Future<void> updateOrder({
+    required String orderId,
+    required OrderDraftState draft,
+  }) async {
+    assert(
+      draft.editingOrderId != null,
+      'updateOrder requires a draft seeded for edit',
+    );
+
+    await _client
+        .from('orders')
+        .update({
+          'shop_id': draft.shop!.id,
+          'area_id': draft.area!.id,
+          'subtotal': draft.subtotal,
+          'gst_total': draft.gstTotal,
+          'grand_total': draft.grandTotal,
+          'notes': draft.notes.isEmpty ? null : draft.notes,
+        })
+        .eq('id', orderId);
+
+    await _client.from('order_items').delete().eq('order_id', orderId);
+
+    await _client.from('order_items').insert(
+          draft.items
+              .map(
+                (item) => <String, dynamic>{
+                  'order_id': orderId,
+                  'product_id': item.productId,
+                  'item_code': item.itemCode,
+                  'item_name': item.itemName,
+                  'mrp': item.mrp,
+                  'selling_rate': item.sellingRate,
+                  'quantity': item.quantity,
+                  'gst_percent': item.gstPercent,
+                  'line_total': item.lineTotal,
+                  'discount_percent': item.discountPercent,
+                  'free_qty': item.freeQty,
+                },
+              )
+              .toList(),
+        );
+  }
+
   /// Syncs a single outbox entry to Supabase. Called by the sync worker.
   Future<void> syncOutboxOrder(OutboxOrder entry) async {
     await _hive.outboxBox.put(
@@ -377,6 +428,8 @@ class OrdersRepository {
                     'quantity': item.quantity,
                     'gst_percent': item.gstPercent,
                     'line_total': item.lineTotal,
+                    'discount_percent': item.discountPercent,
+                    'free_qty': item.freeQty,
                   },
                 )
                 .toList(),
@@ -439,6 +492,8 @@ class OrdersRepository {
                   'quantity': item.quantity,
                   'gst_percent': item.gstPercent,
                   'line_total': item.lineTotal,
+                  'discount_percent': item.discountPercent,
+                  'free_qty': item.freeQty,
                 },
               )
               .toList(),
@@ -479,6 +534,8 @@ class OrdersRepository {
               quantity: item.quantity,
               gstPercent: item.gstPercent,
               lineTotal: item.lineTotal,
+              discountPercent: item.discountPercent,
+              freeQty: item.freeQty,
             ),
           )
           .toList(),

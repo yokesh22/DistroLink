@@ -22,13 +22,17 @@ class ExcelExportService {
     final headers = [
       'orderId',
       'date',
+      'Salesman',
       'area',
       'company',
       'itemname',
       'item code',
       'MRP',
       'Rate',
+      'GST %',
       'Qty',
+      'Discount %',
+      'Free Qty',
       'Total',
     ];
     for (var col = 0; col < headers.length; col++) {
@@ -55,14 +59,18 @@ class ExcelExportService {
 
         write(0, TextCellValue(order.orderNumber));
         write(1, TextCellValue(dateStr));
-        write(2, TextCellValue(order.areaName ?? ''));
-        write(3, TextCellValue(order.shopName ?? ''));
-        write(4, TextCellValue(item.itemName));
-        write(5, TextCellValue(item.itemCode));
-        write(6, DoubleCellValue(item.mrp));
-        write(7, DoubleCellValue(item.sellingRate));
-        write(8, IntCellValue(item.quantity));
-        write(9, DoubleCellValue(item.lineTotal));
+        write(2, TextCellValue(order.salesmanName ?? ''));
+        write(3, TextCellValue(order.areaName ?? ''));
+        write(4, TextCellValue(order.shopName ?? ''));
+        write(5, TextCellValue(item.itemName));
+        write(6, TextCellValue(item.itemCode));
+        write(7, DoubleCellValue(item.mrp));
+        write(8, DoubleCellValue(item.sellingRate));
+        write(9, DoubleCellValue(item.gstPercent));
+        write(10, IntCellValue(item.quantity));
+        write(11, DoubleCellValue(item.discountPercent));
+        write(12, IntCellValue(item.freeQty));
+        write(13, DoubleCellValue(item.lineTotal));
         rowIndex++;
       }
     }
