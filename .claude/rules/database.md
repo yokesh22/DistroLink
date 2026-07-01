@@ -126,7 +126,7 @@ Product catalog scoped per distributor. **Salesmen cannot create products** — 
 | is_active | bool | Inactive products don't appear in catalog list |
 | created_at | timestamptz | |
 
-> **Selling rate validation:** `base_rate ≤ selling_rate ≤ mrp`. See [business-rules.md](./business-rules.md).
+> **Selling rate validation:** `0 ≤ selling_rate ≤ mrp` (MRP is the ceiling; **no base-rate floor** — base-rate floor removed 2026-07-01). `base_rate` is a reference/default only. See [business-rules.md](./business-rules.md).
 
 ---
 
@@ -165,7 +165,7 @@ Line items for an order. Snapshots product fields at order time so retroactive p
 | item_code | text | **Snapshot** of product.item_code at order time |
 | item_name | text | **Snapshot** of product.item_name |
 | mrp | numeric | **Snapshot** |
-| selling_rate | numeric | Salesman-overridable; validated `base_rate ≤ rate ≤ mrp` |
+| selling_rate | numeric | Salesman-overridable per order; validated `0 ≤ rate ≤ mrp` (no base-rate floor) |
 | quantity | int | ≥ 1 |
 | gst_percent | numeric | **Snapshot** |
 | line_total | numeric | `selling_rate * quantity` (excludes GST). GST is computed from `line_total * gst_percent / 100`. |
@@ -199,7 +199,7 @@ If RLS is missing or weaker, **filter client-side as a defence-in-depth measure*
 
 ## Business invariants (enforced in code; document why)
 
-1. `selling_rate ∈ [base_rate, mrp]` — validated at form-submit time and again at repository layer.
+1. `selling_rate ∈ [0, mrp]` — MRP ceiling only, no base-rate floor (changed 2026-07-01). Validated at form-submit time; the draft clamps to `[0, mrp]`.
 2. `quantity ≥ 1` — qty stepper enforces; repo validates.
 3. `subtotal = sum(line_total)`, `grand_total = subtotal + gst_total` — compute in app, send all three (server can recompute as a check).
 4. Snapshots in `order_items` (`item_code`, `item_name`, `mrp`, `gst_percent`) make orders historically stable. Never reach back to `products` to render an old order.

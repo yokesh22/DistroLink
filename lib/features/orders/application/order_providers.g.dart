@@ -363,7 +363,7 @@ final class OrderDraftNotifierProvider
 }
 
 String _$orderDraftNotifierHash() =>
-    r'cf8489fa4aa6da3570e097ecfadd4bdb302cdd5e';
+    r'0e64303eac44d6acc9356ccc383ef60407410ac2';
 
 abstract class _$OrderDraftNotifier extends $Notifier<OrderDraftState> {
   OrderDraftState build();

@@ -44,7 +44,7 @@ Encode these in code (with a short comment pointing here for any non-obvious one
 ### Step 3 — Items
 - Item rows: each shows `item_code`, `item_name`, `MRP`, `base_rate`, `gst_percent`.
 - Qty: `+/−` stepper, **minimum 1** (the `−` button is disabled at 1; tap `✕` to remove the line).
-- Selling rate is editable. **Validation:** `base_rate ≤ selling_rate ≤ mrp`. Show inline error and disable "Next" if any line is invalid.
+- Selling rate is editable and **set per order** by the salesman. **Validation:** `0 ≤ selling_rate ≤ mrp` — there is **no base-rate floor** (a salesman may sell below `base_rate`, e.g. a negotiated price); MRP is the only ceiling. Show inline error and disable "Next" if any line is above MRP. (Was `base_rate ≤ selling_rate ≤ mrp`; base-rate floor removed 2026-07-01 per PM.)
 - "Quick Add" chips show items from the salesman's most recent order — tapping adds at qty 1 with `selling_rate = base_rate`.
 - Subtotal in sticky footer = `Σ (selling_rate × quantity)`.
 

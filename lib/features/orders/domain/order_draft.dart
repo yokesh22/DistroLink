@@ -94,7 +94,9 @@ abstract class DraftItem with _$DraftItem {
 
   int get sgst => gstAmount.round() - cgst;
 
-  bool isRateValid() => sellingRate >= baseRate && sellingRate <= mrp;
+  // Selling rate is per-order: any value from 0 up to MRP is allowed (no
+  // base-rate floor). See business-rules.md.
+  bool isRateValid() => sellingRate >= 0 && sellingRate <= mrp;
 
   bool isDiscountValid() => discountPercent >= 0 && discountPercent <= 100;
 }

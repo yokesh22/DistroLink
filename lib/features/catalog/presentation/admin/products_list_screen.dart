@@ -1,5 +1,6 @@
 import 'package:distro_link/core/theme/app_colors.dart';
 import 'package:distro_link/core/theme/app_spacing.dart';
+import 'package:distro_link/core/utils/money.dart';
 import 'package:distro_link/core/widgets/app_button.dart';
 import 'package:distro_link/features/catalog/application/admin_product_providers.dart';
 import 'package:distro_link/features/catalog/domain/product.dart';
@@ -223,11 +224,11 @@ class _TableHeader extends StatelessWidget {
         children: [
           Expanded(child: Text('PRODUCT', style: labelStyle)),
           SizedBox(
-            width: 60,
+            width: 76,
             child: Text('MRP', style: labelStyle, textAlign: TextAlign.right),
           ),
           SizedBox(
-            width: 60,
+            width: 76,
             child: Text('RATE', style: labelStyle, textAlign: TextAlign.right),
           ),
           SizedBox(
@@ -244,11 +245,6 @@ class _ProductRow extends StatelessWidget {
   const _ProductRow({required this.product, required this.isLast});
   final Product product;
   final bool isLast;
-
-  String _formatPrice(double value) {
-    final rounded = value.round();
-    return '₹$rounded';
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -298,17 +294,17 @@ class _ProductRow extends StatelessWidget {
               ),
             ),
             SizedBox(
-              width: 60,
+              width: 76,
               child: Text(
-                _formatPrice(product.mrp),
+                formatMoney(product.mrp),
                 style: theme.textTheme.bodyMedium,
                 textAlign: TextAlign.right,
               ),
             ),
             SizedBox(
-              width: 60,
+              width: 76,
               child: Text(
-                _formatPrice(product.baseRate),
+                formatMoney(product.baseRate),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w600,

@@ -87,9 +87,7 @@ class DashboardScreen extends ConsumerWidget {
                         PopupMenuButton<_DashboardAction>(
                           onSelected: (action) async {
                             if (action == _DashboardAction.logout) {
-                              await ref
-                                  .read(authRepositoryProvider)
-                                  .signOut();
+                              await ref.read(authRepositoryProvider).signOut();
                               if (context.mounted) context.go('/login');
                             }
                           },
@@ -219,6 +217,7 @@ class DashboardScreen extends ConsumerWidget {
                               child: Text('No orders yet today.'),
                             )
                           : Column(
+                              spacing: AppSpacing.xs,
                               children: orders
                                   .take(3)
                                   .map((o) => _OrderRow(order: o))
@@ -228,6 +227,7 @@ class DashboardScreen extends ConsumerWidget {
                           const Center(child: CircularProgressIndicator()),
                       error: (e, _) => Text('Error: $e'),
                     ),
+                    const SizedBox(height: AppSpacing.sm),
                   ],
                 ),
               ),

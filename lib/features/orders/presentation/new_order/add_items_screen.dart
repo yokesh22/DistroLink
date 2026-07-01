@@ -156,12 +156,14 @@ class _AddItemsScreenState extends ConsumerState<AddItemsScreen> {
                           itemBuilder: (_, i) {
                             final p = products[i];
                             final inCart = cartById[p.id];
+                            final subtitle =
+                                '${p.itemCode} · MRP ${formatMoney(p.mrp)}';
                             return ListTile(
                               title: Text(p.itemName),
                               subtitle: Text(
                                 inCart != null
-                                    ? '${p.itemCode} · MRP ₹${p.mrp} · in cart'
-                                    : '${p.itemCode} · MRP ₹${p.mrp}',
+                                    ? '$subtitle · in cart'
+                                    : subtitle,
                               ),
                               trailing: inCart != null
                                   ? AppQtyStepper(
@@ -231,8 +233,9 @@ class _CartSheet extends ConsumerWidget {
     final theme = Theme.of(context);
     final draft = ref.watch(orderDraftProvider);
     final notifier = ref.read(orderDraftProvider.notifier);
-    final hasInvalidRate = draft.items
-        .any((i) => !i.isRateValid() || !i.isDiscountValid());
+    final hasInvalidRate = draft.items.any(
+      (i) => !i.isRateValid() || !i.isDiscountValid(),
+    );
 
     return DraggableScrollableSheet(
       initialChildSize: 0.85,
@@ -240,157 +243,169 @@ class _CartSheet extends ConsumerWidget {
       maxChildSize: 0.95,
       expand: false,
       builder: (context, scrollController) {
-        return Column(
-          children: [
-            // ── Header: "YOUR CART / N items" + circular close ─────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.screenPadding,
-                AppSpacing.sm,
-                AppSpacing.sm,
-                AppSpacing.sm,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'YOUR CART',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.8,
-                            color: theme.colorScheme.onSurface
-                                .withValues(alpha: 0.5),
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '${draft.items.length} items',
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Circular grey close button.
-                  Material(
-                    color: theme.colorScheme.surface,
-                    shape: const CircleBorder(),
-                    clipBehavior: Clip.antiAlias,
-                    child: InkWell(
-                      onTap: () => Navigator.of(context).pop(),
-                      child: SizedBox(
-                        width: 40,
-                        height: 40,
-                        child: Icon(
-                          Icons.close_rounded,
-                          size: 22,
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.6),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // ── Cart items (or empty state) ────────────────────────
-            Expanded(
-              child: draft.items.isEmpty
-                  ? Center(
-                      child: Text(
-                        'Your cart is empty.',
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                    )
-                  : ColoredBox(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.05),
-                      child: ListView.builder(
-                        controller: scrollController,
-                        padding: const EdgeInsets.fromLTRB(
-                          AppSpacing.screenPadding,
-                          AppSpacing.sm,
-                          AppSpacing.screenPadding,
-                          AppSpacing.sm,
-                        ),
-                        itemCount: draft.items.length,
-                        itemBuilder: (_, i) => _ItemRow(
-                          item: draft.items[i],
-                          onQtyChanged: (qty) {
-                            final delta = qty - draft.items[i].quantity;
-                            notifier.changeQty(
-                              draft.items[i].productId,
-                              delta,
-                            );
-                          },
-                          onRateChanged: (rate) => notifier.changeRate(
-                            draft.items[i].productId,
-                            rate,
-                          ),
-                          onDiscountChanged: (pct) => notifier.changeDiscount(
-                            draft.items[i].productId,
-                            pct,
-                          ),
-                          onFreeQtyChanged: (qty) => notifier.changeFreeQty(
-                            draft.items[i].productId,
-                            qty,
-                          ),
-                          onRemove: () => notifier.removeItem(
-                            draft.items[i].productId,
-                          ),
-                        ),
-                      ),
-                    ),
-            ),
-
-            // ── Sticky footer inside the sheet ─────────────────────
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.screenPadding),
-              decoration: BoxDecoration(
-                color: theme.scaffoldBackgroundColor,
-                border: Border(
-                  top: BorderSide(color: theme.colorScheme.outline),
+        // Reserve the keyboard inset so the sheet content sits above the keypad
+        // — otherwise the focused rate/discount field on lower items hides
+        // behind it. Collapses back to 0 when the keyboard closes.
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.viewInsetsOf(context).bottom,
+          ),
+          child: Column(
+            children: [
+              // ── Header: "YOUR CART / N items" + circular close ─────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.screenPadding,
+                  AppSpacing.sm,
+                  AppSpacing.sm,
+                  AppSpacing.sm,
                 ),
-              ),
-              child: SafeArea(
-                top: false,
-                child: Column(
+                child: Row(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          '${draft.items.length} items · Subtotal',
-                          style: theme.textTheme.bodyMedium,
-                        ),
-                        Text(
-                          formatMoney(draft.subtotal),
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w800,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'YOUR CART',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.8,
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${draft.items.length} items',
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Circular grey close button.
+                    Material(
+                      color: theme.colorScheme.surface,
+                      shape: const CircleBorder(),
+                      clipBehavior: Clip.antiAlias,
+                      child: InkWell(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: SizedBox(
+                          width: 40,
+                          height: 40,
+                          child: Icon(
+                            Icons.close_rounded,
+                            size: 22,
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.6,
+                            ),
                           ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    AppButton(
-                      label: 'Next: Preview Bill →',
-                      onPressed: draft.items.isNotEmpty && !hasInvalidRate
-                          ? () {
-                              Navigator.of(context).pop();
-                              context.go('/orders/new/4');
-                            }
-                          : null,
+                      ),
                     ),
                   ],
                 ),
               ),
-            ),
-          ],
+
+              // ── Cart items (or empty state) ────────────────────────
+              Expanded(
+                child: draft.items.isEmpty
+                    ? Center(
+                        child: Text(
+                          'Your cart is empty.',
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                      )
+                    : ColoredBox(
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.05,
+                        ),
+                        child: ListView.builder(
+                          controller: scrollController,
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.screenPadding,
+                            AppSpacing.sm,
+                            AppSpacing.screenPadding,
+                            AppSpacing.sm,
+                          ),
+                          itemCount: draft.items.length,
+                          itemBuilder: (_, i) => _ItemRow(
+                            item: draft.items[i],
+                            onQtyChanged: (qty) {
+                              final delta = qty - draft.items[i].quantity;
+                              notifier.changeQty(
+                                draft.items[i].productId,
+                                delta,
+                              );
+                            },
+                            onRateChanged: (rate) => notifier.changeRate(
+                              draft.items[i].productId,
+                              rate,
+                            ),
+                            onDiscountChanged: (pct) => notifier.changeDiscount(
+                              draft.items[i].productId,
+                              pct,
+                            ),
+                            onFreeQtyChanged: (qty) => notifier.changeFreeQty(
+                              draft.items[i].productId,
+                              qty,
+                            ),
+                            onRemove: () => notifier.removeItem(
+                              draft.items[i].productId,
+                            ),
+                          ),
+                        ),
+                      ),
+              ),
+
+              // ── Sticky footer inside the sheet ─────────────────────
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.screenPadding),
+                decoration: BoxDecoration(
+                  color: theme.scaffoldBackgroundColor,
+                  border: Border(
+                    top: BorderSide(color: theme.colorScheme.outline),
+                  ),
+                ),
+                child: SafeArea(
+                  top: false,
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '${draft.items.length} items · Subtotal',
+                            style: theme.textTheme.bodyMedium,
+                          ),
+                          Text(
+                            formatMoney(draft.subtotal),
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      AppButton(
+                        label: 'Next: Preview Bill →',
+                        onPressed: draft.items.isNotEmpty && !hasInvalidRate
+                            ? () {
+                                Navigator.of(context).pop();
+                                context.go('/orders/new/4');
+                              }
+                            : null,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -621,6 +636,16 @@ class _ItemRowState extends State<_ItemRow> {
     _discountCtrl = TextEditingController(
       text: _fmtPct(widget.item.discountPercent),
     );
+    // Safety net: flush the final typed rate when the field loses focus (e.g.
+    // the salesman taps "Next" without submitting), so the draft never keeps a
+    // stale rate. didUpdateWidget then normalises the display on the rebuild.
+    _rateFocus.addListener(() {
+      if (!_rateFocus.hasFocus && _editingRate) {
+        final parsed = double.tryParse(_rateCtrl.text);
+        if (parsed != null) widget.onRateChanged(parsed);
+        setState(() => _editingRate = false);
+      }
+    });
   }
 
   /// Focus the rate field and select its contents so the salesman can type
@@ -683,8 +708,9 @@ class _ItemRowState extends State<_ItemRow> {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primary
-                              .withValues(alpha: 0.14),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.14,
+                          ),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
@@ -714,8 +740,9 @@ class _ItemRowState extends State<_ItemRow> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface
-                                    .withValues(alpha: 0.6),
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
+                                ),
                               ),
                             ),
                           ),
@@ -759,8 +786,9 @@ class _ItemRowState extends State<_ItemRow> {
                         child: Icon(
                           Icons.close_rounded,
                           size: 18,
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.4),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.4,
+                          ),
                         ),
                       ),
                     ),
@@ -771,8 +799,9 @@ class _ItemRowState extends State<_ItemRow> {
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.6,
-                        color: theme.colorScheme.onSurface
-                            .withValues(alpha: 0.5),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.5,
+                        ),
                       ),
                     ),
                     Text(
@@ -785,8 +814,9 @@ class _ItemRowState extends State<_ItemRow> {
                       Text(
                         '+${formatMoney(item.gstAmount)} GST',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.6),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
                         ),
                       ),
                   ],
@@ -795,195 +825,201 @@ class _ItemRowState extends State<_ItemRow> {
             ),
             const Divider(height: AppSpacing.md),
             // ── Quantity ──
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'QUANTITY',
-                style: _fieldLabelStyle(theme),
-              ),
-              AppQtyStepper(
-                value: item.quantity,
-                onChanged: widget.onQtyChanged,
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          // ── Selling rate ──
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: Text('SELLING RATE', style: _fieldLabelStyle(theme)),
-              ),
-              Text(
-                'Range ${formatMoney(item.baseRate)}'
-                ' – ${formatMoney(item.mrp)}',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // Full-width rate field: ₹ prefix · value · tap-to-focus EDIT.
-          Container(
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: isRateInvalid
-                    ? AppColors.error
-                    : theme.colorScheme.primary,
-                width: 1.5,
-              ),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Row(
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '₹',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                  ),
+                  'QUANTITY',
+                  style: _fieldLabelStyle(theme),
                 ),
+                AppQtyStepper(
+                  value: item.quantity,
+                  onChanged: widget.onQtyChanged,
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            // ── Selling rate ──
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
                 Expanded(
-                  child: TextField(
-                    controller: _rateCtrl,
-                    focusNode: _rateFocus,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(
-                        RegExp(r'^\d+\.?\d{0,2}'),
-                      ),
-                    ],
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: isRateInvalid
-                          ? AppColors.error
-                          : theme.colorScheme.onSurface,
-                    ),
-                    decoration: const InputDecoration(
-                      isDense: true,
-                      contentPadding: EdgeInsets.symmetric(vertical: 12),
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      filled: false,
-                    ),
-                    onTap: () => setState(() => _editingRate = true),
-                    onChanged: (v) {
-                      final parsed = double.tryParse(v);
-                      if (parsed != null) {
-                        widget.onRateChanged(parsed);
-                      }
-                    },
-                    onSubmitted: (_) => setState(() => _editingRate = false),
-                  ),
+                  child: Text('SELLING RATE', style: _fieldLabelStyle(theme)),
                 ),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: _focusRate,
-                  behavior: HitTestBehavior.opaque,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Text(
-                      'EDIT',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.5,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
+                Text(
+                  'Max ${formatMoney(item.mrp)}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                   ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          // ── Discount % + Free Qty ──
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('DISCOUNT %', style: _fieldLabelStyle(theme)),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: _discountCtrl,
-                      keyboardType: TextInputType.number,
+            const SizedBox(height: 8),
+            // Full-width rate field: ₹ prefix · value · tap-to-focus EDIT.
+            Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: isRateInvalid
+                      ? AppColors.error
+                      : theme.colorScheme.primary,
+                  width: 1.5,
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                children: [
+                  Text(
+                    '₹',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  Expanded(
+                    child: TextField(
+                      controller: _rateCtrl,
+                      focusNode: _rateFocus,
+                      // decimal: true so the Android keypad exposes a ".";
+                      // without it "28.50" can't be typed and a plain "2850"
+                      // gets clamped up to MRP (rate looked "stuck").
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(
                           RegExp(r'^\d+\.?\d{0,2}'),
                         ),
                       ],
+                      textAlign: TextAlign.right,
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 15,
                         fontWeight: FontWeight.w700,
-                        color: isDiscountInvalid
+                        color: isRateInvalid
                             ? AppColors.error
                             : theme.colorScheme.onSurface,
                       ),
-                      decoration: InputDecoration(
-                        suffixText: '%',
-                        filled: true,
-                        fillColor: theme.colorScheme.surface,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 12,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(
-                            color: isDiscountInvalid
-                                ? AppColors.error
-                                : Colors.transparent,
-                            width: 1.5,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(
-                            color: isDiscountInvalid
-                                ? AppColors.error
-                                : theme.colorScheme.primary,
-                            width: 1.5,
-                          ),
-                        ),
+                      decoration: const InputDecoration(
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(vertical: 12),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        filled: false,
                       ),
-                      onTap: () => setState(() => _editingDiscount = true),
+                      onTap: () => setState(() => _editingRate = true),
                       onChanged: (v) {
                         final parsed = double.tryParse(v);
                         if (parsed != null) {
-                          widget.onDiscountChanged(parsed);
+                          widget.onRateChanged(parsed);
                         }
                       },
-                      onSubmitted: (_) =>
-                          setState(() => _editingDiscount = false),
+                      onSubmitted: (_) => setState(() => _editingRate = false),
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('FREE QTY', style: _fieldLabelStyle(theme)),
-                  const SizedBox(height: 6),
-                  AppQtyStepper(
-                    value: item.freeQty,
-                    min: 0,
-                    onChanged: widget.onFreeQtyChanged,
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: _focusRate,
+                    behavior: HitTestBehavior.opaque,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Text(
+                        'EDIT',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            // ── Discount % + Free Qty ──
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('DISCOUNT %', style: _fieldLabelStyle(theme)),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: _discountCtrl,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d+\.?\d{0,2}'),
+                          ),
+                        ],
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: isDiscountInvalid
+                              ? AppColors.error
+                              : theme.colorScheme.onSurface,
+                        ),
+                        decoration: InputDecoration(
+                          suffixText: '%',
+                          filled: true,
+                          fillColor: theme.colorScheme.surface,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(
+                              color: isDiscountInvalid
+                                  ? AppColors.error
+                                  : Colors.transparent,
+                              width: 1.5,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(
+                              color: isDiscountInvalid
+                                  ? AppColors.error
+                                  : theme.colorScheme.primary,
+                              width: 1.5,
+                            ),
+                          ),
+                        ),
+                        onTap: () => setState(() => _editingDiscount = true),
+                        onChanged: (v) {
+                          final parsed = double.tryParse(v);
+                          if (parsed != null) {
+                            widget.onDiscountChanged(parsed);
+                          }
+                        },
+                        onSubmitted: (_) =>
+                            setState(() => _editingDiscount = false),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('FREE QTY', style: _fieldLabelStyle(theme)),
+                    const SizedBox(height: 6),
+                    AppQtyStepper(
+                      value: item.freeQty,
+                      min: 0,
+                      onChanged: widget.onFreeQtyChanged,
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ],
         ),
       ),
