@@ -70,13 +70,15 @@ class AdminDashboardRepository {
         .from('orders')
         .select('grand_total')
         .eq('distributor_id', distributorId)
-        .eq('order_date', todayStr);
+        .eq('order_date', todayStr)
+        .isFilter('deleted_at', null);
 
     final monthRes = await _client
         .from('orders')
         .select('id')
         .eq('distributor_id', distributorId)
         .gte('order_date', monthStart)
+        .isFilter('deleted_at', null)
         .count(CountOption.exact);
 
     final revenueToday = todayRows.fold<double>(
@@ -113,6 +115,7 @@ class AdminDashboardRepository {
           'shops(shop_name), salesmen(name)',
         )
         .eq('distributor_id', distributorId)
+        .isFilter('deleted_at', null)
         .gte('order_date', fromStr)
         .lte('order_date', toStr)
         .order('created_at', ascending: false)

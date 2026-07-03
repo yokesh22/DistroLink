@@ -1,6 +1,8 @@
 import 'package:distro_link/core/theme/app_colors.dart';
 import 'package:distro_link/features/admin/presentation/admin_dashboard_screen.dart';
+import 'package:distro_link/features/admin/presentation/admin_export_screen.dart';
 import 'package:distro_link/features/admin/presentation/admin_order_summary_screen.dart';
+import 'package:distro_link/features/admin/presentation/admin_settings_screen.dart';
 import 'package:distro_link/features/admin/presentation/admin_shell.dart';
 import 'package:distro_link/features/analytics/presentation/analytics_screen.dart';
 import 'package:distro_link/features/auth/application/auth_providers.dart';
@@ -168,10 +170,18 @@ GoRouter router(Ref ref) {
             path: '/admin/products',
             builder: (_, _) => const AdminProductsListScreen(),
           ),
+          GoRoute(
+            path: '/admin/settings',
+            builder: (_, _) => const AdminSettingsScreen(),
+          ),
         ],
       ),
 
       // ── Admin push routes (no bottom nav) ────────────────────────
+      GoRoute(
+        path: '/admin/export',
+        builder: (_, _) => const AdminExportScreen(),
+      ),
       GoRoute(
         path: '/admin/salesmen/add',
         builder: (_, _) => const AddEditSalesmanScreen(),

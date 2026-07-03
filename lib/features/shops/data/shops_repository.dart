@@ -66,6 +66,7 @@ class ShopsRepository {
         .from('orders')
         .select('shop_id, created_at, shops!inner($shopFields)')
         .eq('salesman_id', salesmanId)
+        .isFilter('deleted_at', null)
         .order('created_at', ascending: false)
         .limit(limit * 4);
 

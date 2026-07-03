@@ -27,6 +27,21 @@ class _AddItemsScreenState extends ConsumerState<AddItemsScreen> {
   final _searchCtrl = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    // Arriving via "Edit Order" pre-seeds the draft (editingOrderId + existing
+    // lines). Open the cart summary straight away so the salesman lands on the
+    // order's items instead of the product picker.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final draft = ref.read(orderDraftProvider);
+      if (draft.editingOrderId != null && draft.items.isNotEmpty) {
+        _showCartSheet(context);
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _searchCtrl.dispose();
     super.dispose();
@@ -334,6 +349,10 @@ class _CartSheet extends ConsumerWidget {
                           ),
                           itemCount: draft.items.length,
                           itemBuilder: (_, i) => _ItemRow(
+                            // Key by productId so removing a line disposes the
+                            // right row's controllers instead of leaking stale
+                            // rate/discount values onto the row that shifts up.
+                            key: ValueKey(draft.items[i].productId),
                             item: draft.items[i],
                             onQtyChanged: (qty) {
                               final delta = qty - draft.items[i].quantity;
@@ -604,6 +623,7 @@ class _ItemRow extends StatefulWidget {
     required this.onDiscountChanged,
     required this.onFreeQtyChanged,
     required this.onRemove,
+    super.key,
   });
 
   final DraftItem item;
@@ -621,6 +641,7 @@ class _ItemRowState extends State<_ItemRow> {
   late final TextEditingController _rateCtrl;
   late final TextEditingController _discountCtrl;
   final FocusNode _rateFocus = FocusNode();
+  final FocusNode _discountFocus = FocusNode();
   bool _editingRate = false;
   bool _editingDiscount = false;
 
@@ -644,6 +665,17 @@ class _ItemRowState extends State<_ItemRow> {
         final parsed = double.tryParse(_rateCtrl.text);
         if (parsed != null) widget.onRateChanged(parsed);
         setState(() => _editingRate = false);
+      }
+    });
+    // Flush the discount on blur too. An emptied field means "no discount" (0),
+    // so clearing it and tapping away reliably sets the line back to 0% instead
+    // of silently keeping the previous value.
+    _discountFocus.addListener(() {
+      if (!_discountFocus.hasFocus && _editingDiscount) {
+        final parsed = double.tryParse(_discountCtrl.text) ?? 0;
+        widget.onDiscountChanged(parsed);
+        _discountCtrl.text = _fmtPct(parsed.clamp(0, 100).toDouble());
+        setState(() => _editingDiscount = false);
       }
     });
   }
@@ -677,6 +709,7 @@ class _ItemRowState extends State<_ItemRow> {
     _rateCtrl.dispose();
     _discountCtrl.dispose();
     _rateFocus.dispose();
+    _discountFocus.dispose();
     super.dispose();
   }
 
@@ -950,6 +983,7 @@ class _ItemRowState extends State<_ItemRow> {
                       const SizedBox(height: 6),
                       TextField(
                         controller: _discountCtrl,
+                        focusNode: _discountFocus,
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
@@ -994,6 +1028,10 @@ class _ItemRowState extends State<_ItemRow> {
                         ),
                         onTap: () => setState(() => _editingDiscount = true),
                         onChanged: (v) {
+                          if (v.isEmpty) {
+                            widget.onDiscountChanged(0);
+                            return;
+                          }
                           final parsed = double.tryParse(v);
                           if (parsed != null) {
                             widget.onDiscountChanged(parsed);

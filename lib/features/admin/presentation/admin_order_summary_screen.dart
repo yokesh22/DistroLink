@@ -3,6 +3,7 @@ import 'package:distro_link/core/theme/app_spacing.dart';
 import 'package:distro_link/core/theme/app_typography.dart';
 import 'package:distro_link/core/widgets/app_button.dart';
 import 'package:distro_link/core/widgets/app_card.dart';
+import 'package:distro_link/features/admin/application/admin_dashboard_providers.dart';
 import 'package:distro_link/features/admin/application/admin_order_providers.dart';
 import 'package:distro_link/features/catalog/application/product_providers.dart';
 import 'package:distro_link/features/exports/application/export_controller.dart';
@@ -67,8 +68,7 @@ class AdminOrderSummaryScreen extends ConsumerWidget {
         ],
       ),
       body: orderAsync.when(
-        loading: () =>
-            const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
           child: Text(
             'Failed to load order.\n$e',
@@ -119,6 +119,8 @@ class _OrderSummaryBody extends ConsumerWidget {
             _EditOrderButton(owt: owt),
             const SizedBox(height: AppSpacing.md),
           ],
+          _DeleteOrderButton(orderId: orderId),
+          const SizedBox(height: AppSpacing.md),
           _ExportSection(orderId: orderId),
           const SizedBox(height: AppSpacing.md),
         ],
@@ -161,11 +163,137 @@ class _EditOrderButton extends ConsumerWidget {
 
   Future<void> _startEdit(BuildContext context, WidgetRef ref) async {
     final catalog = await ref.read(productsProvider.future);
-    ref.read(orderDraftProvider.notifier).seedForEdit(
+    ref
+        .read(orderDraftProvider.notifier)
+        .seedForEdit(
           owt: owt,
           catalog: catalog,
         );
     if (context.mounted) await context.push('/orders/new/3');
+  }
+}
+
+/// Destructive "Delete Order" action shown to both salesmen and admins.
+/// Soft-deletes the order (stamps `deleted_at`) so it disappears from every
+/// order-read surface. Online-only, mirroring [_EditOrderButton].
+class _DeleteOrderButton extends ConsumerStatefulWidget {
+  const _DeleteOrderButton({required this.orderId});
+
+  final String orderId;
+
+  @override
+  ConsumerState<_DeleteOrderButton> createState() => _DeleteOrderButtonState();
+}
+
+class _DeleteOrderButtonState extends ConsumerState<_DeleteOrderButton> {
+  // Ephemeral spinner state — permitted UI state per the Riverpod rules.
+  bool _isDeleting = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isOnline = ref.watch(isOnlineProvider);
+    final enabled = isOnline && !_isDeleting;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton(
+            onPressed: enabled ? _confirmAndDelete : null,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.error,
+              side: const BorderSide(color: AppColors.error),
+            ),
+            child: _isDeleting
+                ? const SizedBox(
+                    height: 18,
+                    width: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation(AppColors.error),
+                    ),
+                  )
+                : const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.delete_outline_rounded, size: 18),
+                      SizedBox(width: 8),
+                      Text('Delete Order'),
+                    ],
+                  ),
+          ),
+        ),
+        if (!isOnline)
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.xs),
+            child: Text(
+              'Connect to the internet to delete this order.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppColors.warning,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Future<void> _confirmAndDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete order?'),
+        content: const Text(
+          'The selected order will be removed from the orders list. '
+          "This action can't be undone.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() => _isDeleting = true);
+    try {
+      final repo = await ref.read(ordersRepositoryProvider.future);
+      await repo.softDeleteOrder(widget.orderId);
+
+      // Refresh every list/dashboard that could show this order (invalidating
+      // an unwatched provider is harmless), then leave the detail screen.
+      ref
+        ..invalidate(recentOrdersProvider)
+        ..invalidate(salesmanStatsProvider)
+        ..invalidate(analyticsDataProvider)
+        ..invalidate(adminRecentActivityProvider)
+        ..invalidate(adminDashboardKpisProvider);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(const SnackBar(content: Text('Order deleted')));
+      context.pop();
+    } on Exception {
+      if (!mounted) return;
+      setState(() => _isDeleting = false);
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('Something went wrong. Please try again.'),
+          ),
+        );
+    }
   }
 }
 
@@ -352,17 +480,15 @@ class _ItemRow extends StatelessWidget {
               children: [
                 Text(
                   item.itemName,
-                  style: theme.textTheme.bodyMedium
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 Text(
                   [
                     '${item.itemCode} · GST ${item.gstPercent.toInt()}%',
                     if (item.discountPercent > 0)
-                      'Disc ${item.discountPercent ==
-                              item.discountPercent.truncateToDouble()
-                          ? item.discountPercent.toStringAsFixed(0)
-                          : item.discountPercent.toStringAsFixed(2)}%',
+                      'Disc ${item.discountPercent == item.discountPercent.truncateToDouble() ? item.discountPercent.toStringAsFixed(0) : item.discountPercent.toStringAsFixed(2)}%',
                     if (item.freeQty > 0) 'Free ${item.freeQty}',
                   ].join(' · '),
                   style: theme.textTheme.bodySmall,
@@ -473,8 +599,7 @@ class _ExportSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final exportState =
-        ref.watch(singleOrderExportControllerProvider(orderId));
+    final exportState = ref.watch(singleOrderExportControllerProvider(orderId));
     final theme = Theme.of(context);
     final isGenerating = exportState.maybeWhen(
       generating: () => true,
@@ -509,11 +634,12 @@ class _ExportSection extends ConsumerWidget {
                 onTap: isGenerating
                     ? null
                     : () => ref
-                        .read(
-                          singleOrderExportControllerProvider(orderId)
-                              .notifier,
-                        )
-                        .export(ExportFormat.pdf),
+                          .read(
+                            singleOrderExportControllerProvider(
+                              orderId,
+                            ).notifier,
+                          )
+                          .export(ExportFormat.pdf),
               ),
             ),
             const SizedBox(width: AppSpacing.xs),
@@ -526,11 +652,12 @@ class _ExportSection extends ConsumerWidget {
                 onTap: isGenerating
                     ? null
                     : () => ref
-                        .read(
-                          singleOrderExportControllerProvider(orderId)
-                              .notifier,
-                        )
-                        .export(ExportFormat.excel),
+                          .read(
+                            singleOrderExportControllerProvider(
+                              orderId,
+                            ).notifier,
+                          )
+                          .export(ExportFormat.excel),
               ),
             ),
           ],
@@ -540,8 +667,9 @@ class _ExportSection extends ConsumerWidget {
             padding: const EdgeInsets.only(top: AppSpacing.xs),
             child: Text(
               errorMessage,
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: AppColors.error),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppColors.error,
+              ),
             ),
           ),
       ],
@@ -574,8 +702,7 @@ class _ExportButton extends StatelessWidget {
           foregroundColor: Colors.white,
           disabledBackgroundColor: color.withValues(alpha: 0.6),
           shape: RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.circular(AppSpacing.radiusButton),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusButton),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 12),
         ),
@@ -585,8 +712,7 @@ class _ExportButton extends StatelessWidget {
                 width: 18,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor:
-                      AlwaysStoppedAnimation(Colors.white),
+                  valueColor: AlwaysStoppedAnimation(Colors.white),
                 ),
               )
             : Row(

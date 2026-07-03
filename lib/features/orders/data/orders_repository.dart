@@ -35,6 +35,7 @@ class OrdersRepository {
           'order_items(*)',
         )
         .eq('salesman_id', salesmanId)
+        .isFilter('deleted_at', null)
         .gte('order_date', fromStr)
         .lt('order_date', toStr)
         .order('order_date', ascending: true);
@@ -88,6 +89,7 @@ class OrdersRepository {
           'order_items(*)',
         )
         .eq('id', orderId)
+        .isFilter('deleted_at', null)
         .single();
 
     final r = raw;
@@ -131,6 +133,7 @@ class OrdersRepository {
         .from('orders')
         .select('*, shops!inner(shop_name, shop_number)')
         .eq('salesman_id', salesmanId)
+        .isFilter('deleted_at', null)
         .order('created_at', ascending: false)
         .limit(limit);
 
@@ -153,7 +156,8 @@ class OrdersRepository {
         .from('orders')
         .select('grand_total, shop_id')
         .eq('salesman_id', salesmanId)
-        .eq('order_date', todayStr);
+        .eq('order_date', todayStr)
+        .isFilter('deleted_at', null);
 
     final ordersToday = rows.length;
     final revenueToday = rows.fold<double>(
@@ -191,6 +195,7 @@ class OrdersRepository {
         .from('orders')
         .select('grand_total, shop_id, order_date')
         .eq('salesman_id', salesmanId)
+        .isFilter('deleted_at', null)
         .gte('order_date', from)
         .lt('order_date', to);
 
@@ -236,6 +241,7 @@ class OrdersRepository {
           ' orders!inner(salesman_id)',
         )
         .eq('orders.salesman_id', salesmanId)
+        .filter('orders.deleted_at', 'is', null)
         .limit(200);
 
     final map = <String, _ProductAcc>{};
@@ -266,6 +272,7 @@ class OrdersRepository {
         .from('orders')
         .select('id')
         .eq('salesman_id', salesmanId)
+        .isFilter('deleted_at', null)
         .order('created_at', ascending: false)
         .limit(1)
         .maybeSingle();
@@ -387,6 +394,17 @@ class OrdersRepository {
               )
               .toList(),
         );
+  }
+
+  /// Soft-deletes an order by stamping `deleted_at`. The row stays in the
+  /// database (audit/history) but is hidden from every order-read query, which
+  /// all filter `deleted_at IS NULL`. Online-only — the delete UI is disabled
+  /// offline, so we let any [PostgrestException] propagate.
+  Future<void> softDeleteOrder(String orderId) async {
+    await _client
+        .from('orders')
+        .update({'deleted_at': DateTime.now().toUtc().toIso8601String()})
+        .eq('id', orderId);
   }
 
   /// Syncs a single outbox entry to Supabase. Called by the sync worker.

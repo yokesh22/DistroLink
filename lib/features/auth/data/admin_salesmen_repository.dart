@@ -123,7 +123,8 @@ class AdminSalesmenRepository {
         .from('orders')
         .select('salesman_id')
         .eq('distributor_id', distributorId)
-        .eq('order_date', todayStr);
+        .eq('order_date', todayStr)
+        .isFilter('deleted_at', null);
     final counts = <String, int>{};
     for (final row in rows) {
       final sid = row['salesman_id'] as String;

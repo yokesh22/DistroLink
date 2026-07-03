@@ -22,6 +22,7 @@ class AdminShell extends StatelessWidget {
     if (location.startsWith('/admin/salesmen')) currentIndex = 1;
     if (location.startsWith('/admin/shops')) currentIndex = 2;
     if (location.startsWith('/admin/products')) currentIndex = 3;
+    if (location.startsWith('/admin/settings')) currentIndex = 4;
 
     return Scaffold(
       body: child,
@@ -33,6 +34,7 @@ class AdminShell extends StatelessWidget {
             '/admin/salesmen',
             '/admin/shops',
             '/admin/products',
+            '/admin/settings',
           ];
           context.go(paths[i]);
         },
@@ -58,6 +60,11 @@ class AdminShell extends StatelessWidget {
             selectedIcon:
                 Icon(Icons.inventory_2_rounded, color: primary),
             label: 'Products',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.settings_outlined, color: secondary),
+            selectedIcon: Icon(Icons.settings_rounded, color: primary),
+            label: 'Settings',
           ),
         ],
       ),
