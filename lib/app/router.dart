@@ -26,7 +26,6 @@ import 'package:distro_link/features/exports/presentation/export_screen.dart';
 import 'package:distro_link/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:distro_link/features/orders/presentation/new_order/add_items_screen.dart';
 import 'package:distro_link/features/orders/presentation/new_order/bill_preview_screen.dart';
-import 'package:distro_link/features/orders/presentation/new_order/order_details_screen.dart';
 import 'package:distro_link/features/orders/presentation/new_order/select_shop_screen.dart';
 import 'package:distro_link/features/orders/presentation/orders_list_screen.dart';
 import 'package:distro_link/features/settings/presentation/settings_screen.dart';
@@ -120,14 +119,10 @@ GoRouter router(Ref ref) {
       ),
       GoRoute(
         path: '/orders/new/2',
-        builder: (_, _) => const OrderDetailsScreen(),
-      ),
-      GoRoute(
-        path: '/orders/new/3',
         builder: (_, _) => const AddItemsScreen(),
       ),
       GoRoute(
-        path: '/orders/new/4',
+        path: '/orders/new/3',
         builder: (_, _) => const BillPreviewScreen(),
       ),
 

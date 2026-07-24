@@ -169,7 +169,7 @@ class _EditOrderButton extends ConsumerWidget {
           owt: owt,
           catalog: catalog,
         );
-    if (context.mounted) await context.push('/orders/new/3');
+    if (context.mounted) await context.push('/orders/new/2');
   }
 }
 

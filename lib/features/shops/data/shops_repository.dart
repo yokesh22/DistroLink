@@ -17,7 +17,8 @@ class ShopsRepository {
         )
         .map(_toShop)
         .toList()
-      ..sort((a, b) => a.shopName.compareTo(b.shopName));
+      // Latest first.
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     if (cached.isNotEmpty) {
       _revalidate(distributorId, areaId).ignore();
       return cached;
@@ -32,13 +33,20 @@ class ShopsRepository {
     }
   }
 
+  /// Write a single shop into the offline cache. Called right after a shop is
+  /// created so the offline-first [listByArea] (which returns cached rows
+  /// immediately) reflects the new shop without waiting for a revalidate.
+  Future<void> cacheShop(Shop shop) async {
+    await _hive.shopsBox.put(shop.id, shop.toJson());
+  }
+
   Future<List<Shop>> _revalidate(String distributorId, String areaId) async {
     final rows = await _client
         .from('shops')
         .select()
         .eq('distributor_id', distributorId)
         .eq('area_id', areaId)
-        .order('shop_name');
+        .order('created_at', ascending: false);
     final shops = rows.map(Shop.fromJson).toList();
     // Remove old entries for this area then insert fresh.
     final staleKeys = _hive.shopsBox.keys

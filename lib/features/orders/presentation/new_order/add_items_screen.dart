@@ -64,12 +64,12 @@ class _AddItemsScreenState extends ConsumerState<AddItemsScreen> {
 
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (_, _) => context.go('/orders/new/2'),
+      onPopInvokedWithResult: (_, _) => context.go('/orders/new/1'),
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_rounded),
-            onPressed: () => context.go('/orders/new/2'),
+            onPressed: () => context.go('/orders/new/1'),
           ),
           title: const Text('Add Items'),
           actions: [
@@ -104,7 +104,7 @@ class _AddItemsScreenState extends ConsumerState<AddItemsScreen> {
           behavior: HitTestBehavior.opaque,
           child: Column(
             children: [
-              const AppStepIndicator(currentStep: 3),
+              const AppStepIndicator(currentStep: 2, total: 3),
 
               // ── Search + scan/voice (Phase 2) ─────────────────────
               Padding(
@@ -415,7 +415,7 @@ class _CartSheet extends ConsumerWidget {
                         onPressed: draft.items.isNotEmpty && !hasInvalidRate
                             ? () {
                                 Navigator.of(context).pop();
-                                context.go('/orders/new/4');
+                                context.go('/orders/new/3');
                               }
                             : null,
                       ),

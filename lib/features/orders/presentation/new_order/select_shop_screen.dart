@@ -7,9 +7,11 @@ import 'package:distro_link/features/orders/application/order_providers.dart';
 import 'package:distro_link/features/shops/application/shop_providers.dart';
 import 'package:distro_link/features/shops/domain/area.dart';
 import 'package:distro_link/features/shops/domain/shop.dart';
+import 'package:distro_link/features/shops/presentation/add_shop_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 class SelectShopScreen extends ConsumerStatefulWidget {
   const SelectShopScreen({super.key});
@@ -24,10 +26,32 @@ class _SelectShopScreenState extends ConsumerState<SelectShopScreen> {
   Shop? _selectedShop;
   final _searchCtrl = TextEditingController();
 
+  /// Order date shown on Step 1. Defaults to today; the salesman can change it
+  /// (persisted to `orders.order_date` on submit). Seeded from the draft when
+  /// resuming/editing.
+  late DateTime _orderDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _orderDate = ref.read(orderDraftProvider).orderDate ?? DateTime.now();
+  }
+
   @override
   void dispose() {
     _searchCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickOrderDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _orderDate,
+      firstDate: DateTime(now.year, now.month, now.day),
+      lastDate: now.add(const Duration(days: 30)),
+    );
+    if (picked != null) setState(() => _orderDate = picked);
   }
 
   @override
@@ -54,7 +78,7 @@ class _SelectShopScreenState extends ConsumerState<SelectShopScreen> {
             padding: const EdgeInsets.only(right: 16),
             child: Center(
               child: Text(
-                '1 of 4',
+                '1 of 3',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurface
                       .withValues(alpha: 0.5),
@@ -66,7 +90,7 @@ class _SelectShopScreenState extends ConsumerState<SelectShopScreen> {
       ),
       body: Column(
         children: [
-          const AppStepIndicator(currentStep: 1),
+          const AppStepIndicator(currentStep: 1, total: 3),
           Expanded(
             child: ListView(
               padding: const EdgeInsets.fromLTRB(
@@ -76,6 +100,24 @@ class _SelectShopScreenState extends ConsumerState<SelectShopScreen> {
                 AppSpacing.screenPadding,
               ),
               children: [
+                // ── Order date / time ─────────────────────────────
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: _OrderDateField(
+                        date: _orderDate,
+                        onChange: _pickOrderDate,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: _OrderTimeField(time: DateTime.now()),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+
                 Text(
                   'Select Shop',
                   style: theme.textTheme.headlineSmall
@@ -135,6 +177,13 @@ class _SelectShopScreenState extends ConsumerState<SelectShopScreen> {
                           Icon(Icons.search_rounded, size: 20),
                     ),
                     onChanged: (_) => setState(() {}),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  AppButton(
+                    label: 'Add New Shop',
+                    variant: AppButtonVariant.secondary,
+                    icon: Icons.add_business_rounded,
+                    onPressed: () => _addNewShop(areasAsync),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   if (shopsAsync != null)
@@ -235,14 +284,12 @@ class _SelectShopScreenState extends ConsumerState<SelectShopScreen> {
                   ? () {
                       final selectedArea = _resolveSelectedArea(areasAsync);
                       if (selectedArea == null) return;
-                      ref
-                          .read(
-                            orderDraftProvider.notifier,
-                          )
-                          .selectShop(
-                            area: selectedArea,
-                            shop: _selectedShop!,
-                          );
+                      ref.read(orderDraftProvider.notifier)
+                        ..setOrderDate(_orderDate)
+                        ..selectShop(
+                          area: selectedArea,
+                          shop: _selectedShop!,
+                        );
                       context.go('/orders/new/2');
                     }
                   : null,
@@ -266,6 +313,17 @@ class _SelectShopScreenState extends ConsumerState<SelectShopScreen> {
       if (area.id == targetAreaId) return area;
     }
     return null;
+  }
+
+  Future<void> _addNewShop(AsyncValue<List<Area>> areasAsync) async {
+    final area = _resolveSelectedArea(areasAsync);
+    if (area == null) return;
+    final created = await AddShopSheet.show(context, area: area);
+    // The shop list refreshes automatically via the provider invalidation in
+    // AdminShopsList.create; select the new shop so "Next" enables at once.
+    if (created != null && mounted) {
+      setState(() => _selectedShop = created);
+    }
   }
 }
 
@@ -406,6 +464,106 @@ class _ShopTile extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _OrderDateField extends StatelessWidget {
+  const _OrderDateField({required this.date, required this.onChange});
+
+  final DateTime date;
+  final Future<void> Function() onChange;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _InputLabel('Order Date'),
+        const SizedBox(height: 6),
+        InkWell(
+          onTap: onChange,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusInput),
+          child: InputDecorator(
+            decoration: const InputDecoration(),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: Text(
+                    DateFormat('dd MMM yyyy').format(date),
+                    style: theme.textTheme.bodyMedium
+                        ?.copyWith(fontWeight: FontWeight.w600),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Text(
+                  'Change',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _OrderTimeField extends StatelessWidget {
+  const _OrderTimeField({required this.time});
+
+  final DateTime time;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _InputLabel('Order Time'),
+        const SizedBox(height: 6),
+        InputDecorator(
+          decoration: const InputDecoration(),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                child: Text(
+                  DateFormat('hh:mm a').format(time),
+                  style: theme.textTheme.bodyMedium
+                      ?.copyWith(fontWeight: FontWeight.w600),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 7,
+                  vertical: 2,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.greenLight,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Text(
+                  'AUTO',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.accent,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

@@ -4,7 +4,6 @@ import 'package:distro_link/features/catalog/domain/product.dart';
 import 'package:distro_link/features/orders/data/orders_repository.dart';
 import 'package:distro_link/features/orders/domain/order.dart';
 import 'package:distro_link/features/orders/domain/order_draft.dart';
-import 'package:distro_link/features/orders/domain/order_type.dart';
 import 'package:distro_link/features/orders/domain/order_with_items.dart';
 import 'package:distro_link/features/shops/domain/area.dart';
 import 'package:distro_link/features/shops/domain/shop.dart';
@@ -139,15 +138,13 @@ class OrderDraftNotifier extends _$OrderDraftNotifier {
     );
   }
 
-  void setDetails({
-    DateTime? deliveryDate,
-    OrderType? orderType,
-    String? notes,
-  }) {
+  /// Sets the order date chosen on Step 1. Delivery date is auto-derived as the
+  /// next day (kept in the draft for consistency; not persisted — there's no
+  /// `delivery_date` column). Order type stays at its default (`regular`).
+  void setOrderDate(DateTime date) {
     state = state.copyWith(
-      deliveryDate: deliveryDate ?? state.deliveryDate,
-      orderType: orderType ?? state.orderType,
-      notes: notes ?? state.notes,
+      orderDate: date,
+      deliveryDate: date.add(const Duration(days: 1)),
     );
   }
 

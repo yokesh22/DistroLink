@@ -348,8 +348,9 @@ class OrdersRepository {
   /// Updates an existing order in place (edit flow). Online-only — the edit
   /// UI is disabled offline, so we let any [PostgrestException] propagate.
   ///
-  /// Preserves `order_number`, `created_at`, `order_date`, `salesman_id`
-  /// and `distributor_id`; replaces line items wholesale (delete + re-insert).
+  /// Preserves `order_number`, `created_at`, `salesman_id` and
+  /// `distributor_id`; updates `order_date` from the draft (editable on
+  /// Step 1); replaces line items wholesale (delete + re-insert).
   /// Not wrapped in a transaction — same non-atomic tradeoff as
   /// [_submitOnline].
   Future<void> updateOrder({
@@ -370,6 +371,7 @@ class OrdersRepository {
           'gst_total': draft.gstTotal,
           'grand_total': draft.grandTotal,
           'notes': draft.notes.isEmpty ? null : draft.notes,
+          if (draft.orderDate != null) 'order_date': _dateStr(draft.orderDate!),
         })
         .eq('id', orderId);
 
@@ -478,7 +480,7 @@ class OrdersRepository {
     required String salesmanId,
     required String distributorId,
   }) async {
-    final today = DateTime.now();
+    final orderDate = draft.orderDate ?? DateTime.now();
     final orderRow = await _client
         .from('orders')
         .insert({
@@ -491,7 +493,7 @@ class OrdersRepository {
           'gst_total': draft.gstTotal,
           'grand_total': draft.grandTotal,
           'notes': draft.notes.isEmpty ? null : draft.notes,
-          'order_date': _dateStr(today),
+          'order_date': _dateStr(orderDate),
         })
         .select('id')
         .single();
@@ -536,7 +538,7 @@ class OrdersRepository {
       subtotal: draft.subtotal,
       gstTotal: draft.gstTotal,
       grandTotal: draft.grandTotal,
-      orderDate: _dateStr(DateTime.now()),
+      orderDate: _dateStr(draft.orderDate ?? DateTime.now()),
       orderNumber: _generateOrderNumber(),
       status: OutboxStatus.pending,
       retryCount: 0,

@@ -90,7 +90,7 @@ Admin-controlled list of geographic areas (e.g. "Sector 12", "MG Road").
 
 ## Table: `shops`
 
-Catalog of shops a salesman can place orders against. **Salesmen cannot create shops** — admin-only.
+Catalog of shops a salesman can place orders against. Admins add/edit shops; **salesmen may _add_ (not edit) shops** in their own distributor from the order flow (changed 2026-07-24 — see [business-rules.md](./business-rules.md)). RLS (`shops_tenant_rw`) already scopes inserts to the caller's distributor, so no migration was needed.
 
 | Column | Type | Notes |
 |---|---|---|

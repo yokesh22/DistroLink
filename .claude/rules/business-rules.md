@@ -8,14 +8,16 @@ Encode these in code (with a short comment pointing here for any non-obvious one
 |---|:-:|:-:|:-:|
 | Manage distributors | ✓ | — | — |
 | Add / edit salesmen | — | ✓ | — |
-| Add / edit shops | — | ✓ | — |
+| Add / edit shops | — | ✓ | add ✓ / edit — ¹ |
 | Add / edit products | — | ✓ | — |
 | Create orders | — | — | ✓ |
 | View own orders | n/a | n/a | ✓ |
 | View all orders (within distributor) | ✓ | ✓ | — |
 | Excel export | ✓ | ✓ | — |
 
-> **Salesmen cannot create shops or salesmen.** This is a hard rule; the UI must not surface those CTAs to salesmen, and the repository layer must reject if it ever happens (defence in depth).
+> **Salesmen cannot create salesmen.** This is a hard rule; the UI must not surface that CTA to salesmen, and the repository layer must reject if it ever happens (defence in depth).
+>
+> ¹ **Salesmen may _add_ (not edit) shops** in their own distributor (changed 2026-07-24 per PM). This is exposed inline in the order flow (Step 1) — see below. RLS already scopes inserts to the caller's distributor (`shops_tenant_rw`, no role check), so no migration was needed. Editing shops remains admin-only.
 
 ## Auth & routing
 
@@ -32,7 +34,7 @@ Encode these in code (with a short comment pointing here for any non-obvious one
 ### Step 1 — Shop selection
 - Salesman picks an **area** (dropdown of `areas`).
 - Then picks a **shop** filtered by that area, OR taps from "Recent Shops" (their own last 5 distinct `shop_id`s ordered by most recent `orders.created_at`).
-- Salesman cannot add a new shop here. If the shop they need is missing, surface "Ask admin to add this shop".
+- If the shop they need is missing, the salesman can **add it inline**: once an area is selected, an "Add New Shop" button (between the search box and the shop list) opens a bottom sheet with the full shop form (Name*, Retailer Code, Address*, Owner, Phone, GSTIN). The new shop's `area_id` is fixed to the selected area; on save it's created in the caller's distributor, the list refreshes, and the shop is auto-selected. Add-only — editing a shop stays admin-only. Requires network (Supabase-only insert; offline shows an error and keeps the sheet open — no offline queueing yet).
 
 ### Step 2 — Details
 - `order_date` auto-set to today (read-only).

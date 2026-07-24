@@ -104,12 +104,12 @@ class _BillPreviewScreenState
 
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (_, _) => context.go('/orders/new/3'),
+      onPopInvokedWithResult: (_, _) => context.go('/orders/new/2'),
       child: Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.go('/orders/new/3'),
+          onPressed: () => context.go('/orders/new/2'),
         ),
         title: const Text('Bill Preview'),
         actions: [
@@ -117,7 +117,7 @@ class _BillPreviewScreenState
             padding: const EdgeInsets.only(right: 16),
             child: Center(
               child: Text(
-                '4 of 4',
+                '3 of 3',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurface
                       .withValues(alpha: 0.5),
@@ -129,7 +129,7 @@ class _BillPreviewScreenState
       ),
       body: Column(
         children: [
-          const AppStepIndicator(currentStep: 4),
+          const AppStepIndicator(currentStep: 3, total: 3),
           Expanded(
             child: ListView(
               padding: const EdgeInsets.all(AppSpacing.screenPadding),
@@ -279,7 +279,7 @@ class _BillPreviewScreenState
                         label: '← Edit Items',
                         variant: AppButtonVariant.secondary,
                         onPressed: () =>
-                            context.go('/orders/new/3'),
+                            context.go('/orders/new/2'),
                       ),
                     ),
                     const SizedBox(width: 10),
