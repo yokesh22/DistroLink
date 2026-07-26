@@ -15,7 +15,9 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Product {
 
- String get id;@JsonKey(name: 'distributor_id') String get distributorId;@JsonKey(name: 'item_code') String get itemCode;@JsonKey(name: 'item_name') String get itemName; double get mrp;@JsonKey(name: 'base_rate') double get baseRate;@JsonKey(name: 'gst_percent') double get gstPercent;@JsonKey(name: 'is_active') bool get isActive;@JsonKey(name: 'created_at') DateTime get createdAt;
+ String get id;@JsonKey(name: 'distributor_id') String get distributorId;@JsonKey(name: 'item_code') String get itemCode;@JsonKey(name: 'item_name') String get itemName; double get mrp;@JsonKey(name: 'base_rate') double get baseRate;@JsonKey(name: 'gst_percent') double get gstPercent;@JsonKey(name: 'is_active') bool get isActive;@JsonKey(name: 'created_at') DateTime get createdAt;// Added 2026-07-26; populated by the super-admin bulk item import. Nullable
+// so products created before these columns existed still parse.
+ String? get brand;@JsonKey(name: 'hsn_code') String? get hsnCode; int? get pack;
 /// Create a copy of Product
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +30,16 @@ $ProductCopyWith<Product> get copyWith => _$ProductCopyWithImpl<Product>(this as
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Product&&(identical(other.id, id) || other.id == id)&&(identical(other.distributorId, distributorId) || other.distributorId == distributorId)&&(identical(other.itemCode, itemCode) || other.itemCode == itemCode)&&(identical(other.itemName, itemName) || other.itemName == itemName)&&(identical(other.mrp, mrp) || other.mrp == mrp)&&(identical(other.baseRate, baseRate) || other.baseRate == baseRate)&&(identical(other.gstPercent, gstPercent) || other.gstPercent == gstPercent)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Product&&(identical(other.id, id) || other.id == id)&&(identical(other.distributorId, distributorId) || other.distributorId == distributorId)&&(identical(other.itemCode, itemCode) || other.itemCode == itemCode)&&(identical(other.itemName, itemName) || other.itemName == itemName)&&(identical(other.mrp, mrp) || other.mrp == mrp)&&(identical(other.baseRate, baseRate) || other.baseRate == baseRate)&&(identical(other.gstPercent, gstPercent) || other.gstPercent == gstPercent)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.brand, brand) || other.brand == brand)&&(identical(other.hsnCode, hsnCode) || other.hsnCode == hsnCode)&&(identical(other.pack, pack) || other.pack == pack));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,distributorId,itemCode,itemName,mrp,baseRate,gstPercent,isActive,createdAt);
+int get hashCode => Object.hash(runtimeType,id,distributorId,itemCode,itemName,mrp,baseRate,gstPercent,isActive,createdAt,brand,hsnCode,pack);
 
 @override
 String toString() {
-  return 'Product(id: $id, distributorId: $distributorId, itemCode: $itemCode, itemName: $itemName, mrp: $mrp, baseRate: $baseRate, gstPercent: $gstPercent, isActive: $isActive, createdAt: $createdAt)';
+  return 'Product(id: $id, distributorId: $distributorId, itemCode: $itemCode, itemName: $itemName, mrp: $mrp, baseRate: $baseRate, gstPercent: $gstPercent, isActive: $isActive, createdAt: $createdAt, brand: $brand, hsnCode: $hsnCode, pack: $pack)';
 }
 
 
@@ -48,7 +50,7 @@ abstract mixin class $ProductCopyWith<$Res>  {
   factory $ProductCopyWith(Product value, $Res Function(Product) _then) = _$ProductCopyWithImpl;
 @useResult
 $Res call({
- String id,@JsonKey(name: 'distributor_id') String distributorId,@JsonKey(name: 'item_code') String itemCode,@JsonKey(name: 'item_name') String itemName, double mrp,@JsonKey(name: 'base_rate') double baseRate,@JsonKey(name: 'gst_percent') double gstPercent,@JsonKey(name: 'is_active') bool isActive,@JsonKey(name: 'created_at') DateTime createdAt
+ String id,@JsonKey(name: 'distributor_id') String distributorId,@JsonKey(name: 'item_code') String itemCode,@JsonKey(name: 'item_name') String itemName, double mrp,@JsonKey(name: 'base_rate') double baseRate,@JsonKey(name: 'gst_percent') double gstPercent,@JsonKey(name: 'is_active') bool isActive,@JsonKey(name: 'created_at') DateTime createdAt, String? brand,@JsonKey(name: 'hsn_code') String? hsnCode, int? pack
 });
 
 
@@ -65,7 +67,7 @@ class _$ProductCopyWithImpl<$Res>
 
 /// Create a copy of Product
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? distributorId = null,Object? itemCode = null,Object? itemName = null,Object? mrp = null,Object? baseRate = null,Object? gstPercent = null,Object? isActive = null,Object? createdAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? distributorId = null,Object? itemCode = null,Object? itemName = null,Object? mrp = null,Object? baseRate = null,Object? gstPercent = null,Object? isActive = null,Object? createdAt = null,Object? brand = freezed,Object? hsnCode = freezed,Object? pack = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,distributorId: null == distributorId ? _self.distributorId : distributorId // ignore: cast_nullable_to_non_nullable
@@ -76,7 +78,10 @@ as double,baseRate: null == baseRate ? _self.baseRate : baseRate // ignore: cast
 as double,gstPercent: null == gstPercent ? _self.gstPercent : gstPercent // ignore: cast_nullable_to_non_nullable
 as double,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
 as bool,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,brand: freezed == brand ? _self.brand : brand // ignore: cast_nullable_to_non_nullable
+as String?,hsnCode: freezed == hsnCode ? _self.hsnCode : hsnCode // ignore: cast_nullable_to_non_nullable
+as String?,pack: freezed == pack ? _self.pack : pack // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 
@@ -161,10 +166,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'distributor_id')  String distributorId, @JsonKey(name: 'item_code')  String itemCode, @JsonKey(name: 'item_name')  String itemName,  double mrp, @JsonKey(name: 'base_rate')  double baseRate, @JsonKey(name: 'gst_percent')  double gstPercent, @JsonKey(name: 'is_active')  bool isActive, @JsonKey(name: 'created_at')  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'distributor_id')  String distributorId, @JsonKey(name: 'item_code')  String itemCode, @JsonKey(name: 'item_name')  String itemName,  double mrp, @JsonKey(name: 'base_rate')  double baseRate, @JsonKey(name: 'gst_percent')  double gstPercent, @JsonKey(name: 'is_active')  bool isActive, @JsonKey(name: 'created_at')  DateTime createdAt,  String? brand, @JsonKey(name: 'hsn_code')  String? hsnCode,  int? pack)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Product() when $default != null:
-return $default(_that.id,_that.distributorId,_that.itemCode,_that.itemName,_that.mrp,_that.baseRate,_that.gstPercent,_that.isActive,_that.createdAt);case _:
+return $default(_that.id,_that.distributorId,_that.itemCode,_that.itemName,_that.mrp,_that.baseRate,_that.gstPercent,_that.isActive,_that.createdAt,_that.brand,_that.hsnCode,_that.pack);case _:
   return orElse();
 
 }
@@ -182,10 +187,10 @@ return $default(_that.id,_that.distributorId,_that.itemCode,_that.itemName,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'distributor_id')  String distributorId, @JsonKey(name: 'item_code')  String itemCode, @JsonKey(name: 'item_name')  String itemName,  double mrp, @JsonKey(name: 'base_rate')  double baseRate, @JsonKey(name: 'gst_percent')  double gstPercent, @JsonKey(name: 'is_active')  bool isActive, @JsonKey(name: 'created_at')  DateTime createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'distributor_id')  String distributorId, @JsonKey(name: 'item_code')  String itemCode, @JsonKey(name: 'item_name')  String itemName,  double mrp, @JsonKey(name: 'base_rate')  double baseRate, @JsonKey(name: 'gst_percent')  double gstPercent, @JsonKey(name: 'is_active')  bool isActive, @JsonKey(name: 'created_at')  DateTime createdAt,  String? brand, @JsonKey(name: 'hsn_code')  String? hsnCode,  int? pack)  $default,) {final _that = this;
 switch (_that) {
 case _Product():
-return $default(_that.id,_that.distributorId,_that.itemCode,_that.itemName,_that.mrp,_that.baseRate,_that.gstPercent,_that.isActive,_that.createdAt);case _:
+return $default(_that.id,_that.distributorId,_that.itemCode,_that.itemName,_that.mrp,_that.baseRate,_that.gstPercent,_that.isActive,_that.createdAt,_that.brand,_that.hsnCode,_that.pack);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -202,10 +207,10 @@ return $default(_that.id,_that.distributorId,_that.itemCode,_that.itemName,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'distributor_id')  String distributorId, @JsonKey(name: 'item_code')  String itemCode, @JsonKey(name: 'item_name')  String itemName,  double mrp, @JsonKey(name: 'base_rate')  double baseRate, @JsonKey(name: 'gst_percent')  double gstPercent, @JsonKey(name: 'is_active')  bool isActive, @JsonKey(name: 'created_at')  DateTime createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'distributor_id')  String distributorId, @JsonKey(name: 'item_code')  String itemCode, @JsonKey(name: 'item_name')  String itemName,  double mrp, @JsonKey(name: 'base_rate')  double baseRate, @JsonKey(name: 'gst_percent')  double gstPercent, @JsonKey(name: 'is_active')  bool isActive, @JsonKey(name: 'created_at')  DateTime createdAt,  String? brand, @JsonKey(name: 'hsn_code')  String? hsnCode,  int? pack)?  $default,) {final _that = this;
 switch (_that) {
 case _Product() when $default != null:
-return $default(_that.id,_that.distributorId,_that.itemCode,_that.itemName,_that.mrp,_that.baseRate,_that.gstPercent,_that.isActive,_that.createdAt);case _:
+return $default(_that.id,_that.distributorId,_that.itemCode,_that.itemName,_that.mrp,_that.baseRate,_that.gstPercent,_that.isActive,_that.createdAt,_that.brand,_that.hsnCode,_that.pack);case _:
   return null;
 
 }
@@ -217,7 +222,7 @@ return $default(_that.id,_that.distributorId,_that.itemCode,_that.itemName,_that
 @JsonSerializable()
 
 class _Product implements Product {
-  const _Product({required this.id, @JsonKey(name: 'distributor_id') required this.distributorId, @JsonKey(name: 'item_code') required this.itemCode, @JsonKey(name: 'item_name') required this.itemName, required this.mrp, @JsonKey(name: 'base_rate') required this.baseRate, @JsonKey(name: 'gst_percent') required this.gstPercent, @JsonKey(name: 'is_active') required this.isActive, @JsonKey(name: 'created_at') required this.createdAt});
+  const _Product({required this.id, @JsonKey(name: 'distributor_id') required this.distributorId, @JsonKey(name: 'item_code') required this.itemCode, @JsonKey(name: 'item_name') required this.itemName, required this.mrp, @JsonKey(name: 'base_rate') required this.baseRate, @JsonKey(name: 'gst_percent') required this.gstPercent, @JsonKey(name: 'is_active') required this.isActive, @JsonKey(name: 'created_at') required this.createdAt, this.brand, @JsonKey(name: 'hsn_code') this.hsnCode, this.pack});
   factory _Product.fromJson(Map<String, dynamic> json) => _$ProductFromJson(json);
 
 @override final  String id;
@@ -229,6 +234,11 @@ class _Product implements Product {
 @override@JsonKey(name: 'gst_percent') final  double gstPercent;
 @override@JsonKey(name: 'is_active') final  bool isActive;
 @override@JsonKey(name: 'created_at') final  DateTime createdAt;
+// Added 2026-07-26; populated by the super-admin bulk item import. Nullable
+// so products created before these columns existed still parse.
+@override final  String? brand;
+@override@JsonKey(name: 'hsn_code') final  String? hsnCode;
+@override final  int? pack;
 
 /// Create a copy of Product
 /// with the given fields replaced by the non-null parameter values.
@@ -243,16 +253,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Product&&(identical(other.id, id) || other.id == id)&&(identical(other.distributorId, distributorId) || other.distributorId == distributorId)&&(identical(other.itemCode, itemCode) || other.itemCode == itemCode)&&(identical(other.itemName, itemName) || other.itemName == itemName)&&(identical(other.mrp, mrp) || other.mrp == mrp)&&(identical(other.baseRate, baseRate) || other.baseRate == baseRate)&&(identical(other.gstPercent, gstPercent) || other.gstPercent == gstPercent)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Product&&(identical(other.id, id) || other.id == id)&&(identical(other.distributorId, distributorId) || other.distributorId == distributorId)&&(identical(other.itemCode, itemCode) || other.itemCode == itemCode)&&(identical(other.itemName, itemName) || other.itemName == itemName)&&(identical(other.mrp, mrp) || other.mrp == mrp)&&(identical(other.baseRate, baseRate) || other.baseRate == baseRate)&&(identical(other.gstPercent, gstPercent) || other.gstPercent == gstPercent)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.brand, brand) || other.brand == brand)&&(identical(other.hsnCode, hsnCode) || other.hsnCode == hsnCode)&&(identical(other.pack, pack) || other.pack == pack));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,distributorId,itemCode,itemName,mrp,baseRate,gstPercent,isActive,createdAt);
+int get hashCode => Object.hash(runtimeType,id,distributorId,itemCode,itemName,mrp,baseRate,gstPercent,isActive,createdAt,brand,hsnCode,pack);
 
 @override
 String toString() {
-  return 'Product(id: $id, distributorId: $distributorId, itemCode: $itemCode, itemName: $itemName, mrp: $mrp, baseRate: $baseRate, gstPercent: $gstPercent, isActive: $isActive, createdAt: $createdAt)';
+  return 'Product(id: $id, distributorId: $distributorId, itemCode: $itemCode, itemName: $itemName, mrp: $mrp, baseRate: $baseRate, gstPercent: $gstPercent, isActive: $isActive, createdAt: $createdAt, brand: $brand, hsnCode: $hsnCode, pack: $pack)';
 }
 
 
@@ -263,7 +273,7 @@ abstract mixin class _$ProductCopyWith<$Res> implements $ProductCopyWith<$Res> {
   factory _$ProductCopyWith(_Product value, $Res Function(_Product) _then) = __$ProductCopyWithImpl;
 @override @useResult
 $Res call({
- String id,@JsonKey(name: 'distributor_id') String distributorId,@JsonKey(name: 'item_code') String itemCode,@JsonKey(name: 'item_name') String itemName, double mrp,@JsonKey(name: 'base_rate') double baseRate,@JsonKey(name: 'gst_percent') double gstPercent,@JsonKey(name: 'is_active') bool isActive,@JsonKey(name: 'created_at') DateTime createdAt
+ String id,@JsonKey(name: 'distributor_id') String distributorId,@JsonKey(name: 'item_code') String itemCode,@JsonKey(name: 'item_name') String itemName, double mrp,@JsonKey(name: 'base_rate') double baseRate,@JsonKey(name: 'gst_percent') double gstPercent,@JsonKey(name: 'is_active') bool isActive,@JsonKey(name: 'created_at') DateTime createdAt, String? brand,@JsonKey(name: 'hsn_code') String? hsnCode, int? pack
 });
 
 
@@ -280,7 +290,7 @@ class __$ProductCopyWithImpl<$Res>
 
 /// Create a copy of Product
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? distributorId = null,Object? itemCode = null,Object? itemName = null,Object? mrp = null,Object? baseRate = null,Object? gstPercent = null,Object? isActive = null,Object? createdAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? distributorId = null,Object? itemCode = null,Object? itemName = null,Object? mrp = null,Object? baseRate = null,Object? gstPercent = null,Object? isActive = null,Object? createdAt = null,Object? brand = freezed,Object? hsnCode = freezed,Object? pack = freezed,}) {
   return _then(_Product(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,distributorId: null == distributorId ? _self.distributorId : distributorId // ignore: cast_nullable_to_non_nullable
@@ -291,7 +301,10 @@ as double,baseRate: null == baseRate ? _self.baseRate : baseRate // ignore: cast
 as double,gstPercent: null == gstPercent ? _self.gstPercent : gstPercent // ignore: cast_nullable_to_non_nullable
 as double,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
 as bool,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,brand: freezed == brand ? _self.brand : brand // ignore: cast_nullable_to_non_nullable
+as String?,hsnCode: freezed == hsnCode ? _self.hsnCode : hsnCode // ignore: cast_nullable_to_non_nullable
+as String?,pack: freezed == pack ? _self.pack : pack // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 

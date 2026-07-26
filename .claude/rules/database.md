@@ -124,7 +124,16 @@ Product catalog scoped per distributor. **Salesmen cannot create products** — 
 | base_rate | numeric | Distributor's base/floor rate |
 | gst_percent | numeric | GST slab (0, 5, 12, 18, 28) |
 | is_active | bool | Inactive products don't appear in catalog list |
+| brand | text | Added 2026-07-26 (bulk item import). Nullable. |
+| hsn_code | text | HSN tax code. Added 2026-07-26 (bulk item import). Nullable. |
+| pack | int4 | Units per pack. Added 2026-07-26 (bulk item import). Nullable. |
 | created_at | timestamptz | |
+
+> `brand` / `hsn_code` / `pack` were added directly in the Supabase dashboard (no tracked column
+> migration). They're **nullable** in the Dart `Product` model so products created before they
+> existed still parse; only the super-admin **bulk item import** writes them today (the admin
+> add/edit product form doesn't yet). The item import validates `gst` against the slab **{0, 5, 12,
+> 18, 28, 40}** per PM (2026-07-26) — same as the standard slabs plus 40.
 
 > **Selling rate validation:** `0 ≤ selling_rate ≤ mrp` (MRP is the ceiling; **no base-rate floor** — base-rate floor removed 2026-07-01). `base_rate` is a reference/default only. See [business-rules.md](./business-rules.md).
 
@@ -196,6 +205,30 @@ The app assumes Supabase Row-Level Security enforces:
 - An admin can read/write everything within their distributor.
 
 If RLS is missing or weaker, **filter client-side as a defence-in-depth measure**, but flag the gap to the user.
+
+### Super-admin cross-tenant access (migration `0006`, added 2026-07-25)
+
+The tenant policies above scope every read/write to the caller's own distributor. Migration
+`0006_super_admin_cross_tenant.sql` adds two **permissive** policies (they OR with the tenant
+policies, so admins/salesmen stay scoped) so a `super_admin` can:
+- `distributors_super_admin_read` — `select` **all** distributors (feeds the bulk-import picker).
+- `areas_super_admin_rw` — read/write areas in **any** tenant (bulk area import + its duplicate
+  check).
+
+Migrations `0007_shops_super_admin_rw.sql` and `0008_products_super_admin_rw.sql` (added 2026-07-26)
+add the analogous `shops_super_admin_rw` / `products_super_admin_rw` (read/write in **any** tenant)
+for the shops and items bulk imports — read is needed for the duplicate-key check, write for the
+insert; area resolution reuses `areas_super_admin_rw`.
+
+Powers the super-admin **Bulk Import** screen (`/super-admin/import`): **Areas** (single `area`
+column), **Shops** (`area, shop, retailer_code, address, gst_no, mobile, shop_owner`) and **Items**
+(`brand, item_code, item, hsn, mrp, rate, gst, pack`). Parsing is client-side (`ExcelImportService`;
+shops/items parse in a `compute` isolate), the write goes directly through `SuperAdminRepository` in
+one atomic batch insert (no Edge Function / RPC). Shops: `area` resolves to `area_id`
+(unknown/ambiguous → blocking), `gst_no` optional. Items: all 8 fields mandatory, `rate`→`base_rate`,
+`gst` ∈ {0,5,12,18,28,40} as int, `mrp`/`rate` exact decimals, `pack` int, `is_active=true`. Both:
+whole-sheet all-or-nothing validation; existing `retailer_code`/`item_code` skipped; affected rows
+emitted as a re-upload-ready `.xlsx` report (original columns + `issue`).
 
 ## Business invariants (enforced in code; document why)
 

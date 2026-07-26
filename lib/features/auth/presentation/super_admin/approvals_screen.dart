@@ -2,7 +2,6 @@ import 'package:distro_link/core/theme/app_colors.dart';
 import 'package:distro_link/core/theme/app_spacing.dart';
 import 'package:distro_link/core/widgets/app_button.dart';
 import 'package:distro_link/core/widgets/app_card.dart';
-import 'package:distro_link/features/auth/application/auth_providers.dart';
 import 'package:distro_link/features/auth/application/signup_request_providers.dart';
 import 'package:distro_link/features/auth/domain/signup_request.dart';
 import 'package:flutter/material.dart';
@@ -69,13 +68,6 @@ class _SuperAdminApprovalsScreenState
       appBar: AppBar(
         title: const Text('Distributor Accounts'),
         centerTitle: false,
-        actions: [
-          IconButton(
-            tooltip: 'Log out',
-            icon: const Icon(Icons.logout_rounded),
-            onPressed: () => ref.read(authRepositoryProvider).signOut(),
-          ),
-        ],
         bottom: TabBar(
           controller: _controller,
           indicatorColor: activeColor,

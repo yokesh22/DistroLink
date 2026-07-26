@@ -12,6 +12,7 @@ dependencies:
   dio: ^5.9.2
   equatable: ^2.0.8
   excel: ^4.0.6
+  file_picker: ^8.1.0
   flutter:
     sdk: flutter
   flutter_dotenv: ^6.0.1

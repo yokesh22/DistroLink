@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:distro_link/core/theme/app_spacing.dart';
+import 'package:distro_link/core/utils/gst.dart';
 import 'package:distro_link/core/widgets/app_button.dart';
 import 'package:distro_link/core/widgets/app_text_field.dart';
 import 'package:distro_link/features/catalog/application/admin_product_providers.dart';
@@ -10,7 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-const List<double> _gstSlabs = [0, 5, 18, 40];
+final List<double> _gstSlabs = kGstSlabs.map((s) => s.toDouble()).toList();
 
 class AddEditProductScreen extends ConsumerStatefulWidget {
   const AddEditProductScreen({super.key, this.product});

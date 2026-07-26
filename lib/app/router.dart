@@ -16,6 +16,8 @@ import 'package:distro_link/features/auth/presentation/login_screen.dart';
 import 'package:distro_link/features/auth/presentation/pending_approval_screen.dart';
 import 'package:distro_link/features/auth/presentation/signup_screen.dart';
 import 'package:distro_link/features/auth/presentation/super_admin/approvals_screen.dart';
+import 'package:distro_link/features/auth/presentation/super_admin/bulk_import_screen.dart';
+import 'package:distro_link/features/auth/presentation/super_admin/super_admin_dashboard_screen.dart';
 import 'package:distro_link/features/auth/presentation/verify_email_screen.dart';
 import 'package:distro_link/features/catalog/domain/product.dart';
 import 'package:distro_link/features/catalog/presentation/admin/add_edit_product_screen.dart';
@@ -80,8 +82,16 @@ GoRouter router(Ref ref) {
         builder: (_, _) => const AccountDeclinedScreen(),
       ),
       GoRoute(
+        path: '/super-admin',
+        builder: (_, _) => const SuperAdminDashboardScreen(),
+      ),
+      GoRoute(
         path: '/super-admin/approvals',
         builder: (_, _) => const SuperAdminApprovalsScreen(),
+      ),
+      GoRoute(
+        path: '/super-admin/import',
+        builder: (_, _) => const BulkImportScreen(),
       ),
       GoRoute(
         path: '/onboarding',
@@ -303,14 +313,14 @@ class _RouterNotifier extends ChangeNotifier {
       '/account-declined',
     ];
     String homeFor() => isSuperAdmin
-        ? '/super-admin/approvals'
+        ? '/super-admin'
         : (isAdmin ? '/admin/dashboard' : '/home');
 
     if (limboPaths.contains(path)) return homeFor();
 
     // Super admin lives only in the /super-admin area.
     if (isSuperAdmin) {
-      return path.startsWith('/super-admin') ? null : '/super-admin/approvals';
+      return path.startsWith('/super-admin') ? null : '/super-admin';
     }
     // Everyone else is kept out of it.
     if (path.startsWith('/super-admin')) return homeFor();

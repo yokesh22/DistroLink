@@ -16,6 +16,9 @@ _Product _$ProductFromJson(Map<String, dynamic> json) => _Product(
   gstPercent: (json['gst_percent'] as num).toDouble(),
   isActive: json['is_active'] as bool,
   createdAt: DateTime.parse(json['created_at'] as String),
+  brand: json['brand'] as String?,
+  hsnCode: json['hsn_code'] as String?,
+  pack: (json['pack'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$ProductToJson(_Product instance) => <String, dynamic>{
@@ -28,4 +31,7 @@ Map<String, dynamic> _$ProductToJson(_Product instance) => <String, dynamic>{
   'gst_percent': instance.gstPercent,
   'is_active': instance.isActive,
   'created_at': instance.createdAt.toIso8601String(),
+  'brand': instance.brand,
+  'hsn_code': instance.hsnCode,
+  'pack': instance.pack,
 };

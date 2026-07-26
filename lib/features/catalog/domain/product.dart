@@ -15,6 +15,11 @@ abstract class Product with _$Product {
     @JsonKey(name: 'gst_percent') required double gstPercent,
     @JsonKey(name: 'is_active') required bool isActive,
     @JsonKey(name: 'created_at') required DateTime createdAt,
+    // Added 2026-07-26; populated by the super-admin bulk item import. Nullable
+    // so products created before these columns existed still parse.
+    String? brand,
+    @JsonKey(name: 'hsn_code') String? hsnCode,
+    int? pack,
   }) = _Product;
 
   factory Product.fromJson(Map<String, dynamic> json) =>
