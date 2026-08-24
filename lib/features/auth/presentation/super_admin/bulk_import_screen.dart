@@ -174,8 +174,8 @@ class BulkImportScreen extends ConsumerWidget {
   String _fileHint(ImportType type) => switch (type) {
         ImportType.areas => "One column with the header 'area'.",
         ImportType.shops =>
-          'Columns: area, shop, retailer_code, address (required); '
-              'mobile, shop_owner, gst_no (values optional).',
+          'Columns: area, shop, address (required); '
+              'retailer_code, mobile, shop_owner, gst_no (optional).',
         ImportType.items =>
           'Columns: item_code, item, mrp, rate, gst, pack (required); '
               'brand, hsn (values optional).',

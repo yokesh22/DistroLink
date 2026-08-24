@@ -244,8 +244,14 @@ column), **Shops** (`area, shop, retailer_code, address, gst_no, mobile, shop_ow
 shops/items parse in a `compute` isolate), the write goes directly through `SuperAdminRepository` in
 one atomic batch insert (no Edge Function / RPC). Shops: `area` resolves to `area_id`
 (unknown/ambiguous → blocking); `mobile` and `shop_owner` are optional **values** (their columns must
-still be present, but cells may be blank → stored NULL) while `gst_no` is fully optional (its column
-may be omitted entirely); `area`, `shop`, `retailer_code`, `address` mandatory. Items: `brand` and `hsn` are optional **values** (columns still required, blank →
+still be present, but cells may be blank → stored NULL) while `retailer_code` and `gst_no` are fully
+optional (their columns may be omitted entirely; a blank `retailer_code` stores NULL — changed
+2026-08-24 per PM); `area`, `shop`, `address` mandatory. **Shop de-dup key:** coded shops de-dup on
+`shop_number` (existing + in-file); **code-less** shops fall back to `(area_id, lower(shop_name))`
+(app-level, via `shopNameAreaKey` / `SuperAdminRepository.existingShopNameAreaKeys` — so re-uploading a
+code-less sheet skips shops already present by name in their area rather than duplicating; a distinct
+`retailer_code` overrides this, allowing two same-named branches in one area). Items: `brand` and `hsn`
+are optional **values** (columns still required, blank →
 NULL); `item_code`, `item`, `mrp`, `rate`, `gst`, `pack` mandatory; `rate`→`base_rate`,
 `gst` ∈ {0,5,12,18,28,40} as int, `mrp`/`rate` exact decimals, `pack` int, `is_active=true`. Both:
 whole-sheet all-or-nothing validation; existing `retailer_code`/`item_code` skipped; affected rows

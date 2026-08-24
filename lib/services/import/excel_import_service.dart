@@ -98,12 +98,11 @@ class ExcelImportService {
 /// Trimmed string for a cell, tolerant of any cell value type (text/number).
 String _shopCellText(Data? cell) => cell?.value?.toString().trim() ?? '';
 
-/// Expected SHOPS.xlsx headers. `gst_no` is optional (its column may be
-/// absent); the rest must be present.
+/// Expected SHOPS.xlsx headers. `retailer_code` and `gst_no` are optional
+/// (their columns may be absent); the rest must be present.
 const _shopRequiredHeaders = [
   'area',
   'shop',
-  'retailer_code',
   'address',
   'mobile',
   'shop_owner',
@@ -111,13 +110,13 @@ const _shopRequiredHeaders = [
 
 /// Per-row mandatory fields (values must be non-empty). `mobile` and
 /// `shop_owner` are optional values — their columns must still be present (see
-/// `_shopRequiredHeaders`) but the cells may be left blank. `gst_no` is fully
-/// optional: its column may be omitted entirely (it is not in
-/// `_shopRequiredHeaders`).
+/// `_shopRequiredHeaders`) but the cells may be left blank. `retailer_code` and
+/// `gst_no` are fully optional: their columns may be omitted entirely (they are
+/// not in `_shopRequiredHeaders`). A blank `retailer_code` stores NULL and is
+/// exempt from the in-file / existing-code duplicate checks.
 const _shopMandatoryFields = [
   'area',
   'shop',
-  'retailer_code',
   'address',
 ];
 
@@ -170,8 +169,8 @@ ShopSheetParse parseShopSheetBytes(Uint8List bytes) {
   if (missingHeaders.isNotEmpty) {
     return ShopSheetParse.fatal(
       'Missing required column(s): ${missingHeaders.join(', ')}. '
-      'Expected: area, shop, retailer_code, address, mobile, shop_owner '
-      '(gst_no optional).',
+      'Expected: area, shop, address, mobile, shop_owner '
+      '(retailer_code, gst_no optional).',
     );
   }
 
@@ -211,7 +210,10 @@ ShopSheetParse parseShopSheetBytes(Uint8List bytes) {
       continue; // don't also flag dup for a row that's already missing fields
     }
 
-    if (!seenCodes.add(row.retailerCode.toLowerCase())) {
+    // Only coded rows are subject to the duplicate check — a blank
+    // `retailer_code` is optional, so many rows may share the empty value.
+    if (row.retailerCode.isNotEmpty &&
+        !seenCodes.add(row.retailerCode.toLowerCase())) {
       issues.add(
         RowIssue(row: row, issue: 'duplicate retailer_code in file'),
       );

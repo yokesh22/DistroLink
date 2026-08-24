@@ -445,7 +445,9 @@ class _ShopTile extends StatelessWidget {
                         ?.copyWith(fontWeight: FontWeight.w600),
                   ),
                   Text(
-                    '${shop.shopNumber} · ${shop.shopAddress}',
+                    (shop.shopNumber?.isNotEmpty ?? false)
+                        ? '${shop.shopNumber} · ${shop.shopAddress}'
+                        : shop.shopAddress,
                     style: Theme.of(context).textTheme.bodySmall,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

@@ -5,6 +5,7 @@ import 'package:distro_link/services/export/share_service.dart';
 import 'package:distro_link/services/import/excel_import_service.dart';
 import 'package:distro_link/services/import/import_models.dart';
 import 'package:distro_link/services/import/import_report_service.dart';
+import 'package:distro_link/services/import/shop_import_planner.dart';
 import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -174,56 +175,20 @@ class BulkImport extends _$BulkImport {
       final areaRes = await repo.areaNameToIdMap(distributor.id);
       final existingCodes =
           await repo.existingShopNumbersLower(distributor.id);
+      // Fallback identity for code-less shops so a re-upload skips duplicates.
+      final existingNameAreaKeys =
+          await repo.existingShopNameAreaKeys(distributor.id);
 
-      final structuralRows = {
-        for (final i in parse.structuralIssues) i.row.rowNumber,
-      };
-      final blocking = <RowIssue>[...parse.structuralIssues];
-      final skipped = <RowIssue>[];
-      final toInsert = <Map<String, dynamic>>[];
-
-      for (final row in parse.rows) {
-        if (structuralRows.contains(row.rowNumber)) continue;
-
-        final areaKey = row.area.toLowerCase();
-        if (areaRes.ambiguous.contains(areaKey)) {
-          blocking.add(RowIssue(row: row, issue: 'ambiguous area name'));
-          continue;
-        }
-        final areaId = areaRes.map[areaKey];
-        if (areaId == null) {
-          blocking.add(RowIssue(row: row, issue: 'area not found'));
-          continue;
-        }
-        if (existingCodes.contains(row.retailerCode.toLowerCase())) {
-          skipped.add(
-            RowIssue(row: row, issue: 'retailer_code already exists'),
-          );
-          continue;
-        }
-        toInsert.add({
-          'area_id': areaId,
-          'shop_name': row.shop,
-          'shop_address': row.address,
-          'shop_number': row.retailerCode,
-          // Optional values: omit when blank so they store NULL, not '',
-          // matching the admin add-shop path.
-          if (row.shopOwner.isNotEmpty) 'shop_owner': row.shopOwner,
-          if (row.mobile.isNotEmpty) 'phone_no': row.mobile,
-          if (row.gstNo.isNotEmpty) 'gstin': row.gstNo,
-        });
-      }
-
-      blocking.sort((a, b) => a.row.rowNumber.compareTo(b.row.rowNumber));
-
-      state = state.copyWith(
-        phase: ImportPhase.idle,
-        plan: ImportPlan(
-          toInsert: toInsert,
-          skipped: skipped,
-          blocking: blocking,
-        ),
+      final plan = buildShopImportPlan(
+        rows: parse.rows,
+        structuralIssues: parse.structuralIssues,
+        areaMap: areaRes.map,
+        ambiguousAreas: areaRes.ambiguous,
+        existingCodes: existingCodes,
+        existingNameAreaKeys: existingNameAreaKeys,
       );
+
+      state = state.copyWith(phase: ImportPhase.idle, plan: plan);
     } on Exception catch (e) {
       state = state.copyWith(
         phase: ImportPhase.idle,

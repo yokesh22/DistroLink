@@ -85,7 +85,7 @@ void main() {
   test('mobile, shop_owner and gst_no are optional values (blank allowed)', () {
     final bytes = _buildXlsx([
       _headers,
-      _row(mobile: '', owner: '', gst: ''), // all three blank
+      _row(mobile: '', owner: ''), // gst_no blank by default → all three blank
     ]);
 
     final parse = parseShopSheetBytes(bytes);
@@ -100,7 +100,9 @@ void main() {
   test('flags rows missing a still-mandatory field with details', () {
     final bytes = _buildXlsx([
       _headers,
-      _row(address: '', shop: ''), // address + shop are still mandatory
+      // shop + address still mandatory; retailer_code blanked to prove it is
+      // NOT reported as missing even alongside genuinely-missing fields.
+      _row(address: '', shop: '', code: ''),
       _row(code: 'SH-002'),
     ]);
 
@@ -112,8 +114,49 @@ void main() {
     expect(issue.issue, contains('address'));
     expect(issue.issue, contains('shop'));
     // Optional fields must NOT appear in the missing list.
+    expect(issue.issue, isNot(contains('retailer_code')));
     expect(issue.issue, isNot(contains('mobile')));
     expect(issue.issue, isNot(contains('shop_owner')));
+  });
+
+  test('retailer_code is optional (blank allowed)', () {
+    final bytes = _buildXlsx([_headers, _row(code: '')]);
+
+    final parse = parseShopSheetBytes(bytes);
+
+    expect(parse.hasFatalError, isFalse);
+    expect(parse.structuralIssues, isEmpty);
+    expect(parse.rows.single.retailerCode, '');
+  });
+
+  test('multiple blank retailer_code rows are not flagged as duplicates', () {
+    final bytes = _buildXlsx([
+      _headers,
+      _row(shop: 'Store A', code: ''),
+      _row(shop: 'Store B', code: ''),
+      _row(shop: 'Store C', code: ''),
+    ]);
+
+    final parse = parseShopSheetBytes(bytes);
+
+    // Blank codes all collapse to '' but must NOT collide as duplicates.
+    expect(parse.hasFatalError, isFalse);
+    expect(parse.structuralIssues, isEmpty);
+    expect(parse.rows.length, 3);
+  });
+
+  test('retailer_code column may be omitted entirely', () {
+    final headers = [..._headers]..remove('retailer_code');
+    final bytes = _buildXlsx([
+      headers,
+      ['MG Road', 'Kumar Store', '12 Main St', '', '9990001111', 'Ravi'],
+    ]);
+
+    final parse = parseShopSheetBytes(bytes);
+
+    expect(parse.hasFatalError, isFalse);
+    expect(parse.structuralIssues, isEmpty);
+    expect(parse.rows.single.retailerCode, '');
   });
 
   test('flags in-file duplicate retailer_code (case-insensitive)', () {

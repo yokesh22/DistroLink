@@ -1,4 +1,5 @@
 import 'package:distro_link/features/auth/domain/distributor.dart';
+import 'package:distro_link/services/import/shop_import_planner.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Super-admin-only, cross-tenant data access.
@@ -87,6 +88,26 @@ class SuperAdminRepository {
       for (final row in rows)
         if ((row['shop_number'] as String?)?.trim().isNotEmpty ?? false)
           (row['shop_number'] as String).trim().toLowerCase(),
+    };
+  }
+
+  /// Set of `shopNameAreaKey(area_id, shop_name)` for every shop of
+  /// [distributorId] — the fallback identity for **code-less** shops (those
+  /// without a `shop_number`), so a re-uploaded sheet skips shops that already
+  /// exist by name within their area. Uses the same key helper the importer
+  /// applies to incoming rows, so normalization can't drift.
+  Future<Set<String>> existingShopNameAreaKeys(String distributorId) async {
+    final rows = await _client
+        .from('shops')
+        .select('area_id, shop_name')
+        .eq('distributor_id', distributorId);
+    return {
+      for (final row in rows)
+        if (row['area_id'] != null)
+          shopNameAreaKey(
+            row['area_id'] as String,
+            (row['shop_name'] as String?) ?? '',
+          ),
     };
   }
 
