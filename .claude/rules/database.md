@@ -120,8 +120,8 @@ Product catalog scoped per distributor. **Salesmen cannot create products** — 
 | distributor_id | uuid | FK → `distributors.id` |
 | item_code | text | Distributor-unique short code, e.g. `SUN-01` |
 | item_name | text | |
-| mrp | numeric | Maximum Retail Price (the **ceiling** for selling rate) |
-| base_rate | numeric | Distributor's base/floor rate |
+| mrp | numeric | Maximum Retail Price. **Reference/display only** — not a ceiling for selling rate (changed 2026-07-27). |
+| base_rate | numeric | Distributor's base/default rate. May exceed `mrp`. |
 | gst_percent | numeric | GST slab (0, 5, 12, 18, 28) |
 | is_active | bool | Inactive products don't appear in catalog list |
 | brand | text | Added 2026-07-26 (bulk item import). Nullable. |
@@ -135,7 +135,7 @@ Product catalog scoped per distributor. **Salesmen cannot create products** — 
 > add/edit product form doesn't yet). The item import validates `gst` against the slab **{0, 5, 12,
 > 18, 28, 40}** per PM (2026-07-26) — same as the standard slabs plus 40.
 
-> **Selling rate validation:** `0 ≤ selling_rate ≤ mrp` (MRP is the ceiling; **no base-rate floor** — base-rate floor removed 2026-07-01). `base_rate` is a reference/default only. See [business-rules.md](./business-rules.md).
+> **Selling rate validation:** `selling_rate ≥ 0` only — **no MRP ceiling** (removed 2026-07-27; some products legitimately sell above MRP) and **no base-rate floor** (removed 2026-07-01). Both `mrp` and `base_rate` are reference/default values; the bill is computed entirely from `selling_rate`. The admin product form does **not** enforce `base_rate ≤ mrp`. See [business-rules.md](./business-rules.md).
 
 ---
 
@@ -174,7 +174,7 @@ Line items for an order. Snapshots product fields at order time so retroactive p
 | item_code | text | **Snapshot** of product.item_code at order time |
 | item_name | text | **Snapshot** of product.item_name |
 | mrp | numeric | **Snapshot** |
-| selling_rate | numeric | Salesman-overridable per order; validated `0 ≤ rate ≤ mrp` (no base-rate floor) |
+| selling_rate | numeric | Salesman-overridable per order; validated `rate ≥ 0` only (no MRP ceiling, no base-rate floor) |
 | quantity | int | ≥ 1 |
 | gst_percent | numeric | **Snapshot** |
 | line_total | numeric | `selling_rate * quantity` (excludes GST). GST is computed from `line_total * gst_percent / 100`. |
@@ -232,7 +232,7 @@ emitted as a re-upload-ready `.xlsx` report (original columns + `issue`).
 
 ## Business invariants (enforced in code; document why)
 
-1. `selling_rate ∈ [0, mrp]` — MRP ceiling only, no base-rate floor (changed 2026-07-01). Validated at form-submit time; the draft clamps to `[0, mrp]`.
+1. `selling_rate ≥ 0` — no MRP ceiling (removed 2026-07-27), no base-rate floor (removed 2026-07-01). The draft floors at `0` and stores anything else verbatim; it must never silently adjust a rate the salesman typed.
 2. `quantity ≥ 1` — qty stepper enforces; repo validates.
 3. `subtotal = sum(line_total)`, `grand_total = subtotal + gst_total` — compute in app, send all three (server can recompute as a check).
 4. Snapshots in `order_items` (`item_code`, `item_name`, `mrp`, `gst_percent`) make orders historically stable. Never reach back to `products` to render an old order.

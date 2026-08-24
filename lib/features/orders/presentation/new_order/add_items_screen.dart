@@ -880,7 +880,7 @@ class _ItemRowState extends State<_ItemRow> {
                   child: Text('SELLING RATE', style: _fieldLabelStyle(theme)),
                 ),
                 Text(
-                  'Max ${formatMoney(item.mrp)}',
+                  'MRP ${formatMoney(item.mrp)}',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                   ),
@@ -915,8 +915,8 @@ class _ItemRowState extends State<_ItemRow> {
                       controller: _rateCtrl,
                       focusNode: _rateFocus,
                       // decimal: true so the Android keypad exposes a ".";
-                      // without it "28.50" can't be typed and a plain "2850"
-                      // gets clamped up to MRP (rate looked "stuck").
+                      // without it "28.50" can't be typed and the salesman is
+                      // forced to enter whole rupees only.
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
                       ),

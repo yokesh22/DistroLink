@@ -175,10 +175,11 @@ class OrderDraftNotifier extends _$OrderDraftNotifier {
   void changeRate(String productId, double rate) {
     final updated = state.items.map((item) {
       if (item.productId != productId) return item;
-      // Selling rate is per-order and salesman-set: allow anything from 0 up to
-      // MRP (the legal ceiling). No base-rate floor — see business-rules.md.
+      // Selling rate is per-order and salesman-set: allow any non-negative
+      // value. No MRP ceiling (a product may sell above MRP) and no base-rate
+      // floor — see business-rules.md.
       return item.copyWith(
-        sellingRate: rate.clamp(0, item.mrp).toDouble(),
+        sellingRate: rate < 0 ? 0 : rate,
       );
     }).toList();
     state = state.copyWith(items: updated);

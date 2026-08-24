@@ -37,6 +37,9 @@ class AdminProductsList extends _$AdminProductsList {
     required double mrp,
     required double baseRate,
     required double gstPercent,
+    String? brand,
+    String? hsnCode,
+    int? pack,
   }) async {
     final user = await ref.read(currentAppUserProvider.future);
     final distributorId = user?.distributorId ?? '';
@@ -47,6 +50,9 @@ class AdminProductsList extends _$AdminProductsList {
           mrp: mrp,
           baseRate: baseRate,
           gstPercent: gstPercent,
+          brand: brand,
+          hsnCode: hsnCode,
+          pack: pack,
         );
     ref
       ..invalidateSelf()
@@ -61,6 +67,9 @@ class AdminProductsList extends _$AdminProductsList {
     required double baseRate,
     required double gstPercent,
     required bool isActive,
+    String? brand,
+    String? hsnCode,
+    int? pack,
   }) async {
     await ref.read(adminProductsRepositoryProvider).update(
           id: id,
@@ -70,6 +79,9 @@ class AdminProductsList extends _$AdminProductsList {
           baseRate: baseRate,
           gstPercent: gstPercent,
           isActive: isActive,
+          brand: brand,
+          hsnCode: hsnCode,
+          pack: pack,
         );
     ref
       ..invalidateSelf()

@@ -354,6 +354,10 @@ class _AreaDropdown extends StatelessWidget {
           hintText: 'Choose your area…',
           // Match the field to the parent width.
           expandedInsets: EdgeInsets.zero,
+          // Cap the popup to roughly half the screen so a long area list
+          // can't cover it; it stays anchored below the field and scrolls
+          // internally past this.
+          menuHeight: MediaQuery.sizeOf(context).height * 0.5,
           leadingIcon: const Icon(Icons.location_on_rounded, size: 20),
           trailingIcon: Icon(
             Icons.keyboard_arrow_down_rounded,

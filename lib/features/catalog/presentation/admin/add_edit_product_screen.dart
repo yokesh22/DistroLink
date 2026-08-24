@@ -27,6 +27,9 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
   late final TextEditingController _name;
   late final TextEditingController _mrp;
   late final TextEditingController _baseRate;
+  late final TextEditingController _brand;
+  late final TextEditingController _hsnCode;
+  late final TextEditingController _pack;
   late double _gstPercent;
   late bool _isActive;
   bool _loading = false;
@@ -46,6 +49,9 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
     _baseRate = TextEditingController(
       text: p != null ? p.baseRate.toStringAsFixed(2) : '',
     );
+    _brand = TextEditingController(text: p?.brand ?? '');
+    _hsnCode = TextEditingController(text: p?.hsnCode ?? '');
+    _pack = TextEditingController(text: p?.pack?.toString() ?? '');
     _gstPercent = p?.gstPercent ?? 0;
     _isActive = p?.isActive ?? true;
 
@@ -67,6 +73,9 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
     _name.dispose();
     _mrp.dispose();
     _baseRate.dispose();
+    _brand.dispose();
+    _hsnCode.dispose();
+    _pack.dispose();
     super.dispose();
   }
 
@@ -84,9 +93,19 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
       setState(() => _error = 'MRP and selling rate must be positive numbers.');
       return;
     }
-    if (baseRate > mrp) {
-      setState(() => _error = 'Selling rate cannot exceed MRP.');
-      return;
+    // No `baseRate <= mrp` check: a product may legitimately price above its
+    // MRP, so MRP is reference data only. See business-rules.md.
+
+    final brand = _brand.text.trim();
+    final hsnCode = _hsnCode.text.trim();
+    final packText = _pack.text.trim();
+    int? pack;
+    if (packText.isNotEmpty) {
+      pack = int.tryParse(packText);
+      if (pack == null || pack <= 0) {
+        setState(() => _error = 'Pack must be a positive whole number.');
+        return;
+      }
     }
 
     setState(() {
@@ -105,6 +124,9 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
           baseRate: baseRate,
           gstPercent: _gstPercent,
           isActive: _isActive,
+          brand: brand.isEmpty ? null : brand,
+          hsnCode: hsnCode.isEmpty ? null : hsnCode,
+          pack: pack,
         );
       } else {
         await notifier.create(
@@ -113,6 +135,9 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
           mrp: mrp,
           baseRate: baseRate,
           gstPercent: _gstPercent,
+          brand: brand.isEmpty ? null : brand,
+          hsnCode: hsnCode.isEmpty ? null : hsnCode,
+          pack: pack,
         );
       }
       if (mounted) context.pop();
@@ -232,6 +257,43 @@ class _AddEditProductScreenState extends ConsumerState<AddEditProductScreen> {
                           .toList(),
                       onChanged: (v) =>
                           setState(() => _gstPercent = v ?? _gstPercent),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    AppTextField(
+                      controller: _brand,
+                      label: 'Brand',
+                      hint: 'e.g. Fortune',
+                      textInputAction: TextInputAction.next,
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: AppTextField(
+                            controller: _hsnCode,
+                            label: 'HSN Code',
+                            hint: 'e.g. 1512',
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            textInputAction: TextInputAction.next,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: AppTextField(
+                            controller: _pack,
+                            label: 'Pack',
+                            hint: 'e.g. 12',
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            textInputAction: TextInputAction.done,
+                          ),
+                        ),
+                      ],
                     ),
                     if (_isEdit) ...[
                       const SizedBox(height: AppSpacing.sm),

@@ -37,12 +37,17 @@ void main() {
       expect(container.read(orderDraftProvider).subtotal, 57);
     });
 
-    test('caps a rate above MRP at MRP', () {
+    test('keeps a rate ABOVE MRP (no MRP ceiling)', () {
       final container = makeContainer();
 
       container.read(orderDraftProvider.notifier).changeRate('p1', 999);
 
-      expect(container.read(orderDraftProvider).items.single.sellingRate, 30);
+      final line = container.read(orderDraftProvider).items.single;
+      // The typed value must be stored verbatim — it used to snap down to MRP,
+      // which silently saved the order at a price the salesman never entered.
+      expect(line.sellingRate, 999);
+      expect(line.lineTotal, 1998);
+      expect(container.read(orderDraftProvider).subtotal, 1998);
     });
 
     test('floors a negative rate at 0', () {
@@ -51,6 +56,29 @@ void main() {
       container.read(orderDraftProvider.notifier).changeRate('p1', -5);
 
       expect(container.read(orderDraftProvider).items.single.sellingRate, 0);
+    });
+  });
+
+  group('DraftItem.isRateValid', () {
+    test('is true for a rate seeded above MRP', () {
+      // `DraftItem.fromProduct` seeds sellingRate = baseRate, so a product with
+      // base_rate > mrp used to render invalid on first paint and block "Next".
+      const aboveMrp = DraftItem(
+        productId: 'p2',
+        itemCode: 'M11',
+        itemName: 'T C A',
+        mrp: 5,
+        baseRate: 230.48,
+        sellingRate: 230.48,
+        quantity: 1,
+        gstPercent: 5,
+      );
+
+      expect(aboveMrp.isRateValid(), isTrue);
+    });
+
+    test('is false for a negative rate', () {
+      expect(item.copyWith(sellingRate: -1).isRateValid(), isFalse);
     });
   });
 }

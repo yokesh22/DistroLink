@@ -21,6 +21,9 @@ class AdminProductsRepository {
     required double mrp,
     required double baseRate,
     required double gstPercent,
+    String? brand,
+    String? hsnCode,
+    int? pack,
   }) async {
     final row = await _client
         .from('products')
@@ -32,6 +35,9 @@ class AdminProductsRepository {
           'base_rate': baseRate,
           'gst_percent': gstPercent,
           'is_active': true,
+          'brand': brand,
+          'hsn_code': hsnCode,
+          'pack': pack,
         })
         .select()
         .single();
@@ -46,6 +52,9 @@ class AdminProductsRepository {
     required double baseRate,
     required double gstPercent,
     required bool isActive,
+    String? brand,
+    String? hsnCode,
+    int? pack,
   }) async {
     final row = await _client
         .from('products')
@@ -56,6 +65,9 @@ class AdminProductsRepository {
           'base_rate': baseRate,
           'gst_percent': gstPercent,
           'is_active': isActive,
+          'brand': brand,
+          'hsn_code': hsnCode,
+          'pack': pack,
         })
         .eq('id', id)
         .select()
