@@ -206,8 +206,10 @@ class BulkImport extends _$BulkImport {
           'shop_name': row.shop,
           'shop_address': row.address,
           'shop_number': row.retailerCode,
-          'shop_owner': row.shopOwner,
-          'phone_no': row.mobile,
+          // Optional values: omit when blank so they store NULL, not '',
+          // matching the admin add-shop path.
+          if (row.shopOwner.isNotEmpty) 'shop_owner': row.shopOwner,
+          if (row.mobile.isNotEmpty) 'phone_no': row.mobile,
           if (row.gstNo.isNotEmpty) 'gstin': row.gstNo,
         });
       }

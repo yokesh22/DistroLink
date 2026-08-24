@@ -82,10 +82,25 @@ void main() {
     expect(parse.fatalError, contains('mobile'));
   });
 
-  test('flags rows missing mandatory fields with details', () {
+  test('mobile, shop_owner and gst_no are optional values (blank allowed)', () {
     final bytes = _buildXlsx([
       _headers,
-      _row(mobile: '', owner: ''), // missing mobile + shop_owner
+      _row(mobile: '', owner: '', gst: ''), // all three blank
+    ]);
+
+    final parse = parseShopSheetBytes(bytes);
+
+    expect(parse.hasFatalError, isFalse);
+    expect(parse.structuralIssues, isEmpty);
+    expect(parse.rows.single.mobile, '');
+    expect(parse.rows.single.shopOwner, '');
+    expect(parse.rows.single.gstNo, '');
+  });
+
+  test('flags rows missing a still-mandatory field with details', () {
+    final bytes = _buildXlsx([
+      _headers,
+      _row(address: '', shop: ''), // address + shop are still mandatory
       _row(code: 'SH-002'),
     ]);
 
@@ -94,8 +109,11 @@ void main() {
     expect(parse.rows.length, 2);
     expect(parse.structuralIssues.length, 1);
     final issue = parse.structuralIssues.single;
-    expect(issue.issue, contains('mobile'));
-    expect(issue.issue, contains('shop_owner'));
+    expect(issue.issue, contains('address'));
+    expect(issue.issue, contains('shop'));
+    // Optional fields must NOT appear in the missing list.
+    expect(issue.issue, isNot(contains('mobile')));
+    expect(issue.issue, isNot(contains('shop_owner')));
   });
 
   test('flags in-file duplicate retailer_code (case-insensitive)', () {

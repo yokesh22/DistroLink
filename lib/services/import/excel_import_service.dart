@@ -109,14 +109,14 @@ const _shopRequiredHeaders = [
   'shop_owner',
 ];
 
-/// Per-row mandatory fields (values must be non-empty). `gst_no` is optional.
+/// Per-row mandatory fields (values must be non-empty). `gst_no`, `mobile` and
+/// `shop_owner` are optional values (their columns must still be present — see
+/// `_shopRequiredHeaders` — but the cells may be left blank).
 const _shopMandatoryFields = [
   'area',
   'shop',
   'retailer_code',
   'address',
-  'shop_owner',
-  'mobile',
 ];
 
 /// Parses a SHOPS.xlsx from [bytes]. **Top-level** so it can run in a
@@ -168,8 +168,8 @@ ShopSheetParse parseShopSheetBytes(Uint8List bytes) {
   if (missingHeaders.isNotEmpty) {
     return ShopSheetParse.fatal(
       'Missing required column(s): ${missingHeaders.join(', ')}. '
-      'Expected: area, shop, retailer_code, address, gst_no, mobile, '
-      'shop_owner.',
+      'Expected: area, shop, retailer_code, address, mobile, shop_owner '
+      '(gst_no optional).',
     );
   }
 
