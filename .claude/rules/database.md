@@ -79,12 +79,14 @@ Admin-controlled list of geographic areas (e.g. "Sector 12", "MG Road").
 |---|---|---|
 | id | uuid PK | |
 | distributor_id | uuid | FK → `distributors.id`. **Per-distributor tenant scope** (added migration `0001`). |
-| name | text | |
+| name | text | Unique **per distributor**: `unique (distributor_id, name)` (migration `0009`). |
 | created_at | timestamptz | |
 
 **Has many:** `shops`. **Belongs to:** `distributors`.
 
 > Areas are scoped per-**distributor** (not per-salesman). RLS (`areas_tenant_rw`) restricts rows to the caller's distributor via `public.auth_distributor_id()`; the app also filters by `distributor_id` as defence-in-depth. Assignment of areas-to-salesmen (if needed) is a future enhancement.
+>
+> **Uniqueness is composite** — `unique (distributor_id, name)` (migration `0009_areas_unique_per_distributor.sql`). The table originally shipped with a **global** `unique (name)` (`areas_name_key`), which blocked a second distributor from bulk-importing an area name a first distributor already owned. `0009` drops the global constraint and replaces it with the per-distributor composite. The constraint is case-sensitive; the app dedups case-insensitively (`_submitAreas` / `existingAreaNamesLower`).
 
 ---
 
@@ -219,6 +221,15 @@ Migrations `0007_shops_super_admin_rw.sql` and `0008_products_super_admin_rw.sql
 add the analogous `shops_super_admin_rw` / `products_super_admin_rw` (read/write in **any** tenant)
 for the shops and items bulk imports — read is needed for the duplicate-key check, write for the
 insert; area resolution reuses `areas_super_admin_rw`.
+
+Migration `0009_areas_unique_per_distributor.sql` (added 2026-08-24) fixes a **cross-tenant bulk-import
+bug**: `areas` shipped with a global `unique (name)` (`areas_name_key`), so a second distributor could
+not bulk-import an area name a first distributor already owned (Postgres unique-key violation on
+insert, despite the app's per-distributor duplicate check passing). `0009` drops the global constraint
+and adds `unique (distributor_id, name)`. **If `shops.shop_number` / `products.item_code` also carry a
+global unique constraint** (both are documented as *distributor-unique* codes), they have the same
+latent bug — verify with `select conname, pg_get_constraintdef(oid) from pg_constraint where conrelid
+in ('public.shops'::regclass,'public.products'::regclass) and contype='u';` and fix the same way if so.
 
 Powers the super-admin **Bulk Import** screen (`/super-admin/import`): **Areas** (single `area`
 column), **Shops** (`area, shop, retailer_code, address, gst_no, mobile, shop_owner`) and **Items**
