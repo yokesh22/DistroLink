@@ -109,14 +109,16 @@ const _shopRequiredHeaders = [
   'shop_owner',
 ];
 
-/// Per-row mandatory fields (values must be non-empty). `gst_no` is optional.
+/// Per-row mandatory fields (values must be non-empty). `mobile` and
+/// `shop_owner` are optional values — their columns must still be present (see
+/// `_shopRequiredHeaders`) but the cells may be left blank. `gst_no` is fully
+/// optional: its column may be omitted entirely (it is not in
+/// `_shopRequiredHeaders`).
 const _shopMandatoryFields = [
   'area',
   'shop',
   'retailer_code',
   'address',
-  'shop_owner',
-  'mobile',
 ];
 
 /// Parses a SHOPS.xlsx from [bytes]. **Top-level** so it can run in a
@@ -168,8 +170,8 @@ ShopSheetParse parseShopSheetBytes(Uint8List bytes) {
   if (missingHeaders.isNotEmpty) {
     return ShopSheetParse.fatal(
       'Missing required column(s): ${missingHeaders.join(', ')}. '
-      'Expected: area, shop, retailer_code, address, gst_no, mobile, '
-      'shop_owner.',
+      'Expected: area, shop, retailer_code, address, mobile, shop_owner '
+      '(gst_no optional).',
     );
   }
 
@@ -225,12 +227,24 @@ ShopSheetParse parseShopSheetBytes(Uint8List bytes) {
 
 // ─── Items sheet parsing ──────────────────────────────────────────────────
 
-/// Expected ITEMS.xlsx headers — all required.
+/// Expected ITEMS.xlsx headers — all columns must be present.
 const _itemRequiredHeaders = [
   'brand',
   'item_code',
   'item',
   'hsn',
+  'mrp',
+  'rate',
+  'gst',
+  'pack',
+];
+
+/// Per-row mandatory fields (values must be non-empty). `brand` and `hsn` are
+/// optional values — their columns must still be present (see
+/// `_itemRequiredHeaders`) but the cells may be left blank.
+const _itemMandatoryFields = [
+  'item_code',
+  'item',
   'mrp',
   'rate',
   'gst',
@@ -243,7 +257,11 @@ final Set<int> _gstSlab = kGstSlabs.toSet();
 
 /// Parses [text] as an integer, tolerating a whole-number decimal (e.g. Excel
 /// yielding `2.0`). Returns null when not an integer value.
-int? _asIntValue(String text) {
+///
+/// Public so the import validator (`_validateItems`) coerces `gst`/`pack` with
+/// the exact same rule the parser accepts them by — they must not drift (a
+/// plain `int.parse('18.0')` would throw).
+int? asIntValue(String text) {
   final direct = int.tryParse(text);
   if (direct != null) return direct;
   final d = double.tryParse(text);
@@ -254,9 +272,11 @@ int? _asIntValue(String text) {
 /// Parses an ITEMS.xlsx from [bytes]. **Top-level** so it can run in a
 /// background isolate via `compute`.
 ///
-/// Validates (without a distributor): required headers present; per-row all 8
-/// fields non-empty; `mrp`/`rate` numeric (exact decimals kept); `pack` an
-/// integer; `gst` an integer in {0,5,18,40}; in-file duplicate `item_code`.
+/// Validates (without a distributor): required headers present; per-row
+/// mandatory fields non-empty (`brand`/`hsn` optional — see
+/// `_itemMandatoryFields`); `mrp`/`rate` numeric (exact decimals kept); `pack`
+/// an integer; `gst` an integer in `kGstSlabs` ({0, 5, 12, 18, 28, 40});
+/// in-file duplicate `item_code`.
 ItemSheetParse parseItemSheetBytes(Uint8List bytes) {
   final Excel excel;
   try {
@@ -330,7 +350,7 @@ ItemSheetParse parseItemSheetBytes(Uint8List bytes) {
     final problems = <String>[];
 
     final missing = [
-      for (final h in _itemRequiredHeaders)
+      for (final h in _itemMandatoryFields)
         if (valueAt(raw, h).isEmpty) h,
     ];
     if (missing.isNotEmpty) problems.add('missing: ${missing.join(', ')}');
@@ -341,11 +361,11 @@ ItemSheetParse parseItemSheetBytes(Uint8List bytes) {
     if (row.rate.isNotEmpty && double.tryParse(row.rate) == null) {
       problems.add('rate is not a number');
     }
-    if (row.pack.isNotEmpty && _asIntValue(row.pack) == null) {
+    if (row.pack.isNotEmpty && asIntValue(row.pack) == null) {
       problems.add('pack is not an integer');
     }
     if (row.gst.isNotEmpty) {
-      final gst = _asIntValue(row.gst);
+      final gst = asIntValue(row.gst);
       if (gst == null || !_gstSlab.contains(gst)) {
         problems.add('gst must be one of ${kGstSlabs.join(', ')}');
       }

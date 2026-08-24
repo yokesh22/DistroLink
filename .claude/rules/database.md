@@ -79,12 +79,14 @@ Admin-controlled list of geographic areas (e.g. "Sector 12", "MG Road").
 |---|---|---|
 | id | uuid PK | |
 | distributor_id | uuid | FK → `distributors.id`. **Per-distributor tenant scope** (added migration `0001`). |
-| name | text | |
+| name | text | Unique **per distributor**: `unique (distributor_id, name)` (migration `0009`). |
 | created_at | timestamptz | |
 
 **Has many:** `shops`. **Belongs to:** `distributors`.
 
 > Areas are scoped per-**distributor** (not per-salesman). RLS (`areas_tenant_rw`) restricts rows to the caller's distributor via `public.auth_distributor_id()`; the app also filters by `distributor_id` as defence-in-depth. Assignment of areas-to-salesmen (if needed) is a future enhancement.
+>
+> **Uniqueness is composite** — `unique (distributor_id, name)` (migration `0009_areas_unique_per_distributor.sql`). The table originally shipped with a **global** `unique (name)` (`areas_name_key`), which blocked a second distributor from bulk-importing an area name a first distributor already owned. `0009` drops the global constraint and replaces it with the per-distributor composite. The constraint is case-sensitive; the app dedups case-insensitively (`_submitAreas` / `existingAreaNamesLower`).
 
 ---
 
@@ -98,7 +100,7 @@ Catalog of shops a salesman can place orders against. Admins add/edit shops; **s
 | distributor_id | uuid | FK → `distributors.id`. **Per-distributor tenant scope** (added migration `0001`). |
 | area_id | uuid | FK → `areas.id` |
 | shop_name | text | |
-| shop_number | text | Human-readable code, e.g. `SH-041` |
+| shop_number | text | Human-readable code, e.g. `SH-041`. Optional. Unique **per distributor** among non-empty values via a partial index (migration `0010`). |
 | shop_address | text | |
 | shop_owner | text | Optional |
 | phone_no | text | Optional |
@@ -107,6 +109,8 @@ Catalog of shops a salesman can place orders against. Admins add/edit shops; **s
 
 > Scoped per-**distributor**. RLS (`shops_tenant_rw`) restricts rows to the caller's distributor via `public.auth_distributor_id()`; the app also filters by `distributor_id`.
 > No `is_active` column today. If a shop needs to be hidden, plan an `is_active` migration.
+>
+> **`shop_number` uniqueness** — a partial unique index `unique (distributor_id, shop_number) where shop_number is not null and shop_number <> ''` (migration `0010_shops_unique_per_distributor.sql`). Shops originally had **no** unique constraint on the code; `0010` adds per-distributor uniqueness (matching `areas`/`products`) but only for coded shops, since `shop_number` is optional (blank → NULL on add, possibly `''` on edit). Case-sensitive, matching the app's non-empty de-dup.
 
 ---
 
@@ -220,12 +224,29 @@ add the analogous `shops_super_admin_rw` / `products_super_admin_rw` (read/write
 for the shops and items bulk imports — read is needed for the duplicate-key check, write for the
 insert; area resolution reuses `areas_super_admin_rw`.
 
+Migration `0009_areas_unique_per_distributor.sql` (added 2026-08-24) fixes a **cross-tenant bulk-import
+bug**: `areas` shipped with a global `unique (name)` (`areas_name_key`), so a second distributor could
+not bulk-import an area name a first distributor already owned (Postgres unique-key violation on
+insert, despite the app's per-distributor duplicate check passing). `0009` drops the global constraint
+and adds `unique (distributor_id, name)`.
+
+Audit of the analogous *distributor-unique* codes (2026-08-24) found: `products.item_code` was
+**already** `unique (distributor_id, item_code)` (no change needed), while `shops.shop_number` had
+**no** unique constraint at all. Migration `0010_shops_unique_per_distributor.sql` adds a **partial**
+unique index `unique (distributor_id, shop_number) where shop_number is not null and shop_number <> ''`
+— per-distributor uniqueness for coded shops only (`shop_number` is optional). Because shops had no
+prior constraint, run the duplicate pre-check in `0010`'s header before applying (the index build fails
+transactionally if existing dup codes exist within a distributor).
+
 Powers the super-admin **Bulk Import** screen (`/super-admin/import`): **Areas** (single `area`
 column), **Shops** (`area, shop, retailer_code, address, gst_no, mobile, shop_owner`) and **Items**
 (`brand, item_code, item, hsn, mrp, rate, gst, pack`). Parsing is client-side (`ExcelImportService`;
 shops/items parse in a `compute` isolate), the write goes directly through `SuperAdminRepository` in
 one atomic batch insert (no Edge Function / RPC). Shops: `area` resolves to `area_id`
-(unknown/ambiguous → blocking), `gst_no` optional. Items: all 8 fields mandatory, `rate`→`base_rate`,
+(unknown/ambiguous → blocking); `mobile` and `shop_owner` are optional **values** (their columns must
+still be present, but cells may be blank → stored NULL) while `gst_no` is fully optional (its column
+may be omitted entirely); `area`, `shop`, `retailer_code`, `address` mandatory. Items: `brand` and `hsn` are optional **values** (columns still required, blank →
+NULL); `item_code`, `item`, `mrp`, `rate`, `gst`, `pack` mandatory; `rate`→`base_rate`,
 `gst` ∈ {0,5,12,18,28,40} as int, `mrp`/`rate` exact decimals, `pack` int, `is_active=true`. Both:
 whole-sheet all-or-nothing validation; existing `retailer_code`/`item_code` skipped; affected rows
 emitted as a re-upload-ready `.xlsx` report (original columns + `issue`).

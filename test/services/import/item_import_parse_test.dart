@@ -73,10 +73,24 @@ void main() {
     expect(parse.fatalError, contains('pack'));
   });
 
-  test('flags rows missing mandatory fields', () {
+  test('brand and hsn are optional values (blank allowed)', () {
     final bytes = _buildXlsx([
       _headers,
       _row(brand: '', hsn: ''),
+    ]);
+
+    final parse = parseItemSheetBytes(bytes);
+
+    expect(parse.hasFatalError, isFalse);
+    expect(parse.structuralIssues, isEmpty);
+    expect(parse.rows.single.brand, '');
+    expect(parse.rows.single.hsn, '');
+  });
+
+  test('flags rows missing a still-mandatory field', () {
+    final bytes = _buildXlsx([
+      _headers,
+      _row(code: '', item: ''), // item_code + item are still mandatory
       _row(code: 'M2'),
     ]);
 
@@ -84,8 +98,11 @@ void main() {
 
     expect(parse.structuralIssues.length, 1);
     final issue = parse.structuralIssues.single.issue;
-    expect(issue, contains('brand'));
-    expect(issue, contains('hsn'));
+    expect(issue, contains('item_code'));
+    expect(issue, contains('item'));
+    // Optional fields must NOT appear in the missing list.
+    expect(issue, isNot(contains('brand')));
+    expect(issue, isNot(contains('hsn')));
   });
 
   test('flags non-numeric mrp / rate', () {
@@ -118,6 +135,36 @@ void main() {
     final parse = parseItemSheetBytes(bytes);
 
     expect(parse.structuralIssues, isEmpty);
+  });
+
+  test('accepts whole-number gst written as 18.0', () {
+    final bytes = _buildXlsx([_headers, _row(gst: '18.0')]);
+
+    final parse = parseItemSheetBytes(bytes);
+
+    expect(parse.structuralIssues, isEmpty);
+  });
+
+  // `asIntValue` is the shared coercion the parser accepts gst/pack by AND the
+  // import validator (`_validateItems`) converts them with — they must agree,
+  // so an Excel-formatted `18.0`/`2.0` never throws at insert-plan build time
+  // (a plain `int.parse('18.0')` would). Regression guard for that.
+  group('asIntValue', () {
+    test('parses plain integers', () {
+      expect(asIntValue('18'), 18);
+      expect(asIntValue('0'), 0);
+    });
+
+    test('coerces whole-number decimals (Excel 18.0 / 2.0)', () {
+      expect(asIntValue('18.0'), 18);
+      expect(asIntValue('2.0'), 2);
+    });
+
+    test('returns null for non-integer values', () {
+      expect(asIntValue('2.5'), isNull);
+      expect(asIntValue('abc'), isNull);
+      expect(asIntValue(''), isNull);
+    });
   });
 
   test('flags gst outside the {0,5,12,18,28,40} slab', () {

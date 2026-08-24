@@ -206,8 +206,10 @@ class BulkImport extends _$BulkImport {
           'shop_name': row.shop,
           'shop_address': row.address,
           'shop_number': row.retailerCode,
-          'shop_owner': row.shopOwner,
-          'phone_no': row.mobile,
+          // Optional values: omit when blank so they store NULL, not '',
+          // matching the admin add-shop path.
+          if (row.shopOwner.isNotEmpty) 'shop_owner': row.shopOwner,
+          if (row.mobile.isNotEmpty) 'phone_no': row.mobile,
           if (row.gstNo.isNotEmpty) 'gstin': row.gstNo,
         });
       }
@@ -267,10 +269,14 @@ class BulkImport extends _$BulkImport {
           'item_name': row.item,
           'mrp': double.parse(row.mrp),
           'base_rate': double.parse(row.rate),
-          'gst_percent': int.parse(row.gst),
-          'pack': int.parse(row.pack),
-          'brand': row.brand,
-          'hsn_code': row.hsn,
+          // Coerce with the same helper the parser accepts gst/pack by, so an
+          // Excel-formatted `18.0` / `2.0` doesn't throw here (int.parse would).
+          // Structural validation guarantees these are valid, so non-null.
+          'gst_percent': asIntValue(row.gst),
+          'pack': asIntValue(row.pack),
+          // Optional values: omit when blank so they store NULL, not ''.
+          if (row.brand.isNotEmpty) 'brand': row.brand,
+          if (row.hsn.isNotEmpty) 'hsn_code': row.hsn,
           'is_active': true,
         });
       }
