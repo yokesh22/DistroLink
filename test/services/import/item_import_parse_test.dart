@@ -73,10 +73,24 @@ void main() {
     expect(parse.fatalError, contains('pack'));
   });
 
-  test('flags rows missing mandatory fields', () {
+  test('brand and hsn are optional values (blank allowed)', () {
     final bytes = _buildXlsx([
       _headers,
       _row(brand: '', hsn: ''),
+    ]);
+
+    final parse = parseItemSheetBytes(bytes);
+
+    expect(parse.hasFatalError, isFalse);
+    expect(parse.structuralIssues, isEmpty);
+    expect(parse.rows.single.brand, '');
+    expect(parse.rows.single.hsn, '');
+  });
+
+  test('flags rows missing a still-mandatory field', () {
+    final bytes = _buildXlsx([
+      _headers,
+      _row(code: '', item: ''), // item_code + item are still mandatory
       _row(code: 'M2'),
     ]);
 
@@ -84,8 +98,11 @@ void main() {
 
     expect(parse.structuralIssues.length, 1);
     final issue = parse.structuralIssues.single.issue;
-    expect(issue, contains('brand'));
-    expect(issue, contains('hsn'));
+    expect(issue, contains('item_code'));
+    expect(issue, contains('item'));
+    // Optional fields must NOT appear in the missing list.
+    expect(issue, isNot(contains('brand')));
+    expect(issue, isNot(contains('hsn')));
   });
 
   test('flags non-numeric mrp / rate', () {

@@ -245,7 +245,8 @@ shops/items parse in a `compute` isolate), the write goes directly through `Supe
 one atomic batch insert (no Edge Function / RPC). Shops: `area` resolves to `area_id`
 (unknown/ambiguous → blocking); `gst_no`, `mobile` and `shop_owner` are optional **values** (their
 columns must still be present, but cells may be blank → stored NULL); `area`, `shop`, `retailer_code`,
-`address` mandatory. Items: all 8 fields mandatory, `rate`→`base_rate`,
+`address` mandatory. Items: `brand` and `hsn` are optional **values** (columns still required, blank →
+NULL); `item_code`, `item`, `mrp`, `rate`, `gst`, `pack` mandatory; `rate`→`base_rate`,
 `gst` ∈ {0,5,12,18,28,40} as int, `mrp`/`rate` exact decimals, `pack` int, `is_active=true`. Both:
 whole-sheet all-or-nothing validation; existing `retailer_code`/`item_code` skipped; affected rows
 emitted as a re-upload-ready `.xlsx` report (original columns + `issue`).

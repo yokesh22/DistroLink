@@ -177,7 +177,8 @@ class BulkImportScreen extends ConsumerWidget {
           'Columns: area, shop, retailer_code, address (required); '
               'mobile, shop_owner, gst_no (values optional).',
         ImportType.items =>
-          'Columns: brand, item_code, item, hsn, mrp, rate, gst, pack.',
+          'Columns: item_code, item, mrp, rate, gst, pack (required); '
+              'brand, hsn (values optional).',
       };
 
   String _submitLabel(BulkImportState state) {

@@ -225,12 +225,24 @@ ShopSheetParse parseShopSheetBytes(Uint8List bytes) {
 
 // ─── Items sheet parsing ──────────────────────────────────────────────────
 
-/// Expected ITEMS.xlsx headers — all required.
+/// Expected ITEMS.xlsx headers — all columns must be present.
 const _itemRequiredHeaders = [
   'brand',
   'item_code',
   'item',
   'hsn',
+  'mrp',
+  'rate',
+  'gst',
+  'pack',
+];
+
+/// Per-row mandatory fields (values must be non-empty). `brand` and `hsn` are
+/// optional values — their columns must still be present (see
+/// `_itemRequiredHeaders`) but the cells may be left blank.
+const _itemMandatoryFields = [
+  'item_code',
+  'item',
   'mrp',
   'rate',
   'gst',
@@ -258,9 +270,10 @@ int? asIntValue(String text) {
 /// Parses an ITEMS.xlsx from [bytes]. **Top-level** so it can run in a
 /// background isolate via `compute`.
 ///
-/// Validates (without a distributor): required headers present; per-row all 8
-/// fields non-empty; `mrp`/`rate` numeric (exact decimals kept); `pack` an
-/// integer; `gst` an integer in `kGstSlabs` ({0, 5, 12, 18, 28, 40}); in-file
+/// Validates (without a distributor): required headers present; per-row
+/// mandatory fields non-empty (`brand`/`hsn` optional — see
+/// `_itemMandatoryFields`); `mrp`/`rate` numeric (exact decimals kept); `pack`
+/// an integer; `gst` an integer in `kGstSlabs` ({0, 5, 12, 18, 28, 40}); in-file
 /// duplicate `item_code`.
 ItemSheetParse parseItemSheetBytes(Uint8List bytes) {
   final Excel excel;
@@ -335,7 +348,7 @@ ItemSheetParse parseItemSheetBytes(Uint8List bytes) {
     final problems = <String>[];
 
     final missing = [
-      for (final h in _itemRequiredHeaders)
+      for (final h in _itemMandatoryFields)
         if (valueAt(raw, h).isEmpty) h,
     ];
     if (missing.isNotEmpty) problems.add('missing: ${missing.join(', ')}');

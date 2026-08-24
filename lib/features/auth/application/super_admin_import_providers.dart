@@ -274,8 +274,9 @@ class BulkImport extends _$BulkImport {
           // Structural validation guarantees these are valid, so non-null.
           'gst_percent': asIntValue(row.gst),
           'pack': asIntValue(row.pack),
-          'brand': row.brand,
-          'hsn_code': row.hsn,
+          // Optional values: omit when blank so they store NULL, not ''.
+          if (row.brand.isNotEmpty) 'brand': row.brand,
+          if (row.hsn.isNotEmpty) 'hsn_code': row.hsn,
           'is_active': true,
         });
       }
