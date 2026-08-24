@@ -109,9 +109,11 @@ const _shopRequiredHeaders = [
   'shop_owner',
 ];
 
-/// Per-row mandatory fields (values must be non-empty). `gst_no`, `mobile` and
-/// `shop_owner` are optional values (their columns must still be present — see
-/// `_shopRequiredHeaders` — but the cells may be left blank).
+/// Per-row mandatory fields (values must be non-empty). `mobile` and
+/// `shop_owner` are optional values — their columns must still be present (see
+/// `_shopRequiredHeaders`) but the cells may be left blank. `gst_no` is fully
+/// optional: its column may be omitted entirely (it is not in
+/// `_shopRequiredHeaders`).
 const _shopMandatoryFields = [
   'area',
   'shop',
@@ -273,8 +275,8 @@ int? asIntValue(String text) {
 /// Validates (without a distributor): required headers present; per-row
 /// mandatory fields non-empty (`brand`/`hsn` optional — see
 /// `_itemMandatoryFields`); `mrp`/`rate` numeric (exact decimals kept); `pack`
-/// an integer; `gst` an integer in `kGstSlabs` ({0, 5, 12, 18, 28, 40}); in-file
-/// duplicate `item_code`.
+/// an integer; `gst` an integer in `kGstSlabs` ({0, 5, 12, 18, 28, 40});
+/// in-file duplicate `item_code`.
 ItemSheetParse parseItemSheetBytes(Uint8List bytes) {
   final Excel excel;
   try {
