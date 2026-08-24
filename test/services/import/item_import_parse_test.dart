@@ -120,6 +120,36 @@ void main() {
     expect(parse.structuralIssues, isEmpty);
   });
 
+  test('accepts whole-number gst written as 18.0', () {
+    final bytes = _buildXlsx([_headers, _row(gst: '18.0')]);
+
+    final parse = parseItemSheetBytes(bytes);
+
+    expect(parse.structuralIssues, isEmpty);
+  });
+
+  // `asIntValue` is the shared coercion the parser accepts gst/pack by AND the
+  // import validator (`_validateItems`) converts them with — they must agree,
+  // so an Excel-formatted `18.0`/`2.0` never throws at insert-plan build time
+  // (a plain `int.parse('18.0')` would). Regression guard for that.
+  group('asIntValue', () {
+    test('parses plain integers', () {
+      expect(asIntValue('18'), 18);
+      expect(asIntValue('0'), 0);
+    });
+
+    test('coerces whole-number decimals (Excel 18.0 / 2.0)', () {
+      expect(asIntValue('18.0'), 18);
+      expect(asIntValue('2.0'), 2);
+    });
+
+    test('returns null for non-integer values', () {
+      expect(asIntValue('2.5'), isNull);
+      expect(asIntValue('abc'), isNull);
+      expect(asIntValue(''), isNull);
+    });
+  });
+
   test('flags gst outside the {0,5,12,18,28,40} slab', () {
     final bytes = _buildXlsx([
       _headers,

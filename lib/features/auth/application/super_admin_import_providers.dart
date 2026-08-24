@@ -269,8 +269,11 @@ class BulkImport extends _$BulkImport {
           'item_name': row.item,
           'mrp': double.parse(row.mrp),
           'base_rate': double.parse(row.rate),
-          'gst_percent': int.parse(row.gst),
-          'pack': int.parse(row.pack),
+          // Coerce with the same helper the parser accepts gst/pack by, so an
+          // Excel-formatted `18.0` / `2.0` doesn't throw here (int.parse would).
+          // Structural validation guarantees these are valid, so non-null.
+          'gst_percent': asIntValue(row.gst),
+          'pack': asIntValue(row.pack),
           'brand': row.brand,
           'hsn_code': row.hsn,
           'is_active': true,
