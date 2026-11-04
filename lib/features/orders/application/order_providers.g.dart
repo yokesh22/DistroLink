@@ -284,6 +284,107 @@ final class LastOrderItemNamesProvider
 String _$lastOrderItemNamesHash() =>
     r'8d5827eb3c2d0e028b6ce845fde6f9f8d7b85dbe';
 
+/// Last selling rate per product for [shopId] (`{productId: rate}`), used to
+/// pre-fill rates when the "Use last shop rate" toggle is on. Empty when the
+/// toggle is off or the device is offline — callers then use base rate. See
+/// business-rules.md, Step 3.
+
+@ProviderFor(shopLastRates)
+final shopLastRatesProvider = ShopLastRatesFamily._();
+
+/// Last selling rate per product for [shopId] (`{productId: rate}`), used to
+/// pre-fill rates when the "Use last shop rate" toggle is on. Empty when the
+/// toggle is off or the device is offline — callers then use base rate. See
+/// business-rules.md, Step 3.
+
+final class ShopLastRatesProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<Map<String, double>>,
+          Map<String, double>,
+          FutureOr<Map<String, double>>
+        >
+    with
+        $FutureModifier<Map<String, double>>,
+        $FutureProvider<Map<String, double>> {
+  /// Last selling rate per product for [shopId] (`{productId: rate}`), used to
+  /// pre-fill rates when the "Use last shop rate" toggle is on. Empty when the
+  /// toggle is off or the device is offline — callers then use base rate. See
+  /// business-rules.md, Step 3.
+  ShopLastRatesProvider._({
+    required ShopLastRatesFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'shopLastRatesProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$shopLastRatesHash();
+
+  @override
+  String toString() {
+    return r'shopLastRatesProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<Map<String, double>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<Map<String, double>> create(Ref ref) {
+    final argument = this.argument as String;
+    return shopLastRates(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is ShopLastRatesProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$shopLastRatesHash() => r'03c8d664a236a0ce6a77506a0c583c3d30d5bcef';
+
+/// Last selling rate per product for [shopId] (`{productId: rate}`), used to
+/// pre-fill rates when the "Use last shop rate" toggle is on. Empty when the
+/// toggle is off or the device is offline — callers then use base rate. See
+/// business-rules.md, Step 3.
+
+final class ShopLastRatesFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<Map<String, double>>, String> {
+  ShopLastRatesFamily._()
+    : super(
+        retry: null,
+        name: r'shopLastRatesProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// Last selling rate per product for [shopId] (`{productId: rate}`), used to
+  /// pre-fill rates when the "Use last shop rate" toggle is on. Empty when the
+  /// toggle is off or the device is offline — callers then use base rate. See
+  /// business-rules.md, Step 3.
+
+  ShopLastRatesProvider call(String shopId) =>
+      ShopLastRatesProvider._(argument: shopId, from: this);
+
+  @override
+  String toString() => r'shopLastRatesProvider';
+}
+
 /// Outbox orders waiting to sync (pending + failed).
 
 @ProviderFor(outboxOrders)
@@ -363,7 +464,7 @@ final class OrderDraftNotifierProvider
 }
 
 String _$orderDraftNotifierHash() =>
-    r'd072cbbdb35c2b9e2e01593ea4b58edf3dc62332';
+    r'da7537f5255f16746c7b4dc6a5dac2be0e648677';
 
 abstract class _$OrderDraftNotifier extends $Notifier<OrderDraftState> {
   OrderDraftState build();

@@ -293,6 +293,21 @@ class OrdersRepository {
         .toList();
   }
 
+  /// Latest selling rate per product for [shopId], across all salesmen in the
+  /// distributor (RLS-scoped). Backed by the `last_shop_selling_rates` RPC
+  /// (migration 0011). Returns `{productId: sellingRate}`.
+  Future<Map<String, double>> lastSellingRatesForShop(String shopId) async {
+    final rows = await _client.rpc<List<dynamic>>(
+      'last_shop_selling_rates',
+      params: {'p_shop_id': shopId},
+    );
+    return {
+      for (final dynamic raw in rows)
+        (raw as Map<String, dynamic>)['product_id'] as String:
+            (raw['selling_rate'] as num).toDouble(),
+    };
+  }
+
   // ─── Outbox queries ───────────────────────────────────────────────
 
   List<OutboxOrder> pendingOutboxOrders() => _hive.outboxBox.values

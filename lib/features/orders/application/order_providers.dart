@@ -7,8 +7,10 @@ import 'package:distro_link/features/orders/domain/order_draft.dart';
 import 'package:distro_link/features/orders/domain/order_with_items.dart';
 import 'package:distro_link/features/shops/domain/area.dart';
 import 'package:distro_link/features/shops/domain/shop.dart';
+import 'package:distro_link/services/connectivity/connectivity_provider.dart';
 import 'package:distro_link/services/hive/hive_provider.dart';
 import 'package:distro_link/services/hive/outbox_order.dart';
+import 'package:distro_link/services/preferences/last_rate_preference_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'order_providers.g.dart';
@@ -64,6 +66,18 @@ Future<List<String>> lastOrderItemNames(Ref ref) async {
   if (salesman == null) return [];
   final repo = await ref.watch(ordersRepositoryProvider.future);
   return repo.lastOrderItemNames(salesman.id);
+}
+
+/// Last selling rate per product for [shopId] (`{productId: rate}`), used to
+/// pre-fill rates when the "Use last shop rate" toggle is on. Empty when the
+/// toggle is off or the device is offline — callers then use base rate. See
+/// business-rules.md, Step 3.
+@riverpod
+Future<Map<String, double>> shopLastRates(Ref ref, String shopId) async {
+  if (!ref.watch(useLastShopRateProvider)) return const {};
+  if (!ref.watch(isOnlineProvider)) return const {};
+  final repo = await ref.watch(ordersRepositoryProvider.future);
+  return repo.lastSellingRatesForShop(shopId);
 }
 
 /// Outbox orders waiting to sync (pending + failed).

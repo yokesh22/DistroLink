@@ -18,6 +18,7 @@ lib/
     sheets/           Google Sheets API client wrapper
     location/         geolocator wrapper
     connectivity/     connectivity_plus wrapper
+    preferences/      per-device user settings shared across features (e.g. "Use last shop rate")
   l10n/               ARB translation files (added when i18n is needed)
 ```
 

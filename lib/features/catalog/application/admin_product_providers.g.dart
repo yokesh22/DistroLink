@@ -115,7 +115,7 @@ final class AdminProductsListProvider
   AdminProductsList create() => AdminProductsList();
 }
 
-String _$adminProductsListHash() => r'b41032723bf8cb359f5e23504a104764337e9f86';
+String _$adminProductsListHash() => r'9ca1b351f2c8daf50288c4f537f17f62f8f578d7';
 
 abstract class _$AdminProductsList extends $AsyncNotifier<List<Product>> {
   FutureOr<List<Product>> build();

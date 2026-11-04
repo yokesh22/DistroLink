@@ -164,6 +164,16 @@ Header row for an order placed by a salesman against a shop.
 
 > Insert `orders` and `order_items` together. Prefer a Postgres function (RPC) for atomicity if available; otherwise insert order header → use returned id → insert items in one batch.
 
+> **Last-shop-rate lookup** (migration `0011_last_shop_rates.sql`, added 2026-10-03): function
+> `public.last_shop_selling_rates(p_shop_id uuid) returns table (product_id uuid, selling_rate numeric)`
+> — `DISTINCT ON (product_id)` over `order_items ⋈ orders` for the shop, latest `orders.created_at`
+> first, excluding soft-deleted orders. `security invoker` (tenant RLS applies). Backed by indexes
+> `orders_shop_created_idx (shop_id, created_at desc) where deleted_at is null` and
+> `order_items_order_id_idx (order_id)`. Powers the "Use last shop rate" setting (see
+> [business-rules.md](./business-rules.md) Step 3). No new table: a trigger-maintained rates table was
+> rejected because it would have to stay correct through order edits, soft deletes and outbox sync —
+> see [ADR-0007](../../docs/decisions/0007-last-shop-rate-lookup-via-rpc.md).
+
 ---
 
 ## Table: `order_items`

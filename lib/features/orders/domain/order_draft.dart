@@ -63,15 +63,19 @@ abstract class DraftItem with _$DraftItem {
     @Default(0) int freeQty,
   }) = _DraftItem;
 
-  /// Build a draft item from a [Product] using the selling rate as the default
-  /// selling rate — called when the salesman taps a Quick Add chip.
-  factory DraftItem.fromProduct(Product p) => DraftItem(
+  /// Build a draft item from a [Product]. The selling rate defaults to the
+  /// base rate, unless [lastRate] (the rate last used for this shop, from the
+  /// "Use last shop rate" setting) differs from the current base rate — i.e.
+  /// it was edited. See business-rules.md, Step 3.
+  factory DraftItem.fromProduct(Product p, {double? lastRate}) => DraftItem(
     productId: p.id,
     itemCode: p.itemCode,
     itemName: p.itemName,
     mrp: p.mrp,
     baseRate: p.baseRate,
-    sellingRate: p.baseRate,
+    sellingRate: lastRate != null && lastRate != p.baseRate
+        ? lastRate
+        : p.baseRate,
     quantity: 1,
     gstPercent: p.gstPercent,
   );

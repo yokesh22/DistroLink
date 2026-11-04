@@ -6,6 +6,7 @@ import 'package:distro_link/features/auth/application/auth_providers.dart';
 import 'package:distro_link/features/exports/application/export_controller.dart';
 import 'package:distro_link/features/settings/application/settings_providers.dart';
 import 'package:distro_link/services/connectivity/connectivity_provider.dart';
+import 'package:distro_link/services/preferences/last_rate_preference_provider.dart';
 import 'package:distro_link/services/sync/pending_sync_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,6 +22,7 @@ class SettingsScreen extends ConsumerWidget {
     final salesmanAsync = ref.watch(currentSalesmanProvider);
     final themeMode = ref.watch(themeModeProvider);
     final isDark = themeMode == ThemeMode.dark;
+    final useLastShopRate = ref.watch(useLastShopRateProvider);
     final isOnline = ref.watch(isOnlineProvider);
     final pendingCount =
         ref.watch(pendingSyncCountProvider).asData?.value ?? 0;
@@ -168,6 +170,15 @@ class SettingsScreen extends ConsumerWidget {
                   .toggle(),
             ),
 
+            // ── Use last shop rate toggle ────────────────────────
+            _PrefRow(
+              label: 'Use last shop rate',
+              subtitle: 'Pre-fill the rate last used for this shop',
+              value: useLastShopRate,
+              onChanged: (enabled) =>
+                  _onUseLastShopRateChanged(context, ref, enabled: enabled),
+            ),
+
             // ── Other preferences (cosmetic Phase 1) ────────────
             const _PrefRow(
               label: 'Auto-fill last shop',
@@ -275,6 +286,56 @@ class SettingsScreen extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Turning the toggle on first shows a short notice; it's only enabled on OK
+/// (X / tap-outside leaves it off). Turning it off applies immediately.
+Future<void> _onUseLastShopRateChanged(
+  BuildContext context,
+  WidgetRef ref, {
+  required bool enabled,
+}) async {
+  final notifier = ref.read(useLastShopRateProvider.notifier);
+  if (!enabled) {
+    await notifier.set(enabled: false);
+    return;
+  }
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (_) => const _LastShopRateNoticeDialog(),
+  );
+  if (confirmed ?? false) await notifier.set(enabled: true);
+}
+
+class _LastShopRateNoticeDialog extends StatelessWidget {
+  const _LastShopRateNoticeDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Row(
+        children: [
+          const Expanded(child: Text('Use last shop rate')),
+          IconButton(
+            icon: const Icon(Icons.close_rounded),
+            tooltip: 'Close',
+            onPressed: () => Navigator.of(context).pop(false),
+          ),
+        ],
+      ),
+      content: const Text(
+        'When you add an item, its rate will be filled with the rate last '
+        'used for this shop, if that rate was edited. Otherwise the base '
+        'rate is used.\n\nNeeds internet. You can still change any rate.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          child: const Text('OK'),
+        ),
+      ],
     );
   }
 }

@@ -58,6 +58,14 @@ class _AddItemsScreenState extends ConsumerState<AddItemsScreen> {
           )
         : ref.watch(productsProvider);
     final lastItemsAsync = ref.watch(lastOrderItemNamesProvider);
+    // Rates last used for this shop ("Use last shop rate" setting). While
+    // loading, on error, or with the toggle off this is empty and items fall
+    // back to base rate — a rate pre-fill must never block order entry.
+    final shopId = draft.shop?.id;
+    final lastRates = shopId == null
+        ? const <String, double>{}
+        : ref.watch(shopLastRatesProvider(shopId)).asData?.value ??
+              const <String, double>{};
 
     // Fast lookup so each product row can show its current cart quantity.
     final cartById = {for (final it in draft.items) it.productId: it};
@@ -143,7 +151,12 @@ class _AddItemsScreenState extends ConsumerState<AddItemsScreen> {
                               (p) => p.itemName == name,
                               orElse: () => products.first,
                             );
-                            notifier.addItem(DraftItem.fromProduct(p));
+                            notifier.addItem(
+                              DraftItem.fromProduct(
+                                p,
+                                lastRate: lastRates[p.id],
+                              ),
+                            );
                           });
                         },
                       ),
@@ -196,7 +209,10 @@ class _AddItemsScreenState extends ConsumerState<AddItemsScreen> {
                                         ).colorScheme.primary,
                                       ),
                                       onPressed: () => notifier.addItem(
-                                        DraftItem.fromProduct(p),
+                                        DraftItem.fromProduct(
+                                          p,
+                                          lastRate: lastRates[p.id],
+                                        ),
                                       ),
                                     ),
                             );

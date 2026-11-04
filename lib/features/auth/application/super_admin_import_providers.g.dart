@@ -273,7 +273,7 @@ final class BulkImportProvider
   }
 }
 
-String _$bulkImportHash() => r'620029aac9d6a04dc9cff2aab7da56625b3963e3';
+String _$bulkImportHash() => r'e0611ed4d133d3c5fc44ee92c7c01a2e141fa69c';
 
 abstract class _$BulkImport extends $Notifier<BulkImportState> {
   BulkImportState build();
