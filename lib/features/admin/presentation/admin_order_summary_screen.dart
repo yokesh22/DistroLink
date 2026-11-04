@@ -21,14 +21,15 @@ class AdminOrderSummaryScreen extends ConsumerWidget {
   const AdminOrderSummaryScreen({
     required this.orderId,
     this.showEdit = false,
+    this.isAdminEdit = false,
     super.key,
   });
 
   final String orderId;
 
-  /// Salesman-only: shows the "Edit Order" action above the export buttons.
-  /// Admins viewing an order keep the read-only view.
+  /// Shows the Edit Order action for the owning salesman or distributor admin.
   final bool showEdit;
+  final bool isAdminEdit;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -79,6 +80,7 @@ class AdminOrderSummaryScreen extends ConsumerWidget {
           owt: owt,
           orderId: orderId,
           showEdit: showEdit,
+          isAdminEdit: isAdminEdit,
         ),
       ),
     );
@@ -90,11 +92,13 @@ class _OrderSummaryBody extends ConsumerWidget {
     required this.owt,
     required this.orderId,
     required this.showEdit,
+    required this.isAdminEdit,
   });
 
   final OrderWithItems owt;
   final String orderId;
   final bool showEdit;
+  final bool isAdminEdit;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -116,7 +120,7 @@ class _OrderSummaryBody extends ConsumerWidget {
           _TotalsSection(order: owt.order, currency: currency),
           const SizedBox(height: AppSpacing.md),
           if (showEdit) ...[
-            _EditOrderButton(owt: owt),
+            _EditOrderButton(owt: owt, isAdminEdit: isAdminEdit),
             const SizedBox(height: AppSpacing.md),
           ],
           _DeleteOrderButton(orderId: orderId),
@@ -130,9 +134,10 @@ class _OrderSummaryBody extends ConsumerWidget {
 }
 
 class _EditOrderButton extends ConsumerWidget {
-  const _EditOrderButton({required this.owt});
+  const _EditOrderButton({required this.owt, required this.isAdminEdit});
 
   final OrderWithItems owt;
+  final bool isAdminEdit;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -169,7 +174,11 @@ class _EditOrderButton extends ConsumerWidget {
           owt: owt,
           catalog: catalog,
         );
-    if (context.mounted) await context.push('/orders/new/2');
+    if (!context.mounted) return;
+    final path = isAdminEdit
+        ? '/admin/orders/${owt.order.id}/edit/2'
+        : '/orders/new/2';
+    await context.push(path);
   }
 }
 

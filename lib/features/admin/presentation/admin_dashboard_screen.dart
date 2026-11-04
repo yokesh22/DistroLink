@@ -58,8 +58,9 @@ class AdminDashboardScreen extends ConsumerWidget {
                       children: [
                         Text(
                           'Dashboard',
-                          style: theme.textTheme.headlineMedium
-                              ?.copyWith(fontWeight: FontWeight.w800),
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                         Text(
                           userAsync.asData?.value?.fullName ?? 'Admin',
@@ -71,9 +72,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                   PopupMenuButton<_AdminAction>(
                     onSelected: (action) async {
                       if (action == _AdminAction.logout) {
-                        await ref
-                            .read(authRepositoryProvider)
-                            .signOut();
+                        await ref.read(authRepositoryProvider).signOut();
                         if (context.mounted) context.go('/login');
                       }
                     },
@@ -200,6 +199,49 @@ class AdminDashboardScreen extends ConsumerWidget {
 
               const SizedBox(height: AppSpacing.md),
 
+              AppCard(
+                onTap: () => context.push('/admin/orders'),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.blueLight,
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusCard,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.receipt_long_rounded,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Orders',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            'Browse and manage distributor orders',
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.chevron_right_rounded),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: AppSpacing.md),
+
               // ── Recent Activity header + filter ───────────────────
               Row(
                 children: [
@@ -209,8 +251,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.8,
-                      color: theme.colorScheme.onSurface
-                          .withValues(alpha: 0.5),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                     ),
                   ),
                   const Spacer(),
@@ -234,8 +275,7 @@ class AdminDashboardScreen extends ConsumerWidget {
 
               // ── Activity list ─────────────────────────────────────
               activityAsync.when(
-                loading: () =>
-                    const Center(child: CircularProgressIndicator()),
+                loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, _) => Text('Failed to load activity: $e'),
                 data: (orders) => orders.isEmpty
                     ? Padding(
@@ -287,13 +327,9 @@ class _FilterButton extends ConsumerWidget {
         if (choice == _FilterChoice.custom) {
           await _showCustomRangeSheet(context, ref);
         } else if (choice == _FilterChoice.today) {
-          ref
-              .read(activityFilterProvider.notifier)
-              .setToday();
+          ref.read(activityFilterProvider.notifier).setToday();
         } else {
-          ref
-              .read(activityFilterProvider.notifier)
-              .setYesterday();
+          ref.read(activityFilterProvider.notifier).setYesterday();
         }
       },
       itemBuilder: (_) => [
@@ -374,9 +410,7 @@ class _FilterButton extends ConsumerWidget {
         initialFrom: current.from,
         initialTo: current.to,
         onApply: (from, to) {
-          ref
-              .read(activityFilterProvider.notifier)
-              .setCustom(from, to);
+          ref.read(activityFilterProvider.notifier).setCustom(from, to);
         },
       ),
     );
@@ -433,9 +467,9 @@ class _DatePill extends StatelessWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.primary,
-              fontWeight: FontWeight.w600,
-            ),
+          color: AppColors.primary,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -568,8 +602,7 @@ class _CustomRangeSheetState extends State<_CustomRangeSheet> {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.outline
-                      .withValues(alpha: 0.3),
+                  color: theme.colorScheme.outline.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -578,8 +611,9 @@ class _CustomRangeSheetState extends State<_CustomRangeSheet> {
 
             Text(
               'Custom date range',
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
@@ -591,8 +625,9 @@ class _CustomRangeSheetState extends State<_CustomRangeSheet> {
             // From date
             Text(
               'From',
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(fontWeight: FontWeight.w600),
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 4),
             _DateField(
@@ -604,8 +639,9 @@ class _CustomRangeSheetState extends State<_CustomRangeSheet> {
             // To date
             Text(
               'To',
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(fontWeight: FontWeight.w600),
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 4),
             _DateField(
@@ -723,8 +759,9 @@ class _QuickChip extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: theme.textTheme.bodySmall
-              ?.copyWith(fontWeight: FontWeight.w500),
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
     );
@@ -758,8 +795,9 @@ class _ActivityRow extends StatelessWidget {
                 children: [
                   Text(
                     order.orderNumber,
-                    style: theme.textTheme.bodyMedium
-                        ?.copyWith(fontWeight: FontWeight.w600),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   Text(
                     '${order.shopName} · ${order.salesmanName}',

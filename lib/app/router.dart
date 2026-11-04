@@ -2,6 +2,7 @@ import 'package:distro_link/core/theme/app_colors.dart';
 import 'package:distro_link/features/admin/presentation/admin_dashboard_screen.dart';
 import 'package:distro_link/features/admin/presentation/admin_export_screen.dart';
 import 'package:distro_link/features/admin/presentation/admin_order_summary_screen.dart';
+import 'package:distro_link/features/admin/presentation/admin_orders_screen.dart';
 import 'package:distro_link/features/admin/presentation/admin_settings_screen.dart';
 import 'package:distro_link/features/admin/presentation/admin_shell.dart';
 import 'package:distro_link/features/analytics/presentation/analytics_screen.dart';
@@ -149,8 +150,7 @@ GoRouter router(Ref ref) {
       GoRoute(
         path: '/settings/export',
         builder: (_, state) => ExportScreen(
-          initialFormat:
-              (state.extra as ExportFormat?) ?? ExportFormat.excel,
+          initialFormat: (state.extra as ExportFormat?) ?? ExportFormat.excel,
         ),
       ),
 
@@ -206,8 +206,7 @@ GoRouter router(Ref ref) {
       ),
       GoRoute(
         path: '/admin/areas/:id/edit',
-        builder: (_, state) =>
-            AddEditAreaScreen(area: state.extra as Area?),
+        builder: (_, state) => AddEditAreaScreen(area: state.extra as Area?),
       ),
       GoRoute(
         path: '/admin/shops/add',
@@ -215,8 +214,7 @@ GoRouter router(Ref ref) {
       ),
       GoRoute(
         path: '/admin/shops/:id/edit',
-        builder: (_, state) =>
-            AddEditShopScreen(shop: state.extra as Shop?),
+        builder: (_, state) => AddEditShopScreen(shop: state.extra as Shop?),
       ),
       GoRoute(
         path: '/admin/products/add',
@@ -228,9 +226,27 @@ GoRouter router(Ref ref) {
             AddEditProductScreen(product: state.extra as Product?),
       ),
       GoRoute(
+        path: '/admin/orders',
+        builder: (_, _) => const AdminOrdersScreen(),
+      ),
+      GoRoute(
+        path: '/admin/orders/:id/edit/1',
+        builder: (_, _) => const SelectShopScreen(isAdminEdit: true),
+      ),
+      GoRoute(
+        path: '/admin/orders/:id/edit/2',
+        builder: (_, _) => const AddItemsScreen(isAdminEdit: true),
+      ),
+      GoRoute(
+        path: '/admin/orders/:id/edit/3',
+        builder: (_, _) => const BillPreviewScreen(isAdminEdit: true),
+      ),
+      GoRoute(
         path: '/admin/orders/:id',
         builder: (_, state) => AdminOrderSummaryScreen(
           orderId: state.pathParameters['id']!,
+          showEdit: true,
+          isAdminEdit: true,
         ),
       ),
     ],
@@ -287,8 +303,8 @@ class _RouterNotifier extends ChangeNotifier {
       final reqAsync = _ref.read(mySignupRequestProvider);
       if (reqAsync.isLoading) return null;
 
-      final target = reqAsync.asData?.value?.status ==
-              SignupRequestStatus.rejected
+      final target =
+          reqAsync.asData?.value?.status == SignupRequestStatus.rejected
           ? '/account-declined'
           : '/pending-approval';
       return path == target ? null : target;
@@ -372,8 +388,7 @@ class _SalesmanShell extends ConsumerWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(msg),
-          backgroundColor:
-              count > 0 ? AppColors.accent : null,
+          backgroundColor: count > 0 ? AppColors.accent : null,
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 3),
         ),
@@ -385,8 +400,7 @@ class _SalesmanShell extends ConsumerWidget {
 
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
-    final secondary =
-        theme.colorScheme.onSurface.withValues(alpha: 0.5);
+    final secondary = theme.colorScheme.onSurface.withValues(alpha: 0.5);
 
     var currentIndex = 0;
     if (location.startsWith('/orders')) currentIndex = 1;
@@ -419,8 +433,7 @@ class _SalesmanShell extends ConsumerWidget {
           ),
           NavigationDestination(
             icon: Icon(Icons.receipt_long_outlined, color: secondary),
-            selectedIcon:
-                Icon(Icons.receipt_long_rounded, color: primary),
+            selectedIcon: Icon(Icons.receipt_long_rounded, color: primary),
             label: 'Orders',
           ),
           NavigationDestination(

@@ -9,6 +9,127 @@ part of 'admin_order_providers.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
+@ProviderFor(adminOrdersPage)
+final adminOrdersPageProvider = AdminOrdersPageFamily._();
+
+final class AdminOrdersPageProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Order>>,
+          List<Order>,
+          FutureOr<List<Order>>
+        >
+    with $FutureModifier<List<Order>>, $FutureProvider<List<Order>> {
+  AdminOrdersPageProvider._({
+    required AdminOrdersPageFamily super.from,
+    required ({
+      int page,
+      String? salesmanId,
+      DateTime? from,
+      DateTime? before,
+      String? search,
+    })
+    super.argument,
+  }) : super(
+         retry: null,
+         name: r'adminOrdersPageProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$adminOrdersPageHash();
+
+  @override
+  String toString() {
+    return r'adminOrdersPageProvider'
+        ''
+        '$argument';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<List<Order>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<Order>> create(Ref ref) {
+    final argument =
+        this.argument
+            as ({
+              int page,
+              String? salesmanId,
+              DateTime? from,
+              DateTime? before,
+              String? search,
+            });
+    return adminOrdersPage(
+      ref,
+      page: argument.page,
+      salesmanId: argument.salesmanId,
+      from: argument.from,
+      before: argument.before,
+      search: argument.search,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is AdminOrdersPageProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$adminOrdersPageHash() => r'b05306adcf96155e0fd077246dd38f10195c7eb5';
+
+final class AdminOrdersPageFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<List<Order>>,
+          ({
+            int page,
+            String? salesmanId,
+            DateTime? from,
+            DateTime? before,
+            String? search,
+          })
+        > {
+  AdminOrdersPageFamily._()
+    : super(
+        retry: null,
+        name: r'adminOrdersPageProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  AdminOrdersPageProvider call({
+    required int page,
+    String? salesmanId,
+    DateTime? from,
+    DateTime? before,
+    String? search,
+  }) => AdminOrdersPageProvider._(
+    argument: (
+      page: page,
+      salesmanId: salesmanId,
+      from: from,
+      before: before,
+      search: search,
+    ),
+    from: this,
+  );
+
+  @override
+  String toString() => r'adminOrdersPageProvider';
+}
+
 @ProviderFor(adminOrderDetail)
 final adminOrderDetailProvider = AdminOrderDetailFamily._();
 

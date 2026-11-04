@@ -13,7 +13,12 @@ Encode these in code (with a short comment pointing here for any non-obvious one
 | Create orders | — | — | ✓ |
 | View own orders | n/a | n/a | ✓ |
 | View all orders (within distributor) | ✓ | ✓ | — |
+| Edit orders (within distributor) | ✓ | own only | — |
 | Excel export | ✓ | ✓ | — |
+
+Distributor admins may edit any order in their distributor. Salesmen may edit
+only their own orders. Editing preserves the original `salesman_id` and
+`distributor_id`; the UI, repository, and RLS enforce this boundary.
 
 > **Salesmen cannot create salesmen.** This is a hard rule; the UI must not surface that CTA to salesmen, and the repository layer must reject if it ever happens (defence in depth).
 >

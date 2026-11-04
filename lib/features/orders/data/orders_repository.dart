@@ -65,9 +65,11 @@ class OrdersRepository {
 
       final itemsRaw = (r['order_items'] as List<dynamic>?) ?? [];
       final items = itemsRaw
-          .map((dynamic i) => OrderItem.fromJson(
-                Map<String, dynamic>.from(i as Map),
-              ))
+          .map(
+            (dynamic i) => OrderItem.fromJson(
+              Map<String, dynamic>.from(i as Map),
+            ),
+          )
           .toList();
 
       return OrderWithItems(
@@ -140,12 +142,42 @@ class OrdersRepository {
     return rows.map((dynamic row) {
       final r = row as Map<String, dynamic>;
       final flat = Map<String, dynamic>.from(r);
-      final shop =
-          (r['shops'] as Map<String, dynamic>?) ?? <String, dynamic>{};
+      final shop = (r['shops'] as Map<String, dynamic>?) ?? <String, dynamic>{};
       flat['shop_name'] = shop['shop_name'];
       flat['shop_number'] = shop['shop_number'];
       return Order.fromJson(flat);
     }).toList();
+  }
+
+  Future<List<Order>> listForDistributor({
+    required String distributorId,
+    required int page,
+    required String? salesmanId,
+    required DateTime? from,
+    required DateTime? before,
+    required String? search,
+    int pageSize = 26,
+  }) async {
+    final rows = await _client.rpc<List<dynamic>>(
+      'list_distributor_orders',
+      params: {
+        'p_distributor_id': distributorId,
+        'p_salesman_id': salesmanId,
+        'p_from': from == null ? null : _dateStr(from),
+        'p_before': before == null ? null : _dateStr(before),
+        'p_search': search?.trim().isEmpty ?? true ? null : search!.trim(),
+        'p_limit': pageSize,
+        'p_offset': page * (pageSize - 1),
+      },
+    );
+
+    return rows
+        .map(
+          (dynamic row) => Order.fromJson(
+            Map<String, dynamic>.from(row as Map),
+          ),
+        )
+        .toList();
   }
 
   Future<SalesmanStats> salesmanStats(String salesmanId) async {
@@ -166,8 +198,7 @@ class OrdersRepository {
           s + ((r as Map<String, dynamic>)['grand_total'] as num).toDouble(),
     );
     final shopsVisited = rows
-        .map((dynamic r) =>
-            (r as Map<String, dynamic>)['shop_id'] as String)
+        .map((dynamic r) => (r as Map<String, dynamic>)['shop_id'] as String)
         .toSet()
         .length;
 
@@ -205,11 +236,9 @@ class OrdersRepository {
           s + ((r as Map<String, dynamic>)['grand_total'] as num).toDouble(),
     );
     final orderCount = rows.length;
-    final avgOrderValue =
-        orderCount > 0 ? totalRevenue / orderCount : 0.0;
+    final avgOrderValue = orderCount > 0 ? totalRevenue / orderCount : 0.0;
     final shopsVisited = rows
-        .map((dynamic r) =>
-            (r as Map<String, dynamic>)['shop_id'] as String)
+        .map((dynamic r) => (r as Map<String, dynamic>)['shop_id'] as String)
         .toSet()
         .length;
 
@@ -253,8 +282,7 @@ class OrdersRepository {
         ..revenue += (r['line_total'] as num).toDouble();
     }
 
-    return (map.values.toList()
-          ..sort((a, b) => b.revenue.compareTo(a.revenue)))
+    return (map.values.toList()..sort((a, b) => b.revenue.compareTo(a.revenue)))
         .take(limit)
         .map(
           (a) => TopProduct(
@@ -287,8 +315,7 @@ class OrdersRepository {
 
     return items
         .map(
-          (dynamic r) =>
-              (r as Map<String, dynamic>)['item_name'] as String,
+          (dynamic r) => (r as Map<String, dynamic>)['item_name'] as String,
         )
         .toList();
   }
@@ -313,8 +340,7 @@ class OrdersRepository {
   List<OutboxOrder> pendingOutboxOrders() => _hive.outboxBox.values
       .where(
         (dynamic m) =>
-            (m as Map<dynamic, dynamic>)['status'] ==
-            OutboxStatus.pending.name,
+            (m as Map<dynamic, dynamic>)['status'] == OutboxStatus.pending.name,
       )
       .map(_toOutboxOrder)
       .toList();
@@ -392,7 +418,9 @@ class OrdersRepository {
 
     await _client.from('order_items').delete().eq('order_id', orderId);
 
-    await _client.from('order_items').insert(
+    await _client
+        .from('order_items')
+        .insert(
           draft.items
               .map(
                 (item) => <String, dynamic>{
@@ -450,7 +478,9 @@ class OrdersRepository {
           .single();
 
       final orderId = orderRow['id'] as String;
-      await _client.from('order_items').insert(
+      await _client
+          .from('order_items')
+          .insert(
             entry.items
                 .map(
                   (item) => <String, dynamic>{
@@ -514,7 +544,9 @@ class OrdersRepository {
         .single();
 
     final orderId = orderRow['id'] as String;
-    await _client.from('order_items').insert(
+    await _client
+        .from('order_items')
+        .insert(
           draft.items
               .map(
                 (item) => <String, dynamic>{
@@ -583,8 +615,7 @@ class OrdersRepository {
   int _pendingCount() => _hive.outboxBox.values
       .where(
         (dynamic m) =>
-            (m as Map<dynamic, dynamic>)['status'] ==
-            OutboxStatus.pending.name,
+            (m as Map<dynamic, dynamic>)['status'] == OutboxStatus.pending.name,
       )
       .length;
 
@@ -603,8 +634,7 @@ class OrdersRepository {
     return 'ORD-$date-$suffix';
   }
 
-  String _dateStr(DateTime d) =>
-      '${d.year}-${_pad(d.month)}-${_pad(d.day)}';
+  String _dateStr(DateTime d) => '${d.year}-${_pad(d.month)}-${_pad(d.day)}';
 
   String _pad(int n) => n.toString().padLeft(2, '0');
 }

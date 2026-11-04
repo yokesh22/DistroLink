@@ -14,11 +14,12 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class SelectShopScreen extends ConsumerStatefulWidget {
-  const SelectShopScreen({super.key});
+  const SelectShopScreen({this.isAdminEdit = false, super.key});
+
+  final bool isAdminEdit;
 
   @override
-  ConsumerState<SelectShopScreen> createState() =>
-      _SelectShopScreenState();
+  ConsumerState<SelectShopScreen> createState() => _SelectShopScreenState();
 }
 
 class _SelectShopScreenState extends ConsumerState<SelectShopScreen> {
@@ -34,7 +35,10 @@ class _SelectShopScreenState extends ConsumerState<SelectShopScreen> {
   @override
   void initState() {
     super.initState();
-    _orderDate = ref.read(orderDraftProvider).orderDate ?? DateTime.now();
+    final draft = ref.read(orderDraftProvider);
+    _selectedAreaId = draft.area?.id;
+    _selectedShop = draft.shop;
+    _orderDate = draft.orderDate ?? DateTime.now();
   }
 
   @override
@@ -45,10 +49,11 @@ class _SelectShopScreenState extends ConsumerState<SelectShopScreen> {
 
   Future<void> _pickOrderDate() async {
     final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
     final picked = await showDatePicker(
       context: context,
       initialDate: _orderDate,
-      firstDate: DateTime(now.year, now.month, now.day),
+      firstDate: _orderDate.isBefore(today) ? _orderDate : today,
       lastDate: now.add(const Duration(days: 30)),
     );
     if (picked != null) setState(() => _orderDate = picked);
@@ -57,256 +62,265 @@ class _SelectShopScreenState extends ConsumerState<SelectShopScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final draft = ref.watch(orderDraftProvider);
     final areasAsync = ref.watch(areasProvider);
-    final shopsAsync = _selectedAreaId != null
-        ? ref.watch(shopsByAreaProvider(_selectedAreaId!))
+    final recentOrdersAsync = ref.watch(recentOrdersProvider);
+    final areas = areasAsync.asData?.value;
+    final lastOrderAreaId = draft.editingOrderId == null && draft.area == null
+        ? recentOrdersAsync.asData?.value.firstOrNull?.areaId
+        : null;
+    final prefilledAreaId =
+        areas?.any((area) => area.id == lastOrderAreaId) == true
+        ? lastOrderAreaId
+        : null;
+    final selectedAreaId = _selectedAreaId ?? prefilledAreaId;
+    final shopsAsync = selectedAreaId != null
+        ? ref.watch(shopsByAreaProvider(selectedAreaId))
         : null;
     final recentAsync = ref.watch(recentShopsProvider);
 
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (_, _) => context.go('/home'),
+      onPopInvokedWithResult: (_, _) => context.go(_exitPath()),
       child: Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.go('/home'),
-        ),
-        title: const Text('New Order'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Center(
-              child: Text(
-                '1 of 3',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface
-                      .withValues(alpha: 0.5),
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_rounded),
+            onPressed: () => context.go(_exitPath()),
+          ),
+          title: Text(
+            draft.editingOrderId == null ? 'New Order' : 'Edit Order',
+          ),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: Center(
+                child: Text(
+                  '1 of 3',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          const AppStepIndicator(currentStep: 1, total: 3),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.screenPadding,
-                4,
-                AppSpacing.screenPadding,
-                AppSpacing.screenPadding,
-              ),
-              children: [
-                // ── Order date / time ─────────────────────────────
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: _OrderDateField(
-                        date: _orderDate,
-                        onChange: _pickOrderDate,
+          ],
+        ),
+        body: Column(
+          children: [
+            const AppStepIndicator(currentStep: 1, total: 3),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.screenPadding,
+                  4,
+                  AppSpacing.screenPadding,
+                  AppSpacing.screenPadding,
+                ),
+                children: [
+                  // ── Order date / time ─────────────────────────────
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: _OrderDateField(
+                          date: _orderDate,
+                          onChange: _pickOrderDate,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: _OrderTimeField(time: DateTime.now()),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+
+                  Text(
+                    'Select Shop',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+
+                  // ── Area dropdown ─────────────────────────────────
+                  areasAsync.when(
+                    data: (areas) => _AreaDropdown(
+                      key: ValueKey(selectedAreaId),
+                      areas: areas,
+                      value: selectedAreaId,
+                      onChanged: (areaId) => setState(() {
+                        debugPrint('Selected areaId: $areaId');
+                        _selectedAreaId = areaId;
+                        _selectedShop = null;
+                      }),
+                    ),
+                    loading: () => const LinearProgressIndicator(),
+                    error: (e, _) => Text('Error loading areas: $e'),
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.xs),
+                    decoration: BoxDecoration(
+                      color: AppColors.orangeLight,
+                      borderRadius: BorderRadius.circular(
+                        AppSpacing.radiusCard,
+                      ),
+                      border: Border.all(
+                        color: const Color(0xFFFDE68A),
                       ),
                     ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: _OrderTimeField(time: DateTime.now()),
+                    child: const Text(
+                      '💡 Areas are set by admin. '
+                      'Selecting area filters shop list.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF92400E),
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.md),
-
-                Text(
-                  'Select Shop',
-                  style: theme.textTheme.headlineSmall
-                      ?.copyWith(fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-
-                // ── Area dropdown ─────────────────────────────────
-                areasAsync.when(
-                  data: (areas) => _AreaDropdown(
-                    areas: areas,
-                    value: _selectedAreaId,
-                    onChanged: (areaId) =>
-                        setState(() {
-                          debugPrint('Selected areaId: $areaId');
-                          _selectedAreaId = areaId;
-                          _selectedShop = null;
-                        }),
-                  ),
-                  loading: () =>
-                      const LinearProgressIndicator(),
-                  error: (e, _) =>
-                      Text('Error loading areas: $e'),
-                ),
-                const SizedBox(height: 6),
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.xs),
-                  decoration: BoxDecoration(
-                    color: AppColors.orangeLight,
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.radiusCard),
-                    border: Border.all(
-                      color: const Color(0xFFFDE68A),
-                    ),
-                  ),
-                  child: const Text(
-                    '💡 Areas are set by admin. '
-                    'Selecting area filters shop list.',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF92400E),
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-
-                // ── Shop search ───────────────────────────────────
-                if (_selectedAreaId != null) ...[
-                  const _InputLabel('Select Shop'),
-                  const SizedBox(height: 6),
-                  TextField(
-                    controller: _searchCtrl,
-                    decoration: const InputDecoration(
-                      hintText: 'Search by name or number…',
-                      prefixIcon:
-                          Icon(Icons.search_rounded, size: 20),
-                    ),
-                    onChanged: (_) => setState(() {}),
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  AppButton(
-                    label: 'Add New Shop',
-                    variant: AppButtonVariant.secondary,
-                    icon: Icons.add_business_rounded,
-                    onPressed: () => _addNewShop(areasAsync),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  if (shopsAsync != null)
-                    shopsAsync.when(
-                      data: (shops) {
-                        final q =
-                            _searchCtrl.text.trim().toLowerCase();
-                        final filtered = q.isEmpty
-                            ? shops
-                            : shops
-                                .where(
-                                  (s) =>
-                                      s.shopName
-                                          .toLowerCase()
-                                          .contains(q) ||
-                                      (s.shopNumber ?? '')
-                                          .toLowerCase()
-                                          .contains(q),
-                                )
-                                .toList();
-                        debugPrint(
-                          'UI shops for area $_selectedAreaId -> '
-                          'total: ${shops.length}, '
-                          'filtered: ${filtered.length}, query: "$q"',
-                        );
-                        if (shops.isEmpty) {
-                          return Text(
-                            'No shops found for this area.',
-                            style: theme.textTheme.bodyMedium,
-                          );
-                        }
-                        if (filtered.isEmpty) {
-                          return Text(
-                            'No shops match "$q".',
-                            style: theme.textTheme.bodyMedium,
-                          );
-                        }
-                        return Column(
-                          children: filtered
-                              .map(
-                                (s) => _ShopTile(
-                                  shop: s,
-                                  selected:
-                                      _selectedShop?.id == s.id,
-                                  onTap: () =>
-                                      setState(
-                                        () => _selectedShop = s,
-                                      ),
-                                ),
-                              )
-                              .toList(),
-                        );
-                      },
-                      loading: () =>
-                          const LinearProgressIndicator(),
-                      error: (e, _) =>
-                          Text('Error loading shops: $e'),
+
+                  // ── Shop search ───────────────────────────────────
+                  if (selectedAreaId != null) ...[
+                    const _InputLabel('Select Shop'),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: _searchCtrl,
+                      decoration: const InputDecoration(
+                        hintText: 'Search by name or number…',
+                        prefixIcon: Icon(Icons.search_rounded, size: 20),
+                      ),
+                      onChanged: (_) => setState(() {}),
                     ),
-                ] else ...[
-                  // ── Recent shops ───────────────────────────────
-                  const _InputLabel('Recent Shops'),
-                  const SizedBox(height: AppSpacing.xs),
-                  recentAsync.when(
-                    data: (shops) => shops.isEmpty
-                        ? const Text('No recent shops yet.')
-                        : Column(
-                            children: shops
+                    const SizedBox(height: AppSpacing.sm),
+                    AppButton(
+                      label: 'Add New Shop',
+                      variant: AppButtonVariant.secondary,
+                      icon: Icons.add_business_rounded,
+                      onPressed: () => _addNewShop(areasAsync, selectedAreaId),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    if (shopsAsync != null)
+                      shopsAsync.when(
+                        data: (shops) {
+                          final q = _searchCtrl.text.trim().toLowerCase();
+                          final filtered = q.isEmpty
+                              ? shops
+                              : shops
+                                    .where(
+                                      (s) =>
+                                          s.shopName.toLowerCase().contains(
+                                            q,
+                                          ) ||
+                                          (s.shopNumber ?? '')
+                                              .toLowerCase()
+                                              .contains(q),
+                                    )
+                                    .toList();
+                          debugPrint(
+                            'UI shops for area $selectedAreaId -> '
+                            'total: ${shops.length}, '
+                            'filtered: ${filtered.length}, query: "$q"',
+                          );
+                          if (shops.isEmpty) {
+                            return Text(
+                              'No shops found for this area.',
+                              style: theme.textTheme.bodyMedium,
+                            );
+                          }
+                          if (filtered.isEmpty) {
+                            return Text(
+                              'No shops match "$q".',
+                              style: theme.textTheme.bodyMedium,
+                            );
+                          }
+                          return Column(
+                            children: filtered
                                 .map(
                                   (s) => _ShopTile(
                                     shop: s,
-                                    selected:
-                                        _selectedShop?.id == s.id,
+                                    selected: _selectedShop?.id == s.id,
                                     onTap: () => setState(
-                                      () {
-                                        _selectedShop = s;
-                                      },
+                                      () => _selectedShop = s,
                                     ),
                                   ),
                                 )
                                 .toList(),
-                          ),
-                    loading: () =>
-                        const LinearProgressIndicator(),
-                    error: (e, _) =>
-                        Text('Error loading recent shops: $e'),
-                  ),
-                ],
+                          );
+                        },
+                        loading: () => const LinearProgressIndicator(),
+                        error: (e, _) => Text('Error loading shops: $e'),
+                      ),
+                  ] else ...[
+                    // ── Recent shops ───────────────────────────────
+                    const _InputLabel('Recent Shops'),
+                    const SizedBox(height: AppSpacing.xs),
+                    recentAsync.when(
+                      data: (shops) => shops.isEmpty
+                          ? const Text('No recent shops yet.')
+                          : Column(
+                              children: shops
+                                  .map(
+                                    (s) => _ShopTile(
+                                      shop: s,
+                                      selected: _selectedShop?.id == s.id,
+                                      onTap: () => setState(
+                                        () {
+                                          _selectedShop = s;
+                                        },
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
+                      loading: () => const LinearProgressIndicator(),
+                      error: (e, _) => Text('Error loading recent shops: $e'),
+                    ),
+                  ],
 
-                const SizedBox(height: AppSpacing.md),
-              ],
+                  const SizedBox(height: AppSpacing.md),
+                ],
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.screenPadding),
-            child: AppButton(
-              label: 'Next: Order Details →',
-              onPressed: _selectedShop != null
-                  ? () {
-                      final selectedArea = _resolveSelectedArea(areasAsync);
-                      if (selectedArea == null) return;
-                      ref.read(orderDraftProvider.notifier)
-                        ..setOrderDate(_orderDate)
-                        ..selectShop(
-                          area: selectedArea,
-                          shop: _selectedShop!,
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.screenPadding),
+              child: AppButton(
+                label: 'Next: Order Details →',
+                onPressed: _selectedShop != null
+                    ? () {
+                        final selectedArea = _resolveSelectedArea(
+                          areasAsync,
+                          selectedAreaId,
                         );
-                      context.go('/orders/new/2');
-                    }
-                  : null,
+                        if (selectedArea == null) return;
+                        ref.read(orderDraftProvider.notifier)
+                          ..setOrderDate(_orderDate)
+                          ..selectShop(
+                            area: selectedArea,
+                            shop: _selectedShop!,
+                          );
+                        context.go(_stepPath(2));
+                      }
+                    : null,
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
 
-  Area? _resolveSelectedArea(AsyncValue<List<Area>> areasAsync) {
+  Area? _resolveSelectedArea(
+    AsyncValue<List<Area>> areasAsync,
+    String? selectedAreaId,
+  ) {
     final areas = areasAsync.asData?.value;
     if (areas == null || areas.isEmpty) return null;
 
     // If user selected from "Recent Shops", infer area by shop.areaId.
-    final targetAreaId = _selectedAreaId ?? _selectedShop?.areaId;
+    final targetAreaId = selectedAreaId ?? _selectedShop?.areaId;
     if (targetAreaId == null) return null;
 
     for (final area in areas) {
@@ -315,8 +329,27 @@ class _SelectShopScreenState extends ConsumerState<SelectShopScreen> {
     return null;
   }
 
-  Future<void> _addNewShop(AsyncValue<List<Area>> areasAsync) async {
-    final area = _resolveSelectedArea(areasAsync);
+  String _stepPath(int step) {
+    final orderId = ref.read(orderDraftProvider).editingOrderId;
+    if (widget.isAdminEdit && orderId != null) {
+      return '/admin/orders/$orderId/edit/$step';
+    }
+    return '/orders/new/$step';
+  }
+
+  String _exitPath() {
+    final orderId = ref.read(orderDraftProvider).editingOrderId;
+    if (orderId == null) {
+      return widget.isAdminEdit ? '/admin/dashboard' : '/home';
+    }
+    return widget.isAdminEdit ? '/admin/orders/$orderId' : '/orders/$orderId';
+  }
+
+  Future<void> _addNewShop(
+    AsyncValue<List<Area>> areasAsync,
+    String? selectedAreaId,
+  ) async {
+    final area = _resolveSelectedArea(areasAsync, selectedAreaId);
     if (area == null) return;
     final created = await AddShopSheet.show(context, area: area);
     // The shop list refreshes automatically via the provider invalidation in
@@ -329,6 +362,7 @@ class _SelectShopScreenState extends ConsumerState<SelectShopScreen> {
 
 class _AreaDropdown extends StatelessWidget {
   const _AreaDropdown({
+    super.key,
     required this.areas,
     required this.value,
     required this.onChanged,
@@ -372,13 +406,11 @@ class _AreaDropdown extends StatelessWidget {
             color: theme.colorScheme.onSurface,
           ),
           menuStyle: MenuStyle(
-            backgroundColor:
-                WidgetStatePropertyAll(theme.colorScheme.surface),
+            backgroundColor: WidgetStatePropertyAll(theme.colorScheme.surface),
             elevation: const WidgetStatePropertyAll(3),
             shape: WidgetStatePropertyAll(
               RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(AppSpacing.radiusCard),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
                 side: BorderSide(color: theme.colorScheme.outline),
               ),
             ),
@@ -441,8 +473,9 @@ class _ShopTile extends StatelessWidget {
                 children: [
                   Text(
                     shop.shopName,
-                    style: Theme.of(context).textTheme.bodyMedium
-                        ?.copyWith(fontWeight: FontWeight.w600),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   Text(
                     (shop.shopNumber?.isNotEmpty ?? false)
@@ -462,10 +495,9 @@ class _ShopTile extends StatelessWidget {
               size: 18,
               color: selected
                   ? AppColors.accent
-                  : Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.3),
+                  : Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.3),
             ),
           ],
         ),
@@ -499,8 +531,9 @@ class _OrderDateField extends StatelessWidget {
                 Flexible(
                   child: Text(
                     DateFormat('dd MMM yyyy').format(date),
-                    style: theme.textTheme.bodyMedium
-                        ?.copyWith(fontWeight: FontWeight.w600),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -542,8 +575,9 @@ class _OrderTimeField extends StatelessWidget {
               Flexible(
                 child: Text(
                   DateFormat('hh:mm a').format(time),
-                  style: theme.textTheme.bodyMedium
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -584,14 +618,11 @@ class _InputLabel extends StatelessWidget {
     return Text(
       text.toUpperCase(),
       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.8,
-            color: Theme.of(context)
-                .colorScheme
-                .onSurface
-                .withValues(alpha: 0.5),
-          ),
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.8,
+        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+      ),
     );
   }
 }

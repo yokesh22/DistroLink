@@ -6,6 +6,7 @@ import 'package:distro_link/core/utils/money.dart';
 import 'package:distro_link/core/widgets/app_button.dart';
 import 'package:distro_link/core/widgets/app_card.dart';
 import 'package:distro_link/core/widgets/app_step_indicator.dart';
+import 'package:distro_link/features/admin/application/admin_dashboard_providers.dart';
 import 'package:distro_link/features/admin/application/admin_order_providers.dart';
 import 'package:distro_link/features/auth/application/auth_providers.dart';
 import 'package:distro_link/features/orders/application/order_providers.dart';
@@ -19,28 +20,21 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class BillPreviewScreen extends ConsumerStatefulWidget {
-  const BillPreviewScreen({super.key});
+  const BillPreviewScreen({this.isAdminEdit = false, super.key});
+
+  final bool isAdminEdit;
 
   @override
-  ConsumerState<BillPreviewScreen> createState() =>
-      _BillPreviewScreenState();
+  ConsumerState<BillPreviewScreen> createState() => _BillPreviewScreenState();
 }
 
-class _BillPreviewScreenState
-    extends ConsumerState<BillPreviewScreen> {
+class _BillPreviewScreenState extends ConsumerState<BillPreviewScreen> {
   bool _submitting = false;
 
   Future<void> _confirm() async {
     setState(() => _submitting = true);
     try {
       final draft = ref.read(orderDraftProvider);
-      final user = await ref.read(currentAppUserProvider.future);
-      final salesman = await ref.read(currentSalesmanProvider.future);
-
-      if (user == null || salesman == null) {
-        throw Exception('Not authenticated');
-      }
-
       final isOnline = ref.read(isOnlineProvider);
       final repo = await ref.read(ordersRepositoryProvider.future);
       final editingOrderId = draft.editingOrderId;
@@ -49,6 +43,11 @@ class _BillPreviewScreenState
       if (isEditing) {
         await repo.updateOrder(orderId: editingOrderId, draft: draft);
       } else {
+        final user = await ref.read(currentAppUserProvider.future);
+        final salesman = await ref.read(currentSalesmanProvider.future);
+        if (user == null || salesman == null) {
+          throw Exception('Not authenticated');
+        }
         await repo.submit(
           draft: draft,
           salesmanId: salesman.id,
@@ -63,22 +62,29 @@ class _BillPreviewScreenState
         ..invalidate(recentShopsProvider)
         ..invalidate(pendingSyncCountProvider);
       if (isEditing) {
-        ref.invalidate(adminOrderDetailProvider(editingOrderId));
+        ref
+          ..invalidate(adminOrderDetailProvider(editingOrderId))
+          ..invalidate(adminOrdersPageProvider)
+          ..invalidate(adminRecentActivityProvider)
+          ..invalidate(adminDashboardKpisProvider);
       }
 
       if (mounted) {
         final message = isEditing
             ? 'Order updated successfully!'
             : isOnline
-                ? 'Order saved successfully!'
-                : 'Saved offline — will sync when connected';
+            ? 'Order saved successfully!'
+            : 'Saved offline — will sync when connected';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
         // For an edit, return to the (refreshed) order summary but rebuild the
         // stack so Home sits underneath — otherwise `go` leaves the summary as
         // the only route and the back gesture exits the app.
-        if (isEditing) {
+        if (isEditing && widget.isAdminEdit) {
+          context.go('/admin/dashboard');
+          unawaited(context.push('/admin/orders/$editingOrderId'));
+        } else if (isEditing) {
           context.go('/home');
           unawaited(context.push('/orders/$editingOrderId'));
         } else {
@@ -104,201 +110,208 @@ class _BillPreviewScreenState
 
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (_, _) => context.go('/orders/new/2'),
+      onPopInvokedWithResult: (_, _) => context.go(_stepPath(2)),
       child: Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.go('/orders/new/2'),
-        ),
-        title: const Text('Bill Preview'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Center(
-              child: Text(
-                '3 of 3',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface
-                      .withValues(alpha: 0.5),
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_rounded),
+            onPressed: () => context.go(_stepPath(2)),
+          ),
+          title: const Text('Bill Preview'),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: Center(
+                child: Text(
+                  '3 of 3',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          const AppStepIndicator(currentStep: 3, total: 3),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(AppSpacing.screenPadding),
-              children: [
-                // ── Order header ──────────────────────────────────
-                AppCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'ORDER FOR',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.5),
-                          letterSpacing: 0.5,
+          ],
+        ),
+        body: Column(
+          children: [
+            const AppStepIndicator(currentStep: 3, total: 3),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(AppSpacing.screenPadding),
+                children: [
+                  // ── Order header ──────────────────────────────────
+                  AppCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'ORDER FOR',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.5,
+                            ),
+                            letterSpacing: 0.5,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        draft.shop?.shopName ?? '—',
-                        style: theme.textTheme.titleLarge
-                            ?.copyWith(fontWeight: FontWeight.w700),
-                      ),
-                      Text(
-                        '${draft.shop?.shopNumber ?? ''} · '
-                        '${draft.area?.name ?? ''} · '
-                        '${fmt.format(DateTime.now())}',
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                    ],
+                        const SizedBox(height: 2),
+                        Text(
+                          draft.shop?.shopName ?? '—',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Text(
+                          '${draft.shop?.shopNumber ?? ''} · '
+                          '${draft.area?.name ?? ''} · '
+                          '${fmt.format(draft.orderDate ?? DateTime.now())}',
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
+                  const SizedBox(height: AppSpacing.sm),
 
-                // ── Column headers ────────────────────────────────
-                Text(
-                  'ITEMS',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.8,
-                    color: theme.colorScheme.onSurface
-                        .withValues(alpha: 0.5),
+                  // ── Column headers ────────────────────────────────
+                  Text(
+                    'ITEMS',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.8,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                const _TableHeader(),
-                ...draft.items.map((item) => _ItemLine(item: item)),
+                  const SizedBox(height: AppSpacing.xs),
+                  const _TableHeader(),
+                  ...draft.items.map((item) => _ItemLine(item: item)),
 
-                const Divider(height: AppSpacing.md),
+                  const Divider(height: AppSpacing.md),
 
-                // ── Totals ────────────────────────────────────────
-                _TotalRow(
-                  label: 'Subtotal',
-                  value: formatMoney(
-                    draft.discountTotal > 0
-                        ? draft.grossSubtotal
-                        : draft.subtotal,
-                  ),
-                ),
-                if (draft.discountTotal > 0)
+                  // ── Totals ────────────────────────────────────────
                   _TotalRow(
-                    label: 'Discount',
-                    value: '−${formatMoney(draft.discountTotal)}',
+                    label: 'Subtotal',
+                    value: formatMoney(
+                      draft.discountTotal > 0
+                          ? draft.grossSubtotal
+                          : draft.subtotal,
+                    ),
                   ),
-                ..._buildGstRows(draft),
-                const SizedBox(height: AppSpacing.sm),
+                  if (draft.discountTotal > 0)
+                    _TotalRow(
+                      label: 'Discount',
+                      value: '−${formatMoney(draft.discountTotal)}',
+                    ),
+                  ..._buildGstRows(draft),
+                  const SizedBox(height: AppSpacing.sm),
 
-                // ── Grand total ───────────────────────────────────
-                Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.radiusCard),
+                  // ── Grand total ───────────────────────────────────
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary,
+                      borderRadius: BorderRadius.circular(
+                        AppSpacing.radiusCard,
+                      ),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.sm,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'TOTAL',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Text(
+                          formatMoney(draft.grandTotal),
+                          style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm,
-                    vertical: AppSpacing.sm,
+                  const SizedBox(height: AppSpacing.sm),
+
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.xs),
+                    decoration: BoxDecoration(
+                      color: AppColors.orangeLight,
+                      borderRadius: BorderRadius.circular(
+                        AppSpacing.radiusCard,
+                      ),
+                      border: Border.all(color: const Color(0xFFFDE68A)),
+                    ),
+                    child: const Text(
+                      '💡 Order saved locally if offline. '
+                      'Syncs automatically when internet returns.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF92400E),
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
                   ),
-                  child: Row(
-                    mainAxisAlignment:
-                        MainAxisAlignment.spaceBetween,
+                ],
+              ),
+            ),
+
+            // ── Action buttons ────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.screenPadding),
+              child: Column(
+                children: [
+                  AppButton(
+                    label: draft.editingOrderId != null
+                        ? '✓ Update Order'
+                        : '✓ Confirm & Save Order',
+                    loading: _submitting,
+                    onPressed: _confirm,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Row(
                     children: [
-                      const Text(
-                        'TOTAL',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                      Expanded(
+                        child: AppButton(
+                          label: '← Edit Items',
+                          variant: AppButtonVariant.secondary,
+                          onPressed: () => context.go(_stepPath(2)),
                         ),
                       ),
-                      Text(
-                        formatMoney(draft.grandTotal),
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
+                      const SizedBox(width: 10),
+                      const Expanded(
+                        child: AppButton(
+                          label: '📤 WhatsApp',
+                          variant: AppButtonVariant.secondary,
+                          onPressed: null, // Phase 5
                         ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.xs),
-                  decoration: BoxDecoration(
-                    color: AppColors.orangeLight,
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.radiusCard),
-                    border: Border.all(
-                        color: const Color(0xFFFDE68A)),
-                  ),
-                  child: const Text(
-                    '💡 Order saved locally if offline. '
-                    'Syncs automatically when internet returns.',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF92400E),
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-
-          // ── Action buttons ────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.screenPadding),
-            child: Column(
-              children: [
-                AppButton(
-                  label: draft.editingOrderId != null
-                      ? '✓ Update Order'
-                      : '✓ Confirm & Save Order',
-                  loading: _submitting,
-                  onPressed: _confirm,
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Row(
-                  children: [
-                    Expanded(
-                      child: AppButton(
-                        label: '← Edit Items',
-                        variant: AppButtonVariant.secondary,
-                        onPressed: () =>
-                            context.go('/orders/new/2'),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    const Expanded(
-                      child: AppButton(
-                        label: '📤 WhatsApp',
-                        variant: AppButtonVariant.secondary,
-                        onPressed: null, // Phase 5
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
+  }
+
+  String _stepPath(int step) {
+    final orderId = ref.read(orderDraftProvider).editingOrderId;
+    if (widget.isAdminEdit && orderId != null) {
+      return '/admin/orders/$orderId/edit/$step';
+    }
+    return '/orders/new/$step';
   }
 
   List<Widget> _buildGstRows(OrderDraftState draft) {
@@ -330,10 +343,9 @@ class _TableHeader extends StatelessWidget {
       fontWeight: FontWeight.w700,
       letterSpacing: 0.4,
     );
-    final color = Theme.of(context)
-        .colorScheme
-        .onSurface
-        .withValues(alpha: 0.5);
+    final color = Theme.of(
+      context,
+    ).colorScheme.onSurface.withValues(alpha: 0.5);
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
@@ -393,16 +405,18 @@ class _ItemLine extends StatelessWidget {
               Expanded(
                 child: Text(
                   item.itemName,
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               SizedBox(
                 width: 36,
                 child: Text(
                   '${item.quantity}',
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                   textAlign: TextAlign.right,
                 ),
               ),
@@ -411,8 +425,9 @@ class _ItemLine extends StatelessWidget {
                 width: 60,
                 child: Text(
                   formatMoney(item.sellingRate),
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                   textAlign: TextAlign.right,
                 ),
               ),
@@ -421,8 +436,9 @@ class _ItemLine extends StatelessWidget {
                 width: 64,
                 child: Text(
                   formatMoney(item.lineTotal),
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(fontWeight: FontWeight.w700),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                   textAlign: TextAlign.right,
                 ),
               ),
@@ -438,16 +454,12 @@ class _ItemLine extends StatelessWidget {
                 [
                   if (item.discountPercent > 0)
                     'Disc ${item.discountPercent.toStringAsFixed(
-                      item.discountPercent ==
-                              item.discountPercent.truncateToDouble()
-                          ? 0
-                          : 2,
+                      item.discountPercent == item.discountPercent.truncateToDouble() ? 0 : 2,
                     )}% −${formatMoney(item.discountAmount)}',
                   if (item.freeQty > 0) 'Free: ${item.freeQty}',
                 ].join(' · '),
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface
-                      .withValues(alpha: 0.5),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                 ),
               ),
             ),
@@ -462,8 +474,7 @@ class _ItemLine extends StatelessWidget {
                 'CGST ${formatMoney(item.cgst)} + '
                 'SGST ${formatMoney(item.sgst)}',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface
-                      .withValues(alpha: 0.5),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                 ),
               ),
             ),
@@ -491,8 +502,9 @@ class _TotalRow extends StatelessWidget {
           Text(label, style: theme.textTheme.bodyMedium),
           Text(
             value,
-            style: theme.textTheme.bodyMedium
-                ?.copyWith(fontWeight: FontWeight.w700),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),

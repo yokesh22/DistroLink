@@ -17,7 +17,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 class AddItemsScreen extends ConsumerStatefulWidget {
-  const AddItemsScreen({super.key});
+  const AddItemsScreen({this.isAdminEdit = false, super.key});
+
+  final bool isAdminEdit;
 
   @override
   ConsumerState<AddItemsScreen> createState() => _AddItemsScreenState();
@@ -72,12 +74,12 @@ class _AddItemsScreenState extends ConsumerState<AddItemsScreen> {
 
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (_, _) => context.go('/orders/new/1'),
+      onPopInvokedWithResult: (_, _) => context.go(_stepPath(1)),
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_rounded),
-            onPressed: () => context.go('/orders/new/1'),
+            onPressed: () => context.go(_stepPath(1)),
           ),
           title: const Text('Add Items'),
           actions: [
@@ -239,6 +241,14 @@ class _AddItemsScreenState extends ConsumerState<AddItemsScreen> {
     );
   }
 
+  String _stepPath(int step) {
+    final orderId = ref.read(orderDraftProvider).editingOrderId;
+    if (widget.isAdminEdit && orderId != null) {
+      return '/admin/orders/$orderId/edit/$step';
+    }
+    return '/orders/new/$step';
+  }
+
   void _showCartSheet(BuildContext context) {
     unawaited(
       showModalBottomSheet<void>(
@@ -250,14 +260,16 @@ class _AddItemsScreenState extends ConsumerState<AddItemsScreen> {
             top: Radius.circular(AppSpacing.radiusCard),
           ),
         ),
-        builder: (_) => const _CartSheet(),
+        builder: (_) => _CartSheet(nextStepPath: _stepPath(3)),
       ),
     );
   }
 }
 
 class _CartSheet extends ConsumerWidget {
-  const _CartSheet();
+  const _CartSheet({required this.nextStepPath});
+
+  final String nextStepPath;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -431,7 +443,7 @@ class _CartSheet extends ConsumerWidget {
                         onPressed: draft.items.isNotEmpty && !hasInvalidRate
                             ? () {
                                 Navigator.of(context).pop();
-                                context.go('/orders/new/3');
+                                context.go(nextStepPath);
                               }
                             : null,
                       ),

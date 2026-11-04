@@ -174,6 +174,16 @@ Header row for an order placed by a salesman against a shop.
 > rejected because it would have to stay correct through order edits, soft deletes and outbox sync —
 > see [ADR-0007](../../docs/decisions/0007-last-shop-rate-lookup-via-rpc.md).
 
+> **Distributor order list and editing** (migration `0012_order_edit_permissions.sql`):
+> `public.list_distributor_orders(p_distributor_id uuid, p_salesman_id uuid, p_from date,
+> p_before date, p_search text, p_limit integer, p_offset integer)` returns joined order rows for the
+> authenticated distributor admin, newest first. The client calls the exact lowercase RPC name
+> `list_distributor_orders`; apply migration `0012` to Supabase before using the admin Orders screen.
+> The migration replaces broad order/item mutation policies with tenant-scoped read/create policies
+> and role/ownership-checked edit policies. Admins may edit any order within their distributor;
+> salesmen may edit only their own. An order-owner trigger prevents changing `salesman_id` or
+> `distributor_id` during edits.
+
 ---
 
 ## Table: `order_items`
@@ -214,9 +224,13 @@ Tracks Excel export status. Phase 2.
 
 The app assumes Supabase Row-Level Security enforces:
 - A salesman can only read shops, products, areas under their distributor.
-- A salesman can only insert `orders` / `order_items` where `salesman_id` matches their own.
-- A salesman can only read `orders` they created.
-- An admin can read/write everything within their distributor.
+- Order and order-item reads are scoped to the caller's distributor; salesman-owned order filtering
+  for list surfaces remains client-side.
+- Order inserts remain tenant-scoped; the app submits a new order with the authenticated salesman's
+  `salesman_id`.
+- Order updates and item insert/update/delete for edits are allowed to a distributor admin within
+  the tenant, or a salesman only for their own orders (migration `0012`).
+- The order's original `salesman_id` and `distributor_id` cannot be changed.
 
 If RLS is missing or weaker, **filter client-side as a defence-in-depth measure**, but flag the gap to the user.
 
